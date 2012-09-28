@@ -4,6 +4,7 @@ tmp*
 
 # General rules
 
+*.exe
 *.py[cod]
 
 # C extensions
