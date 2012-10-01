@@ -7,3 +7,8 @@ This is a back up repository for my $HOME/bin directory.
 Requirements
 ======================================================================
 TBW
+
+
+License
+======================================================================
+See the LICENSE file.
