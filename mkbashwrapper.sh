@@ -1,3 +1,3 @@
 #!/bin/bash
 
-/usr/bin/env python 'D:\home\yojyo\bin\mkbashwrapper.py' $@
+/usr/bin/env python (cygpath -m ~/bin/mkbashwrapper.py) $@
