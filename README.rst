@@ -57,7 +57,7 @@ See the file LICENSE.
 Contacts
 ========
 
-* ƒvƒŒƒnƒu¬‰®
+* ãƒ—ãƒ¬ãƒãƒ–å°å±‹
 
   * Web site: https://github.com/showa-yojyo/helloworld (GitHub)
   * E-mail: yojyo@hotmail.com
