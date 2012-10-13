@@ -11,7 +11,7 @@ import urllib
 import cgi
 from jinja2 import Environment
 
-TWITTER_API_URL = 'https://api.twitter.com/1/statuses/user_timeline.atom?'
+TWITTER_API_URL = 'https://api.twitter.com/1/statuses/user_timeline.rss?'
 
 OPML_TEMPLATE = u'''\
 <?xml version="1.0" encoding="utf-8"?>
