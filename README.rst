@@ -59,7 +59,7 @@ Contacts
 
 * プレハブ小屋
 
-  * Web site: https://github.com/showa-yojyo/helloworld (GitHub)
+  * Web site: https://github.com/showa-yojyo/bin (GitHub)
   * E-mail: yojyo@hotmail.com
   * Twitter: @showa_yojyo
 
