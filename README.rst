@@ -57,12 +57,14 @@ See the file LICENSE.
 Contacts
 ========
 
-* プレハブ小屋
+* `プレハブ小屋`_
 
   * Web site: https://github.com/showa-yojyo/bin (GitHub)
   * E-mail: yojyo@hotmail.com
-  * Twitter: @showa_yojyo
+  * Twitter: `@showa_yojyo`_
 
+.. _`プレハブ小屋`: http://www.geocities.jp/showa_yojyo/
+.. _`@showa_yojyo`: http://twitter.com/showa_yojyo
 .. _Python: http://www.python.org/
 .. _Beautiful Soup: http://www.crummy.com/software/BeautifulSoup/
 .. _PIL: http://www.pythonware.com/products/pil
