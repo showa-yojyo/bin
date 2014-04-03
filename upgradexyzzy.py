@@ -17,7 +17,7 @@ import zipfile
 XYZZY_GITHUB_URL = r'http://xyzzy-022.github.com/'
 
 # TODO: user settings
-XYZZY_DEST = r'C:/Program Files/xyzzy/'
+XYZZY_DEST = r'C:/Program Files(x86)/xyzzy/'
 WORK_DIR = r'D:/Temp/'
 
 def get_latest_xyzzy_url():
