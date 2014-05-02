@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012 プレハブ小屋 <yojyo@hotmail.com>
+# Copyright (c) 2012-2014 プレハブ小屋 <yojyo@hotmail.com>
 # All Rights Reserved.  NO WARRANTY.
 
 """Generate an HTML document for diary of a month."""
@@ -12,9 +12,9 @@ from calendar import Calendar
 from argparse import ArgumentParser
 from jinja2 import Environment
 
-__version__ = '0.0.0'
+__version__ = '0.0.1'
 
-DIARY_ENCODING = "sjis"
+DIARY_ENCODING = "utf-8"
 
 DIARY_TEMPLATE = u"""\
 {#-
@@ -44,12 +44,11 @@ dates: calendar.Calendar.itermonthdays2(year, month)
 
 <?xml version="1.0" encoding="{{ encoding }}" standalone="no"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<!-- $Id: $ -->
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ja">
 <head>
   {% block header %}
   <title>日記 {{ year }}/{{ "%02d"|format(month) }}</title>
-  <meta http-equiv="Content-type" content="text/html; charset=sjis" />
+  <meta http-equiv="Content-type" content="text/html; charset="{{ encoding }}" />
   <meta http-equiv="Content-style-type" content="text/css" />
   <meta name="author" content="showa_yojyo@hotmail.com" />
   <link rel="index" type="text/html" href="http://www.geocities.jp/showa_yojyo/index.html" />
@@ -80,7 +79,6 @@ dates: calendar.Calendar.itermonthdays2(year, month)
 <hr />
 {% block footer %}
 {{ diary_link() }}
-<br />$Id: $
 <br />
 <address>プレハブ小屋管理人<a href="mailto:yojyo@hotmail.com?subject=diary.{{ year }}.{{ "%02d"|format(month) }}">yojyo@hotmail.com</a></address>
 {% endblock %}
