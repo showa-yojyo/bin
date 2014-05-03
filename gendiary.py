@@ -48,7 +48,7 @@ dates: calendar.Calendar.itermonthdays2(year, month)
 <head>
   {% block header %}
   <title>日記 {{ year }}/{{ "%02d"|format(month) }}</title>
-  <meta http-equiv="Content-type" content="text/html; charset="{{ encoding }}" />
+  <meta http-equiv="Content-type" content="text/html; charset={{ encoding }}" />
   <meta http-equiv="Content-style-type" content="text/css" />
   <meta name="author" content="showa_yojyo@hotmail.com" />
   <link rel="index" type="text/html" href="http://www.geocities.jp/showa_yojyo/index.html" />
