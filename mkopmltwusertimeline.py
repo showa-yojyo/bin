@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-u"""
+"""
 Copyright (c) 2012 プレハブ小屋 <yojyo@hotmail.com>
 All Rights Reserved.  NO WARRANTY.
 
 Twitter の user_timeline を ATOM で購読する OPML ファイルを生成する。
 """
 
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import cgi
 from jinja2 import Environment
 
 TWITTER_API_URL = 'https://api.twitter.com/1/statuses/user_timeline.rss?'
 
-OPML_TEMPLATE = u'''\
+OPML_TEMPLATE = '''\
 <?xml version="1.0" encoding="utf-8"?>
 <opml version="1.0">
   <head>
@@ -36,7 +36,7 @@ def makeurl(screen_name):
         count=30,
         include_rts='true',
         )
-    return cgi.escape(TWITTER_API_URL + urllib.urlencode(doseq))
+    return cgi.escape(TWITTER_API_URL + urllib.parse.urlencode(doseq))
 
 def run():
     # TODO: ここをしょっちゅう書き換える必要があるのは面倒。
@@ -50,7 +50,7 @@ def run():
     env = Environment()
     env.filters['makeurl'] = makeurl
     template = env.from_string(OPML_TEMPLATE)
-    print template.render(screen_names=screen_names)
+    print(template.render(screen_names=screen_names))
 
 if __name__ == '__main__':
     run()

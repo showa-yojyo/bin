@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (c) 2012-2014 プレハブ小屋 <yojyo@hotmail.com>
 # All Rights Reserved.  NO WARRANTY.
@@ -16,7 +15,7 @@ __version__ = '0.0.1'
 
 DIARY_ENCODING = "utf-8"
 
-DIARY_TEMPLATE = u"""\
+DIARY_TEMPLATE = """\
 {#-
 render の引数
 -------------

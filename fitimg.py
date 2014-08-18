@@ -1,6 +1,5 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-u"""
+"""
 Copyright (c) 2012 プレハブ小屋 <yojyo@hotmail.com>
 All Rights Reserved.  NO WARRANTY.
 
@@ -11,7 +10,7 @@ Resizes larger JPEG files in the current directory to 1024x768 size
 import sys
 import glob
 # PIL
-import Image
+from PIL import Image
 
 PATTERN = '*.jpg'
 SCREEN_WIDTH = 1024

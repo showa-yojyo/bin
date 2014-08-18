@@ -1,6 +1,5 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-u"""Copyright (c) 2012 プレハブ小屋 <yojyo@hotmail.com>
+"""Copyright (c) 2012 プレハブ小屋 <yojyo@hotmail.com>
 All Rights Reserved.  NO WARRANTY.
 """
 

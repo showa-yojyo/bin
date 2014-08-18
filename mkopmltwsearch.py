@@ -1,6 +1,5 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-u"""
+"""
 Copyright (c) 2012 プレハブ小屋 <yojyo@hotmail.com>
 All Rights Reserved.  NO WARRANTY.
 
@@ -8,14 +7,14 @@ Twitter による所定の検索結果を ATOM で購読する OPML ファイル
 """
 
 import sys
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import cgi
 import codecs
 from jinja2 import Environment
 
 TWITTER_SEARCH_URL = 'http://search.twitter.com/search.atom?'
 
-OPML_TEMPLATE = u'''\
+OPML_TEMPLATE = '''\
 <?xml version="1.0" encoding="utf-8"?>
 <opml version="1.0">
   <head>
@@ -38,13 +37,13 @@ def makeurl(query):
         rpp=30, 
         result_type='recent',
         show_user='true')
-    return cgi.escape(TWITTER_SEARCH_URL + urllib.urlencode(params), True)
+    return cgi.escape(TWITTER_SEARCH_URL + urllib.parse.urlencode(params), True)
 
 def run():
     # TODO: ここをしょっちゅう書き換える必要があるのは面倒。
     queries = (
-        u'むこうぶち OR 麻雀破壊神',
-        u'"トラブル ウィッチーズ" OR トラブルウィッチーズ',
+        'むこうぶち OR 麻雀破壊神',
+        '"トラブル ウィッチーズ" OR トラブルウィッチーズ',
         # ...
         )
 
@@ -55,7 +54,7 @@ def run():
     env = Environment()
     env.filters['makeurl'] = makeurl
     template = env.from_string(OPML_TEMPLATE)
-    print template.render(queries=queries)
+    print(template.render(queries=queries))
 
 if __name__ == '__main__':
     run()
