@@ -5,15 +5,19 @@
 Examples:
   You can add users to a list by the "add" command::
 
-    $ python listmanager.py add your_screen_name your_list_name user1 [user2 ...]
+    $ python listmanager.py add your_screen_name your_list_name [user ...]
 
   Likewise, you can also remove users by the "remove" command.
 """
 
 from secret import twitter_instance
 from argparse import ArgumentParser
+from argparse import FileType
 
 __version__ = '1.0.0'
+
+COMMAND_LIST_ADD = 'add'
+COMMAND_LIST_REMOVE = 'remove'
 
 def configure():
     """Parse the command line parameters.
@@ -26,11 +30,11 @@ def configure():
     parser = ArgumentParser(description='Twitter List Manager')
     parser.add_argument('--version', action='version', version=__version__)
 
-    # Positional arguments
+    # Positional arguments.
     parser.add_argument(
         'command',
-        choices=['add', 'remove',],
-        help='Either "add" or "remove".')
+        choices=[COMMAND_LIST_ADD, COMMAND_LIST_REMOVE,],
+        help='Either "{}" or "{}".'.format(COMMAND_LIST_ADD, COMMAND_LIST_REMOVE))
 
     parser.add_argument(
         'owner_screen_name',
@@ -42,8 +46,15 @@ def configure():
 
     parser.add_argument(
         'screen_names',
-        nargs='+',
-        help='A comma separated list of screen names, up to 100 are allowed in a single request.')
+        nargs='*',
+        help='A list of screen names, up to 100 are allowed in a single request.')
+
+    # Optional arguments.
+    parser.add_argument(
+        '-f', '--file',
+        type=FileType('r', encoding='utf-8'),
+        default=None,
+        help='A file which lists screen names to be added or removed.')
 
     return parser
 
@@ -61,16 +72,22 @@ def main(args):
     tw = twitter_instance()
 
     # Few commands are available so far.
-    if args.command == 'add':
-        tw.lists.members.create_all(
-            owner_screen_name=args.owner_screen_name,
-            slug=args.slug,
-            screen_name=','.join(args.screen_names))
-    elif args.command == 'remove':
-        tw.lists.members.destroy_all(
-            owner_screen_name=args.owner_screen_name,
-            slug=args.slug,
-            screen_name=','.join(args.screen_names))
+    cmd = None
+    if args.command == COMMAND_LIST_ADD:
+        cmd = tw.lists.members.create_all
+    elif args.command == COMMAND_LIST_REMOVE:
+        cmd = tw.lists.members.destroy_all
+
+    # Obtain the target users.
+    users = []
+    users.extend(args.screen_names)
+    if args.file:
+        users.extend(line.strip() for line in args.file)
+
+    cmd(
+        owner_screen_name=args.owner_screen_name,
+        slug=args.slug,
+        screen_name=','.join(users))
 
 if __name__ == '__main__':
     parser = configure()
