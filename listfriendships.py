@@ -47,9 +47,9 @@ def format_user(user):
         user: An instance of the Twitter API users response object.
 
     Returns:
-        A colon-separated value string.
+        A tab-separated value string.
     """
-    return '{screen_name}\t{name}\t{description}\t{url}'.format(**user).replace('\r', '').replace('\n', ' ')
+    return '{screen_name}\t{name}\t{description}\t{url}'.format(**user).replace('\n', ' ')
 
 def main(args):
     """The main function.
