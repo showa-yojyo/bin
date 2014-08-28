@@ -1,10 +1,12 @@
 # Local rules
 _attic/
 tmp*
+*.txt
 
 # General rules
 
 *.exe
+*.vshost.exe.manifest
 *.py[cod]
 
 # C extensions
