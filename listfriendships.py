@@ -49,7 +49,7 @@ def format_user(user):
     Returns:
         A colon-separated value string.
     """
-    return '{screen_name}:{name}:{description}:{url}'.format(**user).replace('\r', '').replace('\n', '')
+    return '{screen_name}\t{name}\t{description}\t{url}'.format(**user).replace('\r', '').replace('\n', ' ')
 
 def main(args):
     """The main function.
