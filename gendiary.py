@@ -15,13 +15,12 @@ Examples:
 """
 
 import sys
-import codecs
 import datetime
 from calendar import Calendar
 from argparse import ArgumentParser
 from jinja2 import Environment
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 DIARY_TEMPLATE = """\
 {#-
