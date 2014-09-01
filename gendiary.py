@@ -1,8 +1,18 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2014 プレハブ小屋 <yojyo@hotmail.com>
-# All Rights Reserved.  NO WARRANTY.
+"""Generate an HTML document for diary of a month.
 
-"""Generate an HTML document for diary of a month."""
+Examples:
+  You can generate diary template of the current month with no arguments::
+
+    $ python gendiary.py
+
+  Or with --year and --month options, you can generate diary templates of
+  any months in any years, e.g.::
+
+    $ python genduary.py --year=2014 --month=9
+
+"""
 
 import sys
 import codecs
@@ -11,27 +21,26 @@ from calendar import Calendar
 from argparse import ArgumentParser
 from jinja2 import Environment
 
-__version__ = '0.0.1'
-
-DIARY_ENCODING = "utf-8"
+__version__ = '1.1.0'
 
 DIARY_TEMPLATE = """\
 {#-
-render の引数
--------------
-year: 西暦 4 桁整数
-month: 月
-dates: calendar.Calendar.itermonthdays2(year, month)
+Args:
+    year: A year.
+    month: A month number (1, 2, ..., 12).
+    dates: calendar.Calendar.itermonthdays2(year, month)
 -#}
 
-{#- 変数 -#}
+{#- Constants -#}
 {%- set dows = ("Mon","Tue","Wed","Thu","Fri","Sat","Sun") -%}
 {%- set monthnames = ("","jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec") -%}
 {%- set monname = monthnames[month] -%}
+{%- set mymail = "showa_yojyo@hotmail.com" -%}
+{%- set myurl = "http://www.geocities.jp/showa_yojyo/" -%}
 
-{#- マクロ diary_link
+{#- Macro diary_link
 
-    HTML の上部と下部、パンクズに使う。
+    Use for header, footer and crumbs.
 -#}
 {%- macro diary_link() -%}
 <a href="../index.html" title="index">日記</a> &gt;
@@ -39,18 +48,18 @@ dates: calendar.Calendar.itermonthdays2(year, month)
 {{ "%02d"|format(month) }} 月
 {%- endmacro -%}
 
-{#- ここからテンプレート本体 -#}
+{#- Here is the template body. -#}
 
-<?xml version="1.0" encoding="{{ encoding }}" standalone="no"?>
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ja">
 <head>
   {% block header %}
   <title>日記 {{ year }}/{{ "%02d"|format(month) }}</title>
-  <meta http-equiv="Content-type" content="text/html; charset={{ encoding }}" />
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
   <meta http-equiv="Content-style-type" content="text/css" />
-  <meta name="author" content="showa_yojyo@hotmail.com" />
-  <link rel="index" type="text/html" href="http://www.geocities.jp/showa_yojyo/index.html" />
+  <meta name="author" content="{{ mymail }}" />
+  <link rel="index" type="text/html" href="{{ myurl }}" />
   <link rel="stylesheet" href="../diary.css" type="text/css" />
   <link rel="stylesheet" href="../buf2html.css" type="text/css" />
   {% endblock %}
@@ -79,43 +88,62 @@ dates: calendar.Calendar.itermonthdays2(year, month)
 {% block footer %}
 {{ diary_link() }}
 <br />
-<address>プレハブ小屋管理人<a href="mailto:yojyo@hotmail.com?subject=diary.{{ year }}.{{ "%02d"|format(month) }}">yojyo@hotmail.com</a></address>
+<address>プレハブ小屋管理人<a href="mailto:{{ mymail }}?subject=diary.{{ year }}.{{ "%02d"|format(month) }}">{{ mymail }}</a></address>
 {% endblock %}
 </body>
 </html>
 """
 
-def main(args):
-    year = args.year
-    month = args.month
-    env = Environment(autoescape = False)
-    templ = env.from_string(DIARY_TEMPLATE)
+def configure():
+    """Parse the command line parameters.
 
-    cal = Calendar()
+    Returns:
+        An instance of argparse.ArgumentParser that stores the command line
+        parameters.
+    """
 
-    sys.stdout = codecs.getwriter(DIARY_ENCODING)(sys.stdout)
-    sys.stdout.write(templ.render(
-        encoding=DIARY_ENCODING,
-        year=year,
-        month=month,
-        dates=cal.itermonthdays2(year, month),
-        ))
-    sys.stdout.write('\n')
+    parser = ArgumentParser(description='Diary Template Generator')
+    parser.add_argument('--version', action='version', version=__version__)
 
-if __name__ == "__main__":
-    parser = ArgumentParser(description=__doc__, version=__version__)
     today = datetime.date.today()
 
-    parser.add_argument('-y', '--year',
-                        type=int,
-                        default=today.year,
-                        dest='year',
-                        help="year of diary (default to today's year)")
-    parser.add_argument('-m', '--month',
-                        type=int,
-                        default=today.month,
-                        dest='month',
-                        help="month of diary (default to today's month)")
+    # Optional arguments.
+    parser.add_argument(
+        '-y', '--year',
+        type=int,
+        default=today.year,
+        help="specify the year of diary (default to today's year)")
 
-    args = parser.parse_args()
-    main(args)
+    parser.add_argument(
+        '-m', '--month',
+        type=int,
+        default=today.month,
+        help="specify the month number of diary (default to today's month)")
+
+    return parser
+
+def main(args):
+    """The main function.
+
+    Args:
+        args: An instance of argparse.ArgumentParser parsed in the configure
+            function.
+
+    Returns:
+        None.
+    """
+
+    env = Environment(autoescape=False)
+    templ = env.from_string(DIARY_TEMPLATE)
+    cal = Calendar()
+    year = args.year
+    month = args.month
+
+    print(templ.render(
+        year=year,
+        month=month,
+        dates=cal.itermonthdays2(year, month)))
+
+if __name__ == "__main__":
+    parser = configure()
+    main(parser.parse_args())
