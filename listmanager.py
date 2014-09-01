@@ -14,10 +14,12 @@ from secret import twitter_instance
 from argparse import ArgumentParser
 from argparse import FileType
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
+# Available subcommands.
 COMMAND_LIST_ADD = 'add'
 COMMAND_LIST_REMOVE = 'remove'
+COMMAND_LIST_LIST = 'list'
 
 def configure():
     """Parse the command line parameters.
@@ -30,33 +32,137 @@ def configure():
     parser = ArgumentParser(description='Twitter List Manager')
     parser.add_argument('--version', action='version', version=__version__)
 
-    # Positional arguments.
-    parser.add_argument(
-        'command',
-        choices=[COMMAND_LIST_ADD, COMMAND_LIST_REMOVE,],
-        help='Either "{}" or "{}".'.format(COMMAND_LIST_ADD, COMMAND_LIST_REMOVE))
+    subparsers = parser.add_subparsers(help='commands')
 
+    parser_add = subparsers.add_parser(
+        COMMAND_LIST_ADD,
+        help='add multiple members to a list')
+
+    parser_remove = subparsers.add_parser(
+        COMMAND_LIST_REMOVE,
+        help='remove multiple members from a list')
+
+    parser_list = subparsers.add_parser(
+        COMMAND_LIST_LIST,
+        help='list the members of the specified list')
+
+    add_common_args(parser_add)
+    add_screen_names_args(parser_add)
+    add_common_args(parser_remove)
+    add_screen_names_args(parser_remove)
+    add_common_args(parser_list)
+
+    parser_add.set_defaults(func=execute_add)
+    parser_remove.set_defaults(func=execute_remove)
+    parser_list.set_defaults(func=execute_list)
+
+    return parser
+
+def add_common_args(parser):
+    """TBW"""
     parser.add_argument(
         'owner_screen_name',
-        help='The screen name of the user who owns the list being requested by a slug.')
+        help='the screen name of the user who owns the list being requested by a slug')
 
     parser.add_argument(
         'slug',
-        help='The slug of the list.')
+        help='the slug of the list.')
 
+def add_screen_names_args(parser):
+    """TBW"""
     parser.add_argument(
         'screen_names',
         nargs='*',
-        help='A list of screen names, up to 100 are allowed in a single request.')
+        help='a list of screen names, up to 100 are allowed in a single request')
 
-    # Optional arguments.
     parser.add_argument(
         '-f', '--file',
         type=FileType('r', encoding='utf-8'),
         default=None,
-        help='A file which lists screen names to be added or removed.')
+        help='a file which lists screen names to be added or removed')
 
-    return parser
+def execute_add(args):
+    """Add multiple members to a list.
+
+    Args:
+        args: An instance of argparse.ArgumentParser parsed in the configure
+            function.
+
+    Returns:
+        None.
+    """
+
+    tw = args.tw
+
+    # Obtain the target users.
+    users = []
+    users.extend(args.screen_names)
+    if args.file:
+        users.extend(line.strip() for line in args.file)
+
+    tw.lists.members.create_all(
+        owner_screen_name=args.owner_screen_name,
+        slug=args.slug,
+        screen_name=','.join(users))
+
+def execute_remove(args):
+    """Remove multiple members from a list.
+
+    Args:
+        args: An instance of argparse.ArgumentParser parsed in the configure
+            function.
+
+    Returns:
+        None.
+    """
+
+    tw = args.tw
+
+    # Obtain the target users.
+    users = []
+    users.extend(args.screen_names)
+    if args.file:
+        users.extend(line.strip() for line in args.file)
+
+    tw.lists.members.destroy_all(
+        owner_screen_name=args.owner_screen_name,
+        slug=args.slug,
+        screen_name=','.join(users))
+
+def execute_list(args):
+    """List the members of the specified list.
+
+    Args:
+        args: An instance of argparse.ArgumentParser parsed in the configure
+            function.
+
+    Returns:
+        None.
+    """
+
+    tw = args.tw
+    next_cursor = -1
+    while next_cursor != 0:
+        response = tw.lists.members(
+            owner_screen_name=args.owner_screen_name,
+            slug=args.slug,
+            cursor=next_cursor)
+
+        for user in response['users']:
+            print(format_user(user))
+
+        next_cursor = response['next_cursor']
+
+def format_user(user):
+    """Return a string that shows user information.
+
+    Args:
+        user: An instance of the Twitter API users response object.
+
+    Returns:
+        A tab-separated value string.
+    """
+    return '{screen_name}\t{name}\t{description}\t{url}'.format(**user).replace('\n', ' ')
 
 def main(args):
     """The main function.
@@ -69,25 +175,8 @@ def main(args):
         None.
     """
 
-    tw = twitter_instance()
-
-    # Few commands are available so far.
-    cmd = None
-    if args.command == COMMAND_LIST_ADD:
-        cmd = tw.lists.members.create_all
-    elif args.command == COMMAND_LIST_REMOVE:
-        cmd = tw.lists.members.destroy_all
-
-    # Obtain the target users.
-    users = []
-    users.extend(args.screen_names)
-    if args.file:
-        users.extend(line.strip() for line in args.file)
-
-    cmd(
-        owner_screen_name=args.owner_screen_name,
-        slug=args.slug,
-        screen_name=','.join(users))
+    args.tw = twitter_instance()
+    args.func(args)
 
 if __name__ == '__main__':
     parser = configure()
