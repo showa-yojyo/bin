@@ -12,8 +12,9 @@ Examples:
 from secret import twitter_instance
 from argparse import ArgumentParser
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
+# Available subcommands.
 COMMAND_LIST_FRIENDS = 'list-friends'
 COMMAND_LIST_FOLLOWERS = 'list-followers'
 
@@ -28,31 +29,28 @@ def configure():
     parser = ArgumentParser(description='Twitter Followers Viewer')
     parser.add_argument('--version', action='version', version=__version__)
 
-    # Positional arguments
-    parser.add_argument(
-        'command',
-        choices=[COMMAND_LIST_FRIENDS, COMMAND_LIST_FOLLOWERS,],
-        help='Either "{0}" or "{1}".'.format(COMMAND_LIST_FRIENDS, COMMAND_LIST_FOLLOWERS))
+    subparsers = parser.add_subparsers(help='commands')
 
-    parser.add_argument(
-        'screen_name',
-        help='The screen name of the target user.')
+    parser_friends = subparsers.add_parser(
+        COMMAND_LIST_FRIENDS,
+        help='list all of the users the specified user is following')
+
+    parser_follows = subparsers.add_parser(
+        COMMAND_LIST_FOLLOWERS,
+        help='list all of the users following the specified user')
+
+    for i in (parser_friends, parser_follows):
+        i.add_argument(
+            'screen_name',
+            help='the screen name of the target user')
+
+    parser_friends.set_defaults(func=execute_list_friends)
+    parser_follows.set_defaults(func=execute_list_followers)
 
     return parser
 
-def format_user(user):
-    """Return a string that shows user information.
-
-    Args:
-        user: An instance of the Twitter API users response object.
-
-    Returns:
-        A tab-separated value string.
-    """
-    return '{screen_name}\t{name}\t{description}\t{url}'.format(**user).replace('\n', ' ')
-
-def main(args):
-    """The main function.
+def execute_list_friends(args):
+    """List all of the users the specified user is following.
 
     Args:
         args: An instance of argparse.ArgumentParser parsed in the configure
@@ -62,15 +60,34 @@ def main(args):
         None.
     """
 
-    tw = twitter_instance()
+    list_common(args, args.tw.friends.list)
+
+def execute_list_followers(args):
+    """List all of the users following the specified user.
+
+    Args:
+        args: An instance of argparse.ArgumentParser parsed in the configure
+            function.
+
+    Returns:
+        None.
+    """
+
+    list_common(args, args.tw.followers.list)
+
+def list_common(args, cmd):
+    """The common procedure of friends/list and followers/list.
+
+    Args:
+        args: An instance of argparse.ArgumentParser parsed in the configure
+            function.
+        cmd: A PTT request method for Twitter API.
+
+    Returns:
+        None.
+    """
+
     next_cursor = -1
-
-    cmd = None
-    if args.command == COMMAND_LIST_FRIENDS:
-        cmd = tw.friends.list
-    elif args.command == COMMAND_LIST_FOLLOWERS:
-        cmd = tw.followers.list
-
     while next_cursor != 0:
         friends = cmd(
             screen_name=args.screen_name,
@@ -83,6 +100,31 @@ def main(args):
             print(format_user(user))
 
         next_cursor = friends['next_cursor']
+
+def format_user(user):
+    """Return a string that shows user information.
+
+    Args:
+        user: An instance of the Twitter API users response object.
+
+    Returns:
+        A tab-separated value string.
+    """
+    return '{screen_name}\t{name}\t{description}\t{url}'.format(**user).replace('\r', '').replace('\n', ' ')
+
+def main(args):
+    """The main function.
+
+    Args:
+        args: An instance of argparse.ArgumentParser parsed in the configure
+            function.
+
+    Returns:
+        None.
+    """
+
+    args.tw = twitter_instance()
+    args.func(args)
 
 if __name__ == '__main__':
     parser = configure()
