@@ -13,8 +13,9 @@ Examples:
 from secret import twitter_instance
 from argparse import ArgumentParser
 from argparse import FileType
+import itertools
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 # Available subcommands.
 COMMAND_LIST_ADD = 'add'
@@ -81,6 +82,36 @@ def add_screen_names_args(parser):
         default=None,
         help='a file which lists screen names to be added or removed')
 
+def manage_members(args, action):
+    """Add multiple members to a list or remove from a list.
+
+    Args:
+        args: An instance of argparse.ArgumentParser parsed in the configure
+            function.
+
+        action: Select lists.members.create_all or lists.members.destroy_all.
+
+    Returns:
+        None.
+    """
+
+    # Obtain the target users.
+    users = itertools.chain(args.screen_names, (line.rstrip() for line in args.file))
+
+    # Note that lists can't have more than 5000 members
+    # and you are limited to adding up to 100 members to a list at a time.
+    up_to = 100
+    for i in range(0, 5000, up_to):
+        chunk = itertools.islice(users, i, i + up_to)
+        csv = ','.join(chunk)
+        if not csv:
+            break
+
+        action(
+            owner_screen_name=args.owner_screen_name,
+            slug=args.slug,
+            screen_name=csv)
+
 def execute_add(args):
     """Add multiple members to a list.
 
@@ -91,19 +122,7 @@ def execute_add(args):
     Returns:
         None.
     """
-
-    tw = args.tw
-
-    # Obtain the target users.
-    users = []
-    users.extend(args.screen_names)
-    if args.file:
-        users.extend(line.strip() for line in args.file)
-
-    tw.lists.members.create_all(
-        owner_screen_name=args.owner_screen_name,
-        slug=args.slug,
-        screen_name=','.join(users))
+    manage_members(args, args.tw.lists.members.create_all)
 
 def execute_remove(args):
     """Remove multiple members from a list.
@@ -115,19 +134,7 @@ def execute_remove(args):
     Returns:
         None.
     """
-
-    tw = args.tw
-
-    # Obtain the target users.
-    users = []
-    users.extend(args.screen_names)
-    if args.file:
-        users.extend(line.strip() for line in args.file)
-
-    tw.lists.members.destroy_all(
-        owner_screen_name=args.owner_screen_name,
-        slug=args.slug,
-        screen_name=','.join(users))
+    manage_members(args, args.tw.lists.members.destroy_all)
 
 def execute_list(args):
     """List the members of the specified list.
