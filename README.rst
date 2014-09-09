@@ -23,8 +23,8 @@ TBW
 Installation
 ============
 
-As this is my private project, I don't want you to have
-this git repository cloned to your machine...
+As this is my private project, you might not want
+this git repository in your machine...
 
 .. code:: bash
 
@@ -39,8 +39,9 @@ Requirements
 * Python_ 3.4.x
 
   * Some scripts need third party's packages, e.g., 
-    Pillow_, 
+    Pillow_,
     Jinja2_,
+    `Python Twitter Tools`_,
     `Beautiful Soup`_, and so on.
 
 Bug Reporting
@@ -67,4 +68,5 @@ Contacts
 .. _Python: http://www.python.org/
 .. _Beautiful Soup: http://www.crummy.com/software/BeautifulSoup/
 .. _Pillow: https://pillow.readthedocs.org/en/latest/
+.. _Python Twitter Tools: http://mike.verdone.ca/twitter/
 .. _Jinja2: http://jinja.pocoo.org/
