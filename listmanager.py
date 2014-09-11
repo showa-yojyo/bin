@@ -11,9 +11,12 @@ Examples:
 """
 
 from secret import twitter_instance
+from secret import format_user
 from argparse import ArgumentParser
 from argparse import FileType
 import itertools
+import sys
+import time
 
 __version__ = '1.1.1'
 
@@ -96,21 +99,27 @@ def manage_members(args, action):
     """
 
     # Obtain the target users.
-    users = itertools.chain(args.screen_names, (line.rstrip() for line in args.file))
+    users = list(itertools.chain(args.screen_names, (line.rstrip() for line in args.file)))
 
     # Note that lists can't have more than 5000 members
     # and you are limited to adding up to 100 members to a list at a time.
-    up_to = 100
+    up_to = 20
     for i in range(0, 5000, up_to):
         chunk = itertools.islice(users, i, i + up_to)
         csv = ','.join(chunk)
         if not csv:
             break
 
+        print("{}-{}: Wait...".format(i, i + up_to), file=sys.stderr, flush=True)
+
         action(
             owner_screen_name=args.owner_screen_name,
             slug=args.slug,
             screen_name=csv)
+
+        print("{}-{}: OK:".format(i, i + up_to), file=sys.stderr, flush=True)
+        print(csv, file=sys.stderr, flush=True)
+        time.sleep(10)
 
 def execute_add(args):
     """Add multiple members to a list.
@@ -159,17 +168,6 @@ def execute_list(args):
             print(format_user(user))
 
         next_cursor = response['next_cursor']
-
-def format_user(user):
-    """Return a string that shows user information.
-
-    Args:
-        user: An instance of the Twitter API users response object.
-
-    Returns:
-        A tab-separated value string.
-    """
-    return '{screen_name}\t{name}\t{description}\t{url}'.format(**user).replace('\n', ' ')
 
 def main(args):
     """The main function.

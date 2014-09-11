@@ -10,7 +10,9 @@ Examples:
 """
 
 from secret import twitter_instance
+from secret import format_user
 from argparse import ArgumentParser
+import sys
 
 __version__ = '1.1.0'
 
@@ -100,17 +102,7 @@ def list_common(args, cmd):
             print(format_user(user))
 
         next_cursor = friends['next_cursor']
-
-def format_user(user):
-    """Return a string that shows user information.
-
-    Args:
-        user: An instance of the Twitter API users response object.
-
-    Returns:
-        A tab-separated value string.
-    """
-    return '{screen_name}\t{name}\t{description}\t{url}'.format(**user).replace('\r', '').replace('\n', ' ')
+        print('next_cursor: {}'.format(next_cursor), file=sys.stderr)
 
 def main(args):
     """The main function.
