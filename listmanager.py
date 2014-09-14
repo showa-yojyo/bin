@@ -12,6 +12,7 @@ Examples:
 
 from secret import twitter_instance
 from secret import format_user
+from secret import get_user_csv_format
 from argparse import ArgumentParser
 from argparse import FileType
 import itertools
@@ -99,7 +100,10 @@ def manage_members(args, action):
     """
 
     # Obtain the target users.
-    users = list(itertools.chain(args.screen_names, (line.rstrip() for line in args.file)))
+    users = []
+    users.extend(args.screen_names)
+    if args.file:
+        users.extend(line.rstrip() for line in args.file)
 
     # Note that lists can't have more than 5000 members
     # and you are limited to adding up to 100 members to a list at a time.
@@ -158,6 +162,9 @@ def execute_list(args):
 
     tw = args.tw
     next_cursor = -1
+
+    print(get_user_csv_format())
+
     while next_cursor != 0:
         response = tw.lists.members(
             owner_screen_name=args.owner_screen_name,
