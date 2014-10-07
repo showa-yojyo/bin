@@ -107,12 +107,15 @@ def manage_members(args, action):
 
     # Note that lists can't have more than 5000 members
     # and you are limited to adding up to 100 members to a list at a time.
-    up_to = 20
+    up_to = 15
     for i in range(0, 5000, up_to):
         chunk = itertools.islice(users, i, i + up_to)
         csv = ','.join(chunk)
         if not csv:
             break
+
+        if i != 0:
+            time.sleep(15)
 
         print("{}-{}: Wait...".format(i, i + up_to), file=sys.stderr, flush=True)
 
@@ -123,7 +126,6 @@ def manage_members(args, action):
 
         print("{}-{}: OK:".format(i, i + up_to), file=sys.stderr, flush=True)
         print(csv, file=sys.stderr, flush=True)
-        time.sleep(10)
 
 def execute_add(args):
     """Add multiple members to a list.
