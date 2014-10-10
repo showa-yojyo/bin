@@ -11,6 +11,7 @@ Examples:
 
 from secret import twitter_instance
 from secret import format_user
+from secret import get_user_csv_format
 from argparse import ArgumentParser
 import sys
 
@@ -88,6 +89,8 @@ def list_common(args, cmd):
     Returns:
         None.
     """
+
+    print(get_user_csv_format())
 
     next_cursor = -1
     while next_cursor != 0:
