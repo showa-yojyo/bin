@@ -53,7 +53,6 @@ Args:
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ja">
 <head>
-  {% block header %}
   <title>日記 {{ year }}/{{ "%02d"|format(month) }}</title>
   <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
   <meta http-equiv="Content-style-type" content="text/css" />
@@ -61,10 +60,8 @@ Args:
   <link rel="index" type="text/html" href="{{ myurl }}" />
   <link rel="stylesheet" href="../diary.css" type="text/css" />
   <link rel="stylesheet" href="../buf2html.css" type="text/css" />
-  {% endblock %}
 </head>
 <body>
-{% block body %}
 <p>
 {{ diary_link() }}
 </p>
@@ -82,13 +79,10 @@ Args:
 </div> <!-- {{ sectid }} -->
 {% endif %}
 {%- endfor %}
-{% endblock %}
 <hr />
-{% block footer %}
 {{ diary_link() }}
 <br />
 <address>プレハブ小屋管理人<a href="mailto:{{ mymail }}?subject=diary.{{ year }}.{{ "%02d"|format(month) }}">{{ mymail }}</a></address>
-{% endblock %}
 </body>
 </html>
 """
