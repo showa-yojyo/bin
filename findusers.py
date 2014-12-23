@@ -62,7 +62,7 @@ def configure():
         type=int,
         nargs='?',
         default=20,
-        choices=range(1, 21),
+        choices=range(1, 51),
         help='the number of potential user results to retrieve per page')
 
     return parser
