@@ -2,20 +2,23 @@
 # -*- coding: utf-8 -*-
 """Find Twitter users.
 
-Examples:
-  $ findusers.py <query> --page=0:5
+Usage:
+  findusers.py [--version] [--help]
+  findusers.py [-p | --page-range <begin>[:<end>]]
+    [-c | --count <n>]
+    <query>
 """
 
 from secret import twitter_instance
-from secret import format_user
-from secret import get_user_csv_format
+from secret import SEP
+from secret import USER_COLUMN_HEADER
 from argparse import ArgumentParser
 from argparse import ArgumentTypeError
 import re
 import sys
 import time
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 def parse_page_range(text):
     """Parse a range of numbers in the form of M, M:N, or M:.
@@ -56,6 +59,7 @@ def configure():
         type=parse_page_range,
         nargs='?',
         default=range(1),
+        metavar='<begin>[:<end>]',
         help='the page ranges of results to retrieve')
     parser.add_argument(
         '-c', '--count',
@@ -63,6 +67,7 @@ def configure():
         nargs='?',
         default=20,
         choices=range(1, 51),
+        metavar='{1..50}',
         help='the number of potential user results to retrieve per page')
 
     return parser
@@ -79,14 +84,13 @@ def main():
 
     tw = twitter_instance()
 
-    print(get_user_csv_format())
+    csv_header = USER_COLUMN_HEADER + ('status[text]', 'status[source]',)
+    csv_format = SEP.join(('{' + i + '}' for i in csv_header))
+
+    print(SEP.join(csv_header))
 
     # Only the first 1,000 matching results are available.
     for i in args.page_range:
-
-        if i != 0:
-            time.sleep(2)
-
         print("{}: Wait...".format(i), file=sys.stderr, flush=True)
 
         response = tw.users.search(
@@ -97,7 +101,11 @@ def main():
 
         print("{}: OK:".format(i), file=sys.stderr, flush=True)
         for j in response:
-            print(format_user(j))
+            if 'status' in j:
+                line = csv_format.format(**j)
+                print(line.replace('\r', '').replace('\n', ' '))
+
+        time.sleep(2)
 
 if __name__ == '__main__':
     main()
