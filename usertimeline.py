@@ -1,19 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""View the most recent tweets of a user.
+"""Show the most recent tweets of a user.
 
-Examples:
-  $ usertimeline.py <screen_name>
+Usage:
+  usertimeline.py [--version] [--help]
+  usertimeline.py [-c | --count <n>]
+    [-M | --max-id <status-id>]
+    [-N | --max-count <n>]
+    <screen-name>
 """
 
 from secret import twitter_instance
 from secret import format_tweet
 from secret import get_tweet_csv_format
 from argparse import ArgumentParser
+from itertools import count
 import sys
 import time
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 def configure():
     """Parse the command line parameters."""
@@ -29,14 +34,23 @@ def configure():
         nargs='?',
         default=20,
         choices=range(1, 201),
-        help='the number of tweets to try and retrieve')
-
+        metavar='{1..200}',
+        help='number of tweets to return per page')
     parser.add_argument(
-        '-m', '--max_id',
+        '-M', '--max_id',
         type=int,
         nargs='?',
         default=0,
+        metavar='<status-id>',
         help='results with an ID less than or equal to the specified ID')
+    parser.add_argument(
+        '-N', '--max-count',
+        type=int,
+        nargs='?',
+        default=100,
+        choices=range(1, 10001),
+        metavar='{1..10000}',
+        help='the maximum number of tweets to show')
 
     return parser.parse_args()
 
@@ -59,36 +73,46 @@ def main(args):
         include_entities=False,
         exclude_replies=True,)
 
-    if args.max_id != 0:
+    if args.max_id:
         kwargs['max_id'] = args.max_id
 
+    # Print CSV header.
     print(get_tweet_csv_format())
 
-    for i in range(5):
-        if i != 0:
-            time.sleep(2)
+    total_statuses = 0
 
+    pcount = args.count
+    max_count = args.max_count
+    if max_count < pcount:
+        max_count = pcount
+
+    for i in count():
         print("{}: Wait...".format(i), file=sys.stderr, flush=True)
+
+        # Request.
         response = tw.statuses.user_timeline(**kwargs)
+        if response:
+            max_id = response[0]['id']
+            min_id = response[-1]['id']
+            mcount = len(response)
+            total_statuses += mcount
+        else:
+            break
 
         for j in response:
             print(format_tweet(j))
 
-        min_id = None
-        if len(response):
-            min_id = response[-1]['id']
+        print("{} (min_id={}): OK.".format(i, min_id),
+              file=sys.stderr, flush=True)
 
-        if min_id:
-            kwargs['max_id'] = min_id - 1
-            print("{} (min_id={}): OK.".format(i, min_id),
+        if max_count <= total_statuses:
+            print("mcount={} max_count={} total_statuses={}".format(
+                mcount, max_count, total_statuses),
                   file=sys.stderr, flush=True)
+            break
 
-        #if response[-1]['created_at'][-4:] < '2014':
-        #    print("Loop break.", file=sys.stderr, flush=True)
-        #    break
-
-        #if len(response) < args.count:
-        #    break
+        kwargs['max_id'] = min_id - 1
+        time.sleep(2)
 
 if __name__ == '__main__':
     main(configure())
