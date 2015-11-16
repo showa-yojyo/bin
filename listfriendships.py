@@ -3,8 +3,8 @@
 """List friends or followers of a specified Twitter user.
 
 Usage:
-  listfriendships.py list-friends <screen-name>
-  listfriendships.py list-followers <screen-name>
+  listfriendships.py [--version] [--help]
+  listfriendships.py <command> [-c | --count <n>] <screen-name>
 """
 
 from secret import twitter_instance
@@ -14,7 +14,7 @@ from common_twitter import make_logger
 from argparse import ArgumentParser
 import sys
 
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 # Available subcommands.
 COMMAND_LIST_FRIENDS = 'list-friends'
@@ -45,6 +45,14 @@ def configure():
         i.add_argument(
             'screen_name',
             help='the screen name of the target user')
+        i.add_argument(
+            '-c', '--count',
+            type=int,
+            nargs='?',
+            default=20,
+            choices=range(1, 201),
+            metavar='{1..200}',
+            help='number of users to return per page')
 
     parser_friends.set_defaults(func=execute_list_friends)
     parser_follows.set_defaults(func=execute_list_followers)
@@ -90,21 +98,25 @@ def list_common(args, cmd):
     """
 
     logger = make_logger('listfriendships')
+
+    # Print CSV header.
     print(get_user_csv_format())
 
     next_cursor = -1
     while next_cursor != 0:
-        friends = cmd(
+
+        # Request.
+        users = cmd(
             screen_name=args.screen_name,
             cursor=next_cursor,
-            count=200,
+            count=args.count,
             skip_status=True,
             include_user_entities=False,)
 
-        for user in friends['users']:
+        for user in users['users']:
             print(format_user(user))
 
-        next_cursor = friends['next_cursor']
+        next_cursor = users['next_cursor']
         logger.info('next_cursor: {}'.format(next_cursor))
 
 def main(args):
