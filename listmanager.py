@@ -8,7 +8,7 @@ Usage:
     [-f | --file <filepath>] <screen-name>...
   listmanager.py remove <owner-screen-name> <slug>
     [-f | --file <filepath>] <screen-name>...
-  listmanager.py show <owner-screen-name> <slug>
+  listmanager.py show [-c | --count <n>] <owner-screen-name> <slug>
 """
 
 from secret import twitter_instance
@@ -21,7 +21,7 @@ import itertools
 import sys
 import time
 
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 # Available subcommands.
 COMMAND_LIST_ADD = 'add'
@@ -58,6 +58,15 @@ def configure():
     add_common_args(parser_remove)
     add_screen_names_args(parser_remove)
     add_common_args(parser_list)
+
+    parser_list.add_argument(
+        '-c', '--count',
+        type=int,
+        nargs='?',
+        default=20,
+        choices=range(1, 5001),
+        metavar='{1..5000}',
+        help='number of users to return per page')
 
     parser_add.set_defaults(func=execute_add)
     parser_remove.set_defaults(func=execute_remove)
@@ -117,17 +126,16 @@ def manage_members(args, action):
         if not csv:
             break
 
-        if i != 0:
-            time.sleep(15)
+        logger.info("[{:04d}]-[{:04d}] Waiting...".format(i, i + up_to))
 
-        logger.info("[{:05d}]-[{:05d}] Waiting...".format(i, i + up_to))
-
+        # Request.
         action(
             owner_screen_name=args.owner_screen_name,
             slug=args.slug,
             screen_name=csv)
 
-        logger.info("[{:05d}]-[{:05d}] Fetched: {}".format(i, i + up_to, csv))
+        logger.info("[{:04d}]-[{:04d}] Processed: {}".format(i, i + up_to, csv))
+        time.sleep(15)
 
 def execute_add(args):
     """Add multiple members to a list.
@@ -172,9 +180,11 @@ def execute_list(args):
     print(get_user_csv_format())
 
     while next_cursor != 0:
+        # Request.
         response = tw.lists.members(
             owner_screen_name=args.owner_screen_name,
             slug=args.slug,
+            count=args.count,
             cursor=next_cursor)
 
         for user in response['users']:
