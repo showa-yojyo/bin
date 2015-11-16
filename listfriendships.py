@@ -1,21 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""This script lists all the followers of a Twitter user.
+"""List friends or followers of a specified Twitter user.
 
-Examples:
-  You must specify the user's screen_name you want to show::
-
-    $ python listfriendships.py list-friends screen_name
-    $ python listfriendships.py list-followers screen_name
+Usage:
+  listfriendships.py list-friends <screen-name>
+  listfriendships.py list-followers <screen-name>
 """
 
 from secret import twitter_instance
-from secret import format_user
-from secret import get_user_csv_format
+from common_twitter import format_user
+from common_twitter import get_user_csv_format
+from common_twitter import make_logger
 from argparse import ArgumentParser
 import sys
 
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 # Available subcommands.
 COMMAND_LIST_FRIENDS = 'list-friends'
@@ -90,6 +89,7 @@ def list_common(args, cmd):
         None.
     """
 
+    logger = make_logger('listfriendships')
     print(get_user_csv_format())
 
     next_cursor = -1
@@ -105,7 +105,7 @@ def list_common(args, cmd):
             print(format_user(user))
 
         next_cursor = friends['next_cursor']
-        print('next_cursor: {}'.format(next_cursor), file=sys.stderr)
+        logger.info('next_cursor: {}'.format(next_cursor))
 
 def main(args):
     """The main function.

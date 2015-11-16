@@ -1,30 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""This script manages your own Twitter lists.
+"""Manage multiple users in a specified Twitter list.
 
-Examples:
-  You can add users to a list by the "add" command::
-
-    $ python listmanager.py add your_screen_name your_list_name [user ...]
-
-  Likewise, you can also remove users by the "remove" command.
+Usage:
+  listmanager.py [--version] [--help]
+  listmanager.py add <owner-screen-name> <slug>
+    [-f | --file <filepath>] <screen-name>...
+  listmanager.py remove <owner-screen-name> <slug>
+    [-f | --file <filepath>] <screen-name>...
+  listmanager.py show <owner-screen-name> <slug>
 """
 
 from secret import twitter_instance
-from secret import format_user
-from secret import get_user_csv_format
+from common_twitter import format_user
+from common_twitter import get_user_csv_format
+from common_twitter import make_logger
 from argparse import ArgumentParser
 from argparse import FileType
 import itertools
 import sys
 import time
 
-__version__ = '1.1.1'
+__version__ = '1.2.0'
 
 # Available subcommands.
 COMMAND_LIST_ADD = 'add'
 COMMAND_LIST_REMOVE = 'remove'
-COMMAND_LIST_LIST = 'list'
+COMMAND_LIST_SHOW = 'show'
 
 def configure():
     """Parse the command line parameters.
@@ -48,7 +50,7 @@ def configure():
         help='remove multiple members from a list')
 
     parser_list = subparsers.add_parser(
-        COMMAND_LIST_LIST,
+        COMMAND_LIST_SHOW,
         help='list the members of the specified list')
 
     add_common_args(parser_add)
@@ -98,6 +100,7 @@ def manage_members(args, action):
     Returns:
         None.
     """
+    logger = make_logger('listmanager')
 
     # Obtain the target users.
     users = []
@@ -117,15 +120,14 @@ def manage_members(args, action):
         if i != 0:
             time.sleep(15)
 
-        print("{}-{}: Wait...".format(i, i + up_to), file=sys.stderr, flush=True)
+        logger.info("[{:05d}]-[{:05d}] Waiting...".format(i, i + up_to))
 
         action(
             owner_screen_name=args.owner_screen_name,
             slug=args.slug,
             screen_name=csv)
 
-        print("{}-{}: OK:".format(i, i + up_to), file=sys.stderr, flush=True)
-        print(csv, file=sys.stderr, flush=True)
+        logger.info("[{:05d}]-[{:05d}] Fetched: {}".format(i, i + up_to, csv))
 
 def execute_add(args):
     """Add multiple members to a list.
@@ -162,6 +164,8 @@ def execute_list(args):
         None.
     """
 
+    logger = make_logger('listmanager')
+
     tw = args.tw
     next_cursor = -1
 
@@ -177,6 +181,7 @@ def execute_list(args):
             print(format_user(user))
 
         next_cursor = response['next_cursor']
+        logger.info('next_cursor: {}'.format(next_cursor))
 
 def main(args):
     """The main function.

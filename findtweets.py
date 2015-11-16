@@ -5,20 +5,21 @@
 Usage:
   findtweets.py [--version] [--help]
   findtweets.py [-c | --count <n>]
-                [-M | --max-id <status-id>]
-                [-N | --max-count <n>]
-                <query>
+    [-M | --max-id <status-id>]
+    [-N | --max-count <n>]
+    <query>
 """
 
 from secret import twitter_instance
-from secret import SEP
+from common_twitter import SEP
+from common_twitter import make_logger
 from argparse import ArgumentParser
 from argparse import ArgumentTypeError
 from itertools import count
 import sys
 import time
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 def configure():
     """Parse the command line parameters.
@@ -67,6 +68,7 @@ def main():
     parser = configure()
     args = parser.parse_args()
 
+    logger = make_logger('findtweets')
     tw = twitter_instance()
 
     csv_header = (
@@ -78,8 +80,6 @@ def main():
         'source',)
     csv_format = SEP.join(('{' + i + '}' for i in csv_header))
 
-    print(SEP.join(csv_header))
-
     kwargs = dict(
         q=args.query,
         count=args.count,
@@ -87,25 +87,30 @@ def main():
     if args.max_id:
         kwargs['max_id'] = args.max_id
 
+    # Print CSV header.
+    print(SEP.join(csv_header))
+
     total_statuses = 0
-    pcount = kwargs['count']
+
+    pcount = args.count
     max_count = args.max_count
 
     if max_count < pcount:
         max_count = pcount
 
     for i in count():
-        print("{}: Wait...".format(i), file=sys.stderr, flush=True)
+        logger.info("[{:03d}] Waiting...".format(i))
 
         # Request.
         response = tw.search.tweets(**kwargs)
-
         metadata = response['search_metadata']
-        max_id = metadata['max_id']
-        #since_id = metadata['since_id']
         if 'statuses' in response and response['statuses']:
             statuses = response['statuses']
+            max_id = metadata['max_id']
+            #since_id = metadata['since_id']
             since_id = statuses[-1]['id']
+            mcount = metadata['count']
+            total_statuses += mcount
         else:
             break
 
@@ -113,12 +118,11 @@ def main():
             line = csv_format.format(**j)
             print(line.replace('\r', '').replace('\n', ' '))
 
-        print("{} ({} to {}): OK.".format(i, max_id, since_id),
-              file=sys.stderr, flush=True)
+        logger.info("[{:03d}] Fetched {}-{}.".format(i, max_id, since_id))
 
-        mcount = metadata['count']
-        total_statuses += mcount
-        if mcount < pcount or max_count <= total_statuses:
+        if max_count <= total_statuses:
+            logger.info("mcount={} max_count={} total_statuses={}".format(
+                mcount, max_count, total_statuses))
             break
 
         kwargs['max_id'] = since_id - 1

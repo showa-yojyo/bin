@@ -11,14 +11,15 @@ Usage:
 """
 
 from secret import twitter_instance
-from secret import format_tweet
-from secret import get_tweet_csv_format
+from common_twitter import format_tweet
+from common_twitter import get_tweet_csv_format
+from common_twitter import make_logger
 from argparse import ArgumentParser
 from itertools import count
 import sys
 import time
 
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 def configure():
     """Parse the command line parameters."""
@@ -64,6 +65,7 @@ def main(args):
       None.
     """
 
+    logger = make_logger('usertimeline')
     tw = twitter_instance()
 
     kwargs = dict(
@@ -87,7 +89,7 @@ def main(args):
         max_count = pcount
 
     for i in count():
-        print("{}: Wait...".format(i), file=sys.stderr, flush=True)
+        logger.info("[{:03d}] Waiting...".format(i))
 
         # Request.
         response = tw.statuses.user_timeline(**kwargs)
@@ -102,13 +104,11 @@ def main(args):
         for j in response:
             print(format_tweet(j))
 
-        print("{} (min_id={}): OK.".format(i, min_id),
-              file=sys.stderr, flush=True)
+        logger.info("[{:03d}] min_id={} Fetched.".format(i, min_id))
 
         if max_count <= total_statuses:
-            print("mcount={} max_count={} total_statuses={}".format(
-                mcount, max_count, total_statuses),
-                  file=sys.stderr, flush=True)
+            logger.info("mcount={} max_count={} total_statuses={}".format(
+                mcount, max_count, total_statuses))
             break
 
         kwargs['max_id'] = min_id - 1

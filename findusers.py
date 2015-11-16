@@ -10,15 +10,16 @@ Usage:
 """
 
 from secret import twitter_instance
-from secret import SEP
-from secret import USER_COLUMN_HEADER
+from common_twitter import SEP
+from common_twitter import USER_COLUMN_HEADER
+from common_twitter import make_logger
 from argparse import ArgumentParser
 from argparse import ArgumentTypeError
 import re
 import sys
 import time
 
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 def parse_page_range(text):
     """Parse a range of numbers in the form of M, M:N, or M:.
@@ -82,6 +83,7 @@ def main():
     parser = configure()
     args = parser.parse_args()
 
+    logger = make_logger('findusers')
     tw = twitter_instance()
 
     csv_header = USER_COLUMN_HEADER + ('status[text]', 'status[source]',)
@@ -91,7 +93,7 @@ def main():
 
     # Only the first 1,000 matching results are available.
     for i in args.page_range:
-        print("{}: Wait...".format(i), file=sys.stderr, flush=True)
+        logger.info("[{:03d}] Waiting...".format(i))
 
         response = tw.users.search(
             q=args.query,
@@ -99,7 +101,7 @@ def main():
             count=args.count,
             include_entities=False)
 
-        print("{}: OK:".format(i), file=sys.stderr, flush=True)
+        logger.info("[{:03d}]: OK:".format(i))
         for j in response:
             if 'status' in j:
                 line = csv_format.format(**j)
