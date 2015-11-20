@@ -21,192 +21,190 @@ import itertools
 import sys
 import time
 
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 
 # Available subcommands.
 COMMAND_LIST_ADD = 'add'
 COMMAND_LIST_REMOVE = 'remove'
 COMMAND_LIST_SHOW = 'show'
 
-def configure():
-    """Parse the command line parameters.
-
-    Returns:
-        An instance of argparse.ArgumentParser that stores the command line
-        parameters.
-    """
-
-    parser = ArgumentParser(description='Twitter List Manager')
-    parser.add_argument('--version', action='version', version=__version__)
-
-    subparsers = parser.add_subparsers(help='commands')
-
-    parser_add = subparsers.add_parser(
-        COMMAND_LIST_ADD,
-        help='add multiple members to a list')
-
-    parser_remove = subparsers.add_parser(
-        COMMAND_LIST_REMOVE,
-        help='remove multiple members from a list')
-
-    parser_list = subparsers.add_parser(
-        COMMAND_LIST_SHOW,
-        help='list the members of the specified list')
-
-    add_common_args(parser_add)
-    add_screen_names_args(parser_add)
-    add_common_args(parser_remove)
-    add_screen_names_args(parser_remove)
-    add_common_args(parser_list)
-
-    parser_list.add_argument(
-        '-c', '--count',
-        type=int,
-        nargs='?',
-        default=20,
-        choices=range(1, 5001),
-        metavar='{1..5000}',
-        help='number of users to return per page')
-
-    parser_add.set_defaults(func=execute_add)
-    parser_remove.set_defaults(func=execute_remove)
-    parser_list.set_defaults(func=execute_list)
-
-    return parser
-
-def add_common_args(parser):
+class TwitterListManager(object):
     """TBW"""
-    parser.add_argument(
-        'owner_screen_name',
-        help='the screen name of the user who owns the list being requested by a slug')
 
-    parser.add_argument(
-        'slug',
-        help='the slug of the list.')
+    def __init__(self):
+        self.tw = None
+        self.logger = make_logger('listmanager')
+        self.args = None
 
-def add_screen_names_args(parser):
-    """TBW"""
-    parser.add_argument(
-        'screen_names',
-        nargs='*',
-        help='a list of screen names, up to 100 are allowed in a single request')
+    def setup(self, params=None):
+        """Setup this instance.
 
-    parser.add_argument(
-        '-f', '--file',
-        type=FileType('r', encoding='utf-8'),
-        default=None,
-        help='a file which lists screen names to be added or removed')
+        Args:
+            params: Raw command line arguments.
+        """
 
-def manage_members(args, action):
-    """Add multiple members to a list or remove from a list.
+        parser = self._configure()
+        self.args = parser.parse_args(params)
 
-    Args:
-        args: An instance of argparse.ArgumentParser parsed in the configure
-            function.
+    def _configure(self):
+        """Create the command line parser.
 
-        action: Select lists.members.create_all or lists.members.destroy_all.
+        Returns:
+            An instance of argparse.ArgumentParser that stores the command line
+            parameters.
+        """
 
-    Returns:
-        None.
-    """
-    logger = make_logger('listmanager')
+        parser = ArgumentParser(description='Twitter List Manager')
+        parser.add_argument('--version', action='version', version=__version__)
 
-    # Obtain the target users.
-    users = []
-    users.extend(args.screen_names)
-    if args.file:
-        users.extend(line.rstrip() for line in args.file)
+        def create_common_parser():
+            """Return the common parser to all subcommands."""
 
-    # Note that lists can't have more than 5000 members
-    # and you are limited to adding up to 100 members to a list at a time.
-    up_to = 15
-    for i in range(0, 5000, up_to):
-        chunk = itertools.islice(users, i, i + up_to)
-        csv = ','.join(chunk)
-        if not csv:
-            break
+            parser = ArgumentParser(add_help=False)
+            parser.add_argument(
+                'owner_screen_name',
+                help='the screen name of the user who owns the list being requested by a slug')
 
-        logger.info("[{:04d}]-[{:04d}] Waiting...".format(i, i + up_to))
+            parser.add_argument(
+                'slug',
+                help='the slug of the list.')
 
-        # Request.
-        action(
-            owner_screen_name=args.owner_screen_name,
-            slug=args.slug,
-            screen_name=csv)
+            return parser
 
-        logger.info("[{:04d}]-[{:04d}] Processed: {}".format(i, i + up_to, csv))
-        time.sleep(15)
+        common_parser = create_common_parser()
 
-def execute_add(args):
-    """Add multiple members to a list.
+        def create_users_parser():
+            """Return the common parser object to subcommands `add` and `remove`."""
 
-    Args:
-        args: An instance of argparse.ArgumentParser parsed in the configure
-            function.
+            parser = ArgumentParser(add_help=False)
+            parser.add_argument(
+                'screen_name',
+                nargs='*',
+                help='a list of screen names, up to 100 are allowed in a single request')
 
-    Returns:
-        None.
-    """
-    manage_members(args, args.tw.lists.members.create_all)
+            parser.add_argument(
+                '-f', '--file',
+                type=FileType('r', encoding='utf-8'),
+                default=None,
+                help='a file which lists screen names to be added or removed')
 
-def execute_remove(args):
-    """Remove multiple members from a list.
+            return parser
 
-    Args:
-        args: An instance of argparse.ArgumentParser parsed in the configure
-            function.
+        modify_parser = create_users_parser()
 
-    Returns:
-        None.
-    """
-    manage_members(args, args.tw.lists.members.destroy_all)
+        # Subcommands
+        subparsers = parser.add_subparsers(help='commands')
 
-def execute_list(args):
-    """List the members of the specified list.
+        parser_add = subparsers.add_parser(
+            COMMAND_LIST_ADD,
+            parents=[common_parser, modify_parser],
+            help='add multiple members to a list')
 
-    Args:
-        args: An instance of argparse.ArgumentParser parsed in the configure
-            function.
+        parser_remove = subparsers.add_parser(
+            COMMAND_LIST_REMOVE,
+            parents=[common_parser, modify_parser],
+            help='remove multiple members from a list')
 
-    Returns:
-        None.
-    """
+        parser_list = subparsers.add_parser(
+            COMMAND_LIST_SHOW,
+            parents=[common_parser],
+            help='list the members of the specified list')
 
-    logger = make_logger('listmanager')
+        parser_list.add_argument(
+            '-c', '--count',
+            type=int,
+            nargs='?',
+            default=20,
+            choices=range(1, 5001),
+            metavar='{1..5000}',
+            help='number of users to return per page')
 
-    tw = args.tw
-    next_cursor = -1
+        parser_add.set_defaults(func=self._execute_add)
+        parser_remove.set_defaults(func=self._execute_remove)
+        parser_list.set_defaults(func=self._execute_list)
 
-    print(get_user_csv_format())
+        return parser
 
-    while next_cursor != 0:
-        # Request.
-        response = tw.lists.members(
-            owner_screen_name=args.owner_screen_name,
-            slug=args.slug,
-            count=args.count,
-            cursor=next_cursor)
+    def _manage_members(self, request):
+        """Add multiple members to a list or remove from a list.
 
-        for user in response['users']:
-            print(format_user(user))
+        Args:
+            request: Select lists.members.create_all or lists.members.destroy_all.
+        """
+        logger, args = self.logger, self.args
 
-        next_cursor = response['next_cursor']
-        logger.info('next_cursor: {}'.format(next_cursor))
+        # Obtain the target users.
+        users = []
+        users.extend(args.screen_name)
+        if args.file:
+            users.extend(line.rstrip() for line in args.file)
 
-def main(args):
+        # Note that lists can't have more than 5000 members
+        # and you are limited to adding up to 100 members to a list at a time.
+        up_to = 15
+        for i in range(0, 5000, up_to):
+            chunk = itertools.islice(users, i, i + up_to)
+            csv = ','.join(chunk)
+            if not csv:
+                break
+
+            logger.info("[{:04d}]-[{:04d}] Waiting...".format(i, i + up_to))
+
+            # Request.
+            request(
+                owner_screen_name=args.owner_screen_name,
+                slug=args.slug,
+                screen_name=csv)
+
+            logger.info("[{:04d}]-[{:04d}] Processed: {}".format(i, i + up_to, csv))
+            time.sleep(15)
+
+    def _execute_add(self):
+        """Add multiple members to a list."""
+        self._manage_members(self.tw.lists.members.create_all)
+
+    def _execute_remove(self):
+        """Remove multiple members from a list."""
+        self._manage_members(self.tw.lists.members.destroy_all)
+
+    def _execute_list(self):
+        """List the members of the specified list."""
+
+        request, logger, args = self.tw.lists.members, self.logger, self.args
+
+        print(get_user_csv_format())
+
+        next_cursor = -1
+        while next_cursor != 0:
+            # Request.
+            response = request(
+                owner_screen_name=args.owner_screen_name,
+                slug=args.slug,
+                count=args.count,
+                cursor=next_cursor)
+
+            for user in response['users']:
+                print(format_user(user))
+
+            next_cursor = response['next_cursor']
+            logger.info('next_cursor: {}'.format(next_cursor))
+
+    def execute(self):
+        """Execute the specified command."""
+
+        self.tw = twitter_instance()
+        self.args.func()
+
+def main(params=None):
     """The main function.
 
     Args:
-        args: An instance of argparse.ArgumentParser parsed in the configure
-            function.
-
-    Returns:
-        None.
+        params: Raw command line arguments.
     """
 
-    args.tw = twitter_instance()
-    args.func(args)
+    mgr = TwitterListManager()
+    mgr.setup(params)
+    mgr.execute()
 
 if __name__ == '__main__':
-    parser = configure()
-    main(parser.parse_args())
+    main()

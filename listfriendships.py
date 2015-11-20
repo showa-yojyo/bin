@@ -14,38 +14,49 @@ from common_twitter import make_logger
 from argparse import ArgumentParser
 import sys
 
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 
 # Available subcommands.
-COMMAND_LIST_FRIENDS = 'list-friends'
-COMMAND_LIST_FOLLOWERS = 'list-followers'
+# names[0] and names[1:] are the official name and aliases, respectively.
+COMMAND_LIST_FRIENDS = ['list-friends', 'friends', 'fr']
+COMMAND_LIST_FOLLOWERS = ['list-followers', 'followers', 'fl']
 
-def configure():
-    """Parse the command line parameters.
+class TwitterFollowerManager(object):
+    """TBW"""
 
-    Returns:
-        An instance of argparse.ArgumentParser that stores the command line
-        parameters.
-    """
+    def __init__(self):
+        self.tw = None
+        self.logger = make_logger('listfriendships')
+        self.args = None
 
-    parser = ArgumentParser(description='Twitter Followers Viewer')
-    parser.add_argument('--version', action='version', version=__version__)
+    def setup(self, params=None):
+        """Setup this instance.
 
-    subparsers = parser.add_subparsers(help='commands')
+        Args:
+            params: Raw command line arguments.
+        """
 
-    parser_friends = subparsers.add_parser(
-        COMMAND_LIST_FRIENDS,
-        help='list all of the users the specified user is following')
+        parser = self._configure()
+        self.args = parser.parse_args(params)
 
-    parser_follows = subparsers.add_parser(
-        COMMAND_LIST_FOLLOWERS,
-        help='list all of the users following the specified user')
+    def _configure(self):
+        """Create the command line parser.
 
-    for i in (parser_friends, parser_follows):
-        i.add_argument(
+        Returns:
+            An instance of argparse.ArgumentParser that stores the command line
+            parameters.
+        """
+
+        parser = ArgumentParser(description='Twitter Followers Viewer')
+        parser.add_argument('--version', action='version', version=__version__)
+
+        subparsers = parser.add_subparsers(help='commands')
+
+        common_parser = ArgumentParser(add_help=False)
+        common_parser.add_argument(
             'screen_name',
             help='the screen name of the target user')
-        i.add_argument(
+        common_parser.add_argument(
             '-c', '--count',
             type=int,
             nargs='?',
@@ -54,85 +65,75 @@ def configure():
             metavar='{1..200}',
             help='number of users to return per page')
 
-    parser_friends.set_defaults(func=execute_list_friends)
-    parser_follows.set_defaults(func=execute_list_followers)
+        parser_friends = subparsers.add_parser(
+            COMMAND_LIST_FRIENDS[0],
+            aliases=COMMAND_LIST_FRIENDS[1:],
+            parents=[common_parser],
+            help='list all of the users the specified user is following')
 
-    return parser
+        parser_follows = subparsers.add_parser(
+            COMMAND_LIST_FOLLOWERS[0],
+            aliases=COMMAND_LIST_FOLLOWERS[1:],
+            parents=[common_parser],
+            help='list all of the users following the specified user')
 
-def execute_list_friends(args):
-    """List all of the users the specified user is following.
+        parser_friends.set_defaults(func=self._execute_list_friends)
+        parser_follows.set_defaults(func=self._execute_list_followers)
 
-    Args:
-        args: An instance of argparse.ArgumentParser parsed in the configure
-            function.
+        return parser
 
-    Returns:
-        None.
-    """
+    def _execute_list_friends(self):
+        """List all of the users the specified user is following."""
+        self._list_common(self.tw.friends.list)
 
-    list_common(args, args.tw.friends.list)
+    def _execute_list_followers(self):
+        """List all of the users following the specified user."""
+        self._list_common(self.tw.followers.list)
 
-def execute_list_followers(args):
-    """List all of the users following the specified user.
+    def _list_common(self, request):
+        """The common procedure of friends/list and followers/list.
 
-    Args:
-        args: An instance of argparse.ArgumentParser parsed in the configure
-            function.
+        Args:
+            request: A PTT request method for Twitter API.
+        """
 
-    Returns:
-        None.
-    """
+        logger, args = self.logger, self.args
 
-    list_common(args, args.tw.followers.list)
+        # Print CSV header.
+        print(get_user_csv_format())
 
-def list_common(args, cmd):
-    """The common procedure of friends/list and followers/list.
+        next_cursor = -1
+        while next_cursor != 0:
+            # Request.
+            users = request(
+                screen_name=args.screen_name,
+                cursor=next_cursor,
+                count=args.count,
+                skip_status=True,
+                include_user_entities=False,)
 
-    Args:
-        args: An instance of argparse.ArgumentParser parsed in the configure
-            function.
-        cmd: A PTT request method for Twitter API.
+            for user in users['users']:
+                print(format_user(user))
 
-    Returns:
-        None.
-    """
+            next_cursor = users['next_cursor']
+            logger.info('next_cursor: {}'.format(next_cursor))
 
-    logger = make_logger('listfriendships')
+    def execute(self):
+        """Execute the specified command."""
 
-    # Print CSV header.
-    print(get_user_csv_format())
+        self.tw = twitter_instance()
+        self.args.func()
 
-    next_cursor = -1
-    while next_cursor != 0:
-
-        # Request.
-        users = cmd(
-            screen_name=args.screen_name,
-            cursor=next_cursor,
-            count=args.count,
-            skip_status=True,
-            include_user_entities=False,)
-
-        for user in users['users']:
-            print(format_user(user))
-
-        next_cursor = users['next_cursor']
-        logger.info('next_cursor: {}'.format(next_cursor))
-
-def main(args):
+def main(params=None):
     """The main function.
 
     Args:
-        args: An instance of argparse.ArgumentParser parsed in the configure
-            function.
-
-    Returns:
-        None.
+        params: Raw command line arguments.
     """
 
-    args.tw = twitter_instance()
-    args.func(args)
+    mgr = TwitterFollowerManager()
+    mgr.setup(params)
+    mgr.execute()
 
 if __name__ == '__main__':
-    parser = configure()
-    main(parser.parse_args())
+    main()
