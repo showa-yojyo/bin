@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 """common_twitter.py: A modules commonly imported by Twitter-related scripts.
 """
+
+from secret import twitter_instance
+from abc import ABCMeta
+from abc import abstractmethod
 import logging
 import sys
 
-__version__ = '1.3.0'
+__version__ = '1.4.0'
 
 SEP = '\t'
 
@@ -93,3 +97,48 @@ def make_logger(name=None):
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     return logger
+
+class AbstractTwitterManager(metaclass=ABCMeta):
+    """This class is the base class of managers of requests for Twitter.
+
+    The AbstractTwitterManager class is the abstract base class of
+    managers that are used in utility scripts.
+    """
+
+    def __init__(self, name):
+        """Create a new manager with the given name.
+
+        Args:
+            name: The name of manager, e.g. `listmanager`.
+        """
+
+        self.tw = None
+        self.logger = make_logger(name)
+        self.args = None
+
+    def setup(self, params=None):
+        """Setup this instance.
+
+        Args:
+            params: Raw command line arguments.
+        """
+
+        parser = self.make_parser()
+        self.args = parser.parse_args(params)
+
+    @abstractmethod
+    def make_parser(self):
+        """Create the command line parser.
+
+        Returns:
+            An instance of argparse.ArgumentParser that stores the command line
+            parameters.
+        """
+        pass
+
+    def execute(self):
+        """Execute the specified command."""
+
+        if not self.tw:
+            self.tw = twitter_instance()
+        self.args.func()

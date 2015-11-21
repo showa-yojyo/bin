@@ -7,39 +7,26 @@ Usage:
   listfriendships.py <command> [-c | --count <n>] <screen-name>
 """
 
-from secret import twitter_instance
+from common_twitter import AbstractTwitterManager
 from common_twitter import format_user
 from common_twitter import get_user_csv_format
-from common_twitter import make_logger
 from argparse import ArgumentParser
 import sys
 
-__version__ = '1.3.1'
+__version__ = '1.3.2'
 
 # Available subcommands.
 # names[0] and names[1:] are the official name and aliases, respectively.
 COMMAND_LIST_FRIENDS = ['list-friends', 'friends', 'fr']
 COMMAND_LIST_FOLLOWERS = ['list-followers', 'followers', 'fl']
 
-class TwitterFollowerManager(object):
+class TwitterFollowerManager(AbstractTwitterManager):
     """TBW"""
 
     def __init__(self):
-        self.tw = None
-        self.logger = make_logger('listfriendships')
-        self.args = None
+        super().__init__('listfriendships')
 
-    def setup(self, params=None):
-        """Setup this instance.
-
-        Args:
-            params: Raw command line arguments.
-        """
-
-        parser = self._configure()
-        self.args = parser.parse_args(params)
-
-    def _configure(self):
+    def make_parser(self):
         """Create the command line parser.
 
         Returns:
@@ -117,12 +104,6 @@ class TwitterFollowerManager(object):
 
             next_cursor = users['next_cursor']
             logger.info('next_cursor: {}'.format(next_cursor))
-
-    def execute(self):
-        """Execute the specified command."""
-
-        self.tw = twitter_instance()
-        self.args.func()
 
 def main(params=None):
     """The main function.
