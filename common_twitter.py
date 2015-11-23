@@ -5,10 +5,11 @@
 from secret import twitter_instance
 from abc import ABCMeta
 from abc import abstractmethod
+from twitter import TwitterHTTPError
 import logging
 import sys
 
-__version__ = '1.4.0'
+__version__ = '1.4.1'
 
 SEP = '\t'
 
@@ -98,6 +99,19 @@ def make_logger(name=None):
     logger.addHandler(handler)
     return logger
 
+class AbstractTwitterCommand(metaclass=ABCMeta):
+    """Prototype"""
+
+    def __init__(self, manager):
+        """Prototype"""
+        self.manager = manager
+
+    @abstractmethod
+    def create_parser(self, subparsers): pass
+
+    @abstractmethod
+    def __call__(self): pass
+
 class AbstractTwitterManager(metaclass=ABCMeta):
     """This class is the base class of managers of requests for Twitter.
 
@@ -105,26 +119,36 @@ class AbstractTwitterManager(metaclass=ABCMeta):
     managers that are used in utility scripts.
     """
 
-    def __init__(self, name):
+    def __init__(self, name, commands=list()):
         """Create a new manager with the given name.
 
         Args:
             name: The name of manager, e.g. `listmanager`.
+            commands: A list which contains command objects.
         """
 
         self.tw = None
         self.logger = make_logger(name)
         self.args = None
+        self.commands = commands
 
-    def setup(self, params=None):
+    def setup(self, command_line=None):
         """Setup this instance.
 
         Args:
-            params: Raw command line arguments.
+            command_line: Raw command line arguments.
         """
 
-        parser = self.make_parser()
-        self.args = parser.parse_args(params)
+        root_parser = self.make_parser()
+
+        # Subcommands
+        subparsers = root_parser.add_subparsers(help='commands')
+
+        for cmd in self.commands:
+            cmd_parser = cmd.create_parser(subparsers)
+            cmd_parser.set_defaults(func=cmd)
+
+        self.args = root_parser.parse_args(command_line)
 
     @abstractmethod
     def make_parser(self):
@@ -141,4 +165,9 @@ class AbstractTwitterManager(metaclass=ABCMeta):
 
         if not self.tw:
             self.tw = twitter_instance()
-        self.args.func()
+
+        try:
+            self.args.func()
+        except TwitterHTTPError as e:
+            self.logger.error('{}'.format(e))
+            raise
