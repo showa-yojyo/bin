@@ -49,7 +49,7 @@ def format_user(user):
     Returns:
         A tab-separated value string.
     """
-    return USER_CSV_FORMAT.format(**user).replace('\r', '').replace('\n', ' ')
+    return USER_CSV_FORMAT.format(**user).replace('\r', '').replace('\n', '\\n')
 
 TWEET_COLUMN_HEADER = (
     'id',
@@ -80,7 +80,34 @@ def format_tweet(tweet):
     Returns:
         A tab-separated value string.
     """
-    return TWEET_CSV_FORMAT.format(**tweet).replace('\r', '').replace('\n', ' ')
+    return TWEET_CSV_FORMAT.format(**tweet).replace('\r', '').replace('\n', '\\n')
+
+LIST_COLUMN_HEADER = (
+    'id',
+    'slug',
+    'full_name',
+    'created_at',
+    'mode',
+    'member_count',
+    'subscriber_count',
+    'description',)
+
+def get_list_csv_format(delim=SEP):
+    """Return the format string for tweet csv lines.
+
+    Args:
+        delim: A character for CSV delimiter.
+
+    Returns:
+        A tab-separated value string.
+    """
+
+    return delim.join(LIST_COLUMN_HEADER)
+
+LIST_CSV_FORMAT = SEP.join(('{' + i + '}' for i in LIST_COLUMN_HEADER))
+
+def format_list(list):
+    return LIST_CSV_FORMAT.format(**list).replace('\r', '').replace('\n', '\\n')
 
 def make_logger(name=None):
     """Set up a logger with the specified name.

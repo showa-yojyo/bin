@@ -12,12 +12,15 @@ Usage:
   listmanager.py remove <owner-screen-name> <slug>
     [-f | --file <filepath>] <screen-name>...
   listmanager.py show [-c | --count <n>] <owner-screen-name> <slug>
+  listmanager.py subscribe <owner-screen-name> <slug>
+  listmanager.py unsubscribe <owner-screen-name> <slug>
   listmanager.py subscribers [-c | --count <n>] <owner-screen-name> <slug>
   listmanager.py memberships [-c | --count <n>] <screen-name>
   listmanager.py ownerships [-c | --count <n>] <screen-name>
   listmanager.py subscriptions [-c | --count <n>] <screen-name>
   listmanager.py create [-m | --mode <public | private>]
     [-d | --desc <DESC>] <name>
+  listmanager.py describe <owner-screen-name> <slug>
   listmanager.py update [-m | --mode <public | private>]
     [-d | --desc <DESC>] [--name <NAME>] <owner_screen_name> <slug>
   listmanager.py destroy <owner_screen_name> <slug>
@@ -26,7 +29,9 @@ Usage:
 from common_twitter import AbstractTwitterCommand
 from common_twitter import AbstractTwitterManager
 from common_twitter import SEP
+from common_twitter import format_list
 from common_twitter import format_user
+from common_twitter import get_list_csv_format
 from common_twitter import get_user_csv_format
 from argparse import ArgumentParser
 from argparse import FileType
@@ -34,7 +39,7 @@ from itertools import count
 from itertools import islice
 import time
 
-__version__ = '1.6.2'
+__version__ = '1.7.0'
 
 # Available subcommands.
 COMMAND_LIST_STATUSES = ('statuses', 'stat', 'st')
@@ -42,10 +47,13 @@ COMMAND_LIST_ADD = 'add'
 COMMAND_LIST_REMOVE = 'remove'
 COMMAND_LIST_SHOW = 'show'
 COMMAND_LIST_SUBSCRIBERS = ('subscribers', 'sb')
+COMMAND_LIST_SUBSCRIBE = ('subscribe', 'subscr')
+COMMAND_LIST_UNSUBSCRIBE = ('unsubscribe', 'unsubscr')
 COMMAND_LIST_MEMBERSHIPS = ('memberships', 'mem')
 COMMAND_LIST_OWNERSHIPS = ('ownerships', 'ow')
 COMMAND_LIST_SUBSCRIPTIONS = ('subscriptions', 'sp')
 COMMAND_LIST_CREATE = 'create'
+COMMAND_LIST_DESCRIBE = ('describe', 'desc')
 COMMAND_LIST_UPDATE = ('update', 'up')
 COMMAND_LIST_DESTROY = ('destroy', 'del')
 
@@ -55,10 +63,10 @@ COMMAND_LIST_DESTROY = ('destroy', 'del')
 # GET lists/ownerships - ('ownerships', 'ow')
 # GET lists/subscriptions - ('subscriptions', 'sp')
 
-# POST lists/subscribers/create
+# POST lists/subscribers/create - ('subscribe', 'subscr')
 # GET lists/subscribers - ('subscribers', 'sb')
 # GET lists/subscribers/show - Check if the specified user is a subscriber of the specified list. 
-# POST lists/subscribers/destroy
+# POST lists/subscribers/destroy - ('unscribe', 'unsubscr')
 
 # POST lists/members/create - n/a
 # POST lists/members/create_all - add
@@ -68,7 +76,7 @@ COMMAND_LIST_DESTROY = ('destroy', 'del')
 # POST lists/members/destroy_all - remove
 
 # POST lists/create - 'create'
-# GET lists/show - Returns the specified list.
+# GET lists/show - ('describe', 'desc')
 # POST lists/update - ('update', 'up')
 # POST lists/destroy - ('destroy', 'del')
 
@@ -83,10 +91,13 @@ class TwitterListManager(AbstractTwitterManager):
              CommandListRemove(self),
              CommandListShow(self),
              CommandListSubscribers(self),
+             CommandListSubscribe(self),
+             CommandListUnsubscribe(self),
              CommandListMemberships(self),
              CommandListOwnerships(self),
              CommandListSubscriptions(self),
              CommandListCreate(self),
+             CommandListDescribe(self),
              CommandListUpdate(self),
              CommandListDelete(self),))
 
@@ -301,6 +312,24 @@ class TwitterListManager(AbstractTwitterManager):
         """List the subscribers of the specified list."""
         self._show_users(self.tw.lists.subscribers)
 
+    def request_subscribe(self):
+        """Subscribe the authenticated user to the specified list."""
+
+        args = self.args
+        self.tw.lists.subscribe(
+            owner_screen_name=args.owner_screen_name,
+            slug=args.slug)
+        self.logger.info("Subscribed to {owner_screen_name}/{slug}.".format(**vars(args)))
+
+    def request_unsubscribe(self):
+        """Unsubscribe the authenticated user to the specified list."""
+
+        args = self.args
+        self.tw.lists.unsubscribe(
+            owner_screen_name=args.owner_screen_name,
+            slug=args.slug)
+        self.logger.info("Unsubscribed from {owner_screen_name}/{slug}.".format(**vars(args)))
+
     def request_memberships(self):
         """List lists the specified user has been added to."""
         self._show_lists(self.tw.lists.memberships)
@@ -316,22 +345,31 @@ class TwitterListManager(AbstractTwitterManager):
     def request_create(self):
         """Create a new list for the authenticated user."""
 
-        request = self.tw.lists.create
         logger, args = self.logger, self.args
 
         kwargs = dict(name=args.name)
         if args.mode:
             kwargs['mode'] = args.mode
-        if args.description:
-            kwargs['description'] = args.description
+        if args.desc:
+            kwargs['description'] = args.desc
 
-        request(**kwargs)
-        logger.info("{} is created.".format(args.name))
+        self.tw.lists.create(**kwargs)
+        logger.info("List {} is created.".format(args.name))
+
+    def request_describe(self):
+        """Show the specified list."""
+
+        args = self.args
+        response = self.tw.lists.show(
+            owner_screen_name=args.owner_screen_name,
+            slug=args.slug)
+
+        print(get_list_csv_format())
+        print(format_list(response))
 
     def request_update(self):
         """Update the specified list."""
 
-        request = self.tw.lists.update
         logger, args = self.logger, self.args
 
         kwargs = dict(
@@ -341,23 +379,20 @@ class TwitterListManager(AbstractTwitterManager):
             kwargs['name'] = args.name
         if args.mode:
             kwargs['mode'] = args.mode
-        if args.description:
-            kwargs['description'] = args.description
+        if args.desc:
+            kwargs['description'] = args.desc
 
-        request(**kwargs)
-        logger.info("{} is updated.".format(args.slug))
+        self.tw.lists.update(**kwargs)
+        logger.info("List {} is updated.".format(args.slug))
 
     def request_delete(self):
         """Delete the specified list."""
 
-        request = self.tw.lists.destroy
         logger, args = self.logger, self.args
-
-        request(
+        self.tw.lists.destroy(
             owner_screen_name=args.owner_screen_name,
             slug=args.slug)
-
-        logger.info("{} is deleted.".format(args.slug))
+        logger.info("List {} is deleted.".format(args.slug))
 
     def _manage_members(self, request):
         """Add multiple members to a list or remove from a list.
@@ -428,18 +463,7 @@ class TwitterListManager(AbstractTwitterManager):
 
         logger, args = self.logger, self.args
 
-        csv_header = (
-            'id',
-            'slug',
-            'full_name',
-            'created_at',
-            'mode',
-            'member_count',
-            'subscriber_count',
-            'description',)
-        csv_format = SEP.join(('{' + i + '}' for i in csv_header))
-
-        print(SEP.join(csv_header))
+        print(get_list_csv_format())
 
         next_cursor = -1
         while next_cursor != 0:
@@ -449,8 +473,7 @@ class TwitterListManager(AbstractTwitterManager):
                 cursor=next_cursor)
 
             for i in response['lists']:
-                line = csv_format.format(**i)
-                print(line.replace('\r', '').replace('\n', ' '))
+                print(format_list(i))
 
             next_cursor = response['next_cursor']
             logger.info('next_cursor: {}'.format(next_cursor))
@@ -540,6 +563,36 @@ class CommandListShow(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_members()
 
+class CommandListSubscribe(AbstractTwitterCommand):
+    """Subscribe the authenticated user to the specified list."""
+
+    def create_parser(self, subparsers):
+        parser_slug = self.manager.parser_slug()
+        parser = subparsers.add_parser(
+            COMMAND_LIST_SUBSCRIBE[0],
+            aliases=COMMAND_LIST_SUBSCRIBE[1:],
+            parents=[parser_slug],
+            help='subscribe you to the specified list')
+        return parser
+
+    def __call__(self):
+        self.manager.request_subscribe()
+
+class CommandListUnsubscribe(AbstractTwitterCommand):
+    """Unsubscribe the authenticated user to the specified list."""
+
+    def create_parser(self, subparsers):
+        parser_slug = self.manager.parser_slug()
+        parser = subparsers.add_parser(
+            COMMAND_LIST_UNSUBSCRIBE[0],
+            aliases=COMMAND_LIST_UNSUBSCRIBE[1:],
+            parents=[parser_slug],
+            help='unsubscribe you to the specified list')
+        return parser
+
+    def __call__(self):
+        self.manager.request_unsubscribe()
+
 class CommandListSubscribers(AbstractTwitterCommand):
     """List the subscribers of the specified list."""
 
@@ -619,6 +672,21 @@ class CommandListCreate(AbstractTwitterCommand):
 
     def __call__(self):
         self.manager.request_create()
+
+class CommandListDescribe(AbstractTwitterCommand):
+    """Show the specified list."""
+
+    def create_parser(self, subparsers):
+        parser_slug = self.manager.parser_slug()
+        parser = subparsers.add_parser(
+            COMMAND_LIST_DESCRIBE[0],
+            aliases=COMMAND_LIST_DESCRIBE[1:],
+            parents=[parser_slug],
+            help='show the specified list')
+        return parser
+
+    def __call__(self):
+        self.manager.request_describe()
 
 class CommandListUpdate(AbstractTwitterCommand):
     """Update the specified list."""
