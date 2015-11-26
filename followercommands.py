@@ -15,7 +15,10 @@ COMMAND_FOLLOWERS_LIST = ('followers-list', 'fol')
 COMMAND_FRIENDS_IDS = ('friends-ids', 'fri')
 COMMAND_FRIENDS_LIST = ('friends-list', 'frl')
 
+COMMAND_FRIENDSHIPS_INCOMING = ('friendships-incoming', 'in')
 COMMAND_FRIENDSHIPS_LOOKUP = ('friendships-lookup', 'lookup')
+COMMAND_FRIENDSHIPS_NO_RETWEETS_IDS = ('friendships-no_retweets-ids', 'nor')
+COMMAND_FRIENDSHIPS_OUTGOING = ('friendships-outgoing', 'out')
 
 # GET followers/ids - COMMAND_FOLLOWERS_IDS
 # GET followers/list - COMMAND_FOLLOWERS_LIST
@@ -25,10 +28,10 @@ COMMAND_FRIENDSHIPS_LOOKUP = ('friendships-lookup', 'lookup')
 
 # POST friendships/create - Allows the authenticating users to follow the user specified in the ID parameter. - screen_name, user_id, follow?
 # POST friendships/destroy - Allows the authenticating user to unfollow the user specified in the ID parameter. - screen_name, user_id
-# GET friendships/incoming - Returns a collection of numeric IDs for every user who has a pending request to follow the authenticating user. - noargs
+# GET friendships/incoming - COMMAND_FRIENDSHIPS_INCOMING
 # GET friendships/lookup - COMMAND_FRIENDSHIPS_LOOKUP
-# GET friendships/no_retweets/ids - Returns a collection of user_ids that the currently authenticated user does not want to receive retweets from. - noargs
-# GET friendships/outgoing - Returns a collection of numeric IDs for every user who has a pending request to follow the authenticating user. - noargs
+# GET friendships/no_retweets/ids - COMMAND_FRIENDSHIPS_NO_RETWEETS_IDS
+# GET friendships/outgoing - COMMAND_FRIENDSHIPS_OUTGOING
 # GET friendships/show - Returns detailed information about the relationship between two arbitrary users. - special
 # POST friendships/update - Allows one to enable or disable retweets and device notifications from the specified user - screen_name, user_id, device, ...
 
@@ -88,6 +91,19 @@ class CommandFriendsList(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_friends_list()
 
+class CommandFriendshipsIncoming(AbstractTwitterCommand):
+    """Print IDs for every user who has a pending request to follow you."""
+
+    def create_parser(self, subparsers):
+        parser = subparsers.add_parser(
+            COMMAND_FRIENDSHIPS_INCOMING[0],
+            aliases=COMMAND_FRIENDSHIPS_INCOMING[1:],
+            help='print IDs for every user who has a pending request to follow you')
+        return parser
+
+    def __call__(self):
+        self.manager.request_friendships_incoming()
+
 class CommandFriendshipsLookup(AbstractTwitterCommand):
     """Print the relationships of you to specified users."""
 
@@ -102,6 +118,32 @@ class CommandFriendshipsLookup(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_friendships_lookup()
 
+class CommandFriendshipsNoRetweetsIds(AbstractTwitterCommand):
+    """Print IDs that you do not want to receive retweets from."""
+
+    def create_parser(self, subparsers):
+        parser = subparsers.add_parser(
+            COMMAND_FRIENDSHIPS_NO_RETWEETS_IDS[0],
+            aliases=COMMAND_FRIENDSHIPS_NO_RETWEETS_IDS[1:],
+            help='print IDs that you do not want to receive retweets from')
+        return parser
+
+    def __call__(self):
+        self.manager.request_friendships_no_retweets_ids()
+
+class CommandFriendshipsOutgoing(AbstractTwitterCommand):
+    """Print IDs for protected user for whom you have a pending follow request."""
+
+    def create_parser(self, subparsers):
+        parser = subparsers.add_parser(
+            COMMAND_FRIENDSHIPS_OUTGOING[0],
+            aliases=COMMAND_FRIENDSHIPS_OUTGOING[1:],
+            help='print IDs for protected user for whom you have a pending follow request')
+        return parser
+
+    def __call__(self):
+        self.manager.request_friendships_outgoing()
+
 def make_commands(manager):
     """Prototype"""
 
@@ -110,7 +152,10 @@ def make_commands(manager):
         CommandFollowersList,
         CommandFriendsIds,
         CommandFriendsList,
-        CommandFriendshipsLookup,)
+        CommandFriendshipsIncoming,
+        CommandFriendshipsLookup,
+        CommandFriendshipsNoRetweetsIds,
+        CommandFriendshipsOutgoing,)
 
     return [cmd_t(manager) for cmd_t in command_classes]
 

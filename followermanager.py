@@ -44,7 +44,7 @@ class TwitterFollowerManager(AbstractTwitterManager):
         self._list_ids(self.tw.friends.ids)
 
     def request_friends_list(self):
-        """List all of the users the specified user is following."""
+        """Request GET friends/list for Twitter."""
         self._list_common(self.tw.friends.list)
 
     def request_followers_ids(self):
@@ -52,8 +52,12 @@ class TwitterFollowerManager(AbstractTwitterManager):
         self._list_ids(self.tw.followers.ids)
 
     def request_followers_list(self):
-        """List all of the users following the specified user."""
+        """Request GET followers/list for Twitter."""
         self._list_common(self.tw.followers.list)
+
+    def request_friendships_incoming(self):
+        """Request GET friendships/incoming for Twitter."""
+        self._list_ids(self.tw.friendships.incoming)
 
     def request_friendships_lookup(self):
         """Request GET friendships/lookup for Twitter."""
@@ -81,15 +85,26 @@ class TwitterFollowerManager(AbstractTwitterManager):
             logger.info("[{:04d}]-[{:04d}] Processed: {}".format(i, i + up_to, csv))
             time.sleep(2)
 
+    def request_friendships_no_retweets_ids(self):
+        """Request GET friendships/no_retweets/ids for Twitter."""
+
+        response = self.tw.friendships.no_retweets.ids(stringify_ids=True)
+        print('\n'.join(response))
+        self.logger.info("{} users returned".format(len(response)))
+
+    def request_friendships_outgoing(self):
+        """Request GET friendships/outgoing for Twitter."""
+        self._list_ids(self.tw.friendships.outgoing)
+
     def _list_ids(self, request):
-        """Print user IDs as CSV texts."""
+        """Print user IDs."""
 
         logger, args = self.logger, self.args
 
-        kwargs = dict(
-            screen_name=args.screen_name,
-            stringify_ids=True,)
-        if args.count:
+        kwargs = dict(stringify_ids=True)
+        if 'screen_name' in args:
+            kwargs['screen_name'] = args.screen_name
+        if 'count' in args:
             kwargs['count'] = args.count
 
         next_cursor = -1
