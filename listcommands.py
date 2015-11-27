@@ -416,7 +416,7 @@ def _parser_list_prop():
             metavar='<public | private>',
             help='public or private')
         parser.add_argument(
-            '-d', '--desc',
+            '-d', '--description',
             nargs='?',
             help='the description to give the list')
         return parser

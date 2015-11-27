@@ -168,13 +168,12 @@ class TwitterListManager(AbstractTwitterManager):
     def request_create(self):
         """Create a new list for the authenticated user."""
 
-        logger, args = self.logger, self.args
-
-        kwargs = dict(name=args.name)
-        if args.mode:
-            kwargs['mode'] = args.mode
-        if args.desc:
-            kwargs['description'] = args.desc
+        logger, args = self.logger, vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'name',
+            'mode',
+            'description')
+                if k in args}
 
         self.tw.lists.create(**kwargs)
         logger.info("List {} is created.".format(args.name))
@@ -193,17 +192,15 @@ class TwitterListManager(AbstractTwitterManager):
     def request_update(self):
         """Update the specified list."""
 
-        logger, args = self.logger, self.args
+        logger, args = self.logger, vars(self.args)
 
-        kwargs = dict(
-            owner_screen_name=args.owner_screen_name,
-            slug=args.slug)
-        if args.name:
-            kwargs['name'] = args.name
-        if args.mode:
-            kwargs['mode'] = args.mode
-        if args.desc:
-            kwargs['description'] = args.desc
+        kwargs = {k:args[k] for k in (
+            'owner_screen_name',
+            'slug',
+            'name',
+            'mode',
+            'description')
+                if k in args}
 
         self.tw.lists.update(**kwargs)
         logger.info("List {} is updated.".format(args.slug))

@@ -19,7 +19,7 @@ from itertools import islice
 from pprint import pprint
 import time
 
-__version__ = '1.5.0'
+__version__ = '1.x.1'
 
 class TwitterFollowerManager(AbstractTwitterManager):
     """This class handles commands about a Twitter followers."""
@@ -54,6 +54,14 @@ class TwitterFollowerManager(AbstractTwitterManager):
     def request_followers_list(self):
         """Request GET followers/list for Twitter."""
         self._list_common(self.tw.followers.list)
+
+    def request_friendships_create(self):
+        """Request GET friendships/create for Twitter."""
+        raise NotImplementedError()
+
+    def request_friendships_destroy(self):
+        """Request GET friendships/destroy for Twitter."""
+        raise NotImplementedError()
 
     def request_friendships_incoming(self):
         """Request GET friendships/incoming for Twitter."""
@@ -95,6 +103,29 @@ class TwitterFollowerManager(AbstractTwitterManager):
     def request_friendships_outgoing(self):
         """Request GET friendships/outgoing for Twitter."""
         self._list_ids(self.tw.friendships.outgoing)
+
+    def request_friendships_show(self):
+        """Request GET friendships/show for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'source_screen_name',
+            'target_screen_name',)}
+        response = self.tw.friendships.show(**kwargs)
+        pprint(response['relationship'])
+
+    def request_friendships_update(self):
+        """Request GET friendships/update for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'screen_name',
+            'device',
+            'retweets',)}
+
+        self.logger.info('update parameters {}'.format(kwargs))
+        response = self.tw.friendships.update(**kwargs)
+        pprint(response['relationship'])
 
     def _list_ids(self, request):
         """Print user IDs."""

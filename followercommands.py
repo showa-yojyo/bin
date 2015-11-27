@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """followercommands.py
 """
-__version__ = '1.5.0'
+__version__ = '1.x.0'
 
 from common_twitter import AbstractTwitterCommand
 from argparse import ArgumentParser
@@ -19,6 +19,8 @@ COMMAND_FRIENDSHIPS_INCOMING = ('friendships-incoming', 'in')
 COMMAND_FRIENDSHIPS_LOOKUP = ('friendships-lookup', 'lookup')
 COMMAND_FRIENDSHIPS_NO_RETWEETS_IDS = ('friendships-no_retweets-ids', 'nor')
 COMMAND_FRIENDSHIPS_OUTGOING = ('friendships-outgoing', 'out')
+COMMAND_FRIENDSHIPS_SHOW = ('friendships-show', 'relation')
+COMMAND_FRIENDSHIPS_UPDATE = ('friendships-update', 'update')
 
 # GET followers/ids - COMMAND_FOLLOWERS_IDS
 # GET followers/list - COMMAND_FOLLOWERS_LIST
@@ -32,8 +34,8 @@ COMMAND_FRIENDSHIPS_OUTGOING = ('friendships-outgoing', 'out')
 # GET friendships/lookup - COMMAND_FRIENDSHIPS_LOOKUP
 # GET friendships/no_retweets/ids - COMMAND_FRIENDSHIPS_NO_RETWEETS_IDS
 # GET friendships/outgoing - COMMAND_FRIENDSHIPS_OUTGOING
-# GET friendships/show - Returns detailed information about the relationship between two arbitrary users. - special
-# POST friendships/update - Allows one to enable or disable retweets and device notifications from the specified user - screen_name, user_id, device, ...
+# GET friendships/show - COMMAND_FRIENDSHIPS_SHOW
+# POST friendships/update - COMMAND_FRIENDSHIPS_UPDATE
 
 class CommandFollowersIds(AbstractTwitterCommand):
     """Print user IDs for every user following the specified user."""
@@ -144,6 +146,69 @@ class CommandFriendshipsOutgoing(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_friendships_outgoing()
 
+class CommandFriendshipsShow(AbstractTwitterCommand):
+    """Describe detailed information about the relationship between two arbitrary users."""
+
+    def create_parser(self, subparsers):
+        parser = subparsers.add_parser(
+            COMMAND_FRIENDSHIPS_SHOW[0],
+            aliases=COMMAND_FRIENDSHIPS_SHOW[1:],
+            help='print information about the relationship between two users')
+
+        parser.add_argument(
+            'source_screen_name',
+            help='the screen_name of the subject user')
+        parser.add_argument(
+            'target_screen_name',
+            help='the screen_name of the target user')
+
+        return parser
+
+    def __call__(self):
+        self.manager.request_friendships_show()
+
+class CommandFriendshipsUpdate(AbstractTwitterCommand):
+    """Allows one to enable or disable retweets and device
+    notifications from the specified user.
+    """
+
+    def create_parser(self, subparsers):
+        parser = subparsers.add_parser(
+            COMMAND_FRIENDSHIPS_UPDATE[0],
+            aliases=COMMAND_FRIENDSHIPS_UPDATE[1:],
+            help='enable or disable retweets and device notifications from the specified user')
+
+        parser.add_argument(
+            'screen_name',
+            help='the screen_name of the user for whom to befriend')
+        device = parser.add_mutually_exclusive_group()
+        device.add_argument(
+            '--device',
+            action='store_true',
+            dest='device',
+            help='enable device notifications from the target user')
+        device.add_argument(
+            '--no-device',
+            action='store_false',
+            dest='device',
+            help='disable device notifications from the target user')
+        rts = parser.add_mutually_exclusive_group()
+        rts.add_argument(
+            '--retweets',
+            action='store_true',
+            dest='retweets',
+            help='enable retweets from the target user')
+        rts.add_argument(
+            '--no-retweets',
+            action='store_false',
+            dest='retweets',
+            help='disable retweets from the target user')
+
+        return parser
+
+    def __call__(self):
+        self.manager.request_friendships_update()
+
 def make_commands(manager):
     """Prototype"""
 
@@ -155,7 +220,9 @@ def make_commands(manager):
         CommandFriendshipsIncoming,
         CommandFriendshipsLookup,
         CommandFriendshipsNoRetweetsIds,
-        CommandFriendshipsOutgoing,)
+        CommandFriendshipsOutgoing,
+        CommandFriendshipsShow,
+        CommandFriendshipsUpdate,)
 
     return [cmd_t(manager) for cmd_t in command_classes]
 
