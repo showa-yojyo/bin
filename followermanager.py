@@ -19,7 +19,7 @@ from itertools import islice
 from pprint import pprint
 import time
 
-__version__ = '1.x.1'
+__version__ = '1.0.1'
 
 class TwitterFollowerManager(AbstractTwitterManager):
     """This class handles commands about a Twitter followers."""
@@ -119,9 +119,10 @@ class TwitterFollowerManager(AbstractTwitterManager):
 
         args = vars(self.args)
         kwargs = {k:args[k] for k in (
+            'user_id',
             'screen_name',
             'device',
-            'retweets',)}
+            'retweets',) if (k in args) and (args[k] is not None)}
 
         self.logger.info('update parameters {}'.format(kwargs))
         response = self.tw.friendships.update(**kwargs)
@@ -130,17 +131,17 @@ class TwitterFollowerManager(AbstractTwitterManager):
     def _list_ids(self, request):
         """Print user IDs."""
 
-        logger, args = self.logger, self.args
-
-        kwargs = dict(stringify_ids=True)
-        if 'screen_name' in args:
-            kwargs['screen_name'] = args.screen_name
-        if 'count' in args:
-            kwargs['count'] = args.count
+        logger, args = self.logger, vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'user_id',
+            'screen_name',
+            'count',) if (k in args) and (args[k] is not None)}
+        logger.info('_list_ids arg: {}'.format(kwargs))
 
         next_cursor = -1
         while next_cursor != 0:
             response = request(
+                stringify_ids=True,
                 cursor=next_cursor,
                 **kwargs)
 
@@ -156,17 +157,19 @@ class TwitterFollowerManager(AbstractTwitterManager):
             request: A PTT request method for Twitter API.
         """
 
-        logger, args = self.logger, self.args
+        logger, args = self.logger, vars(self.args)
 
         # Print CSV header.
         print(get_user_csv_format())
 
         kwargs = dict(
-            screen_name=args.screen_name,
             skip_status=True,
             include_user_entities=False,)
-        if args.count:
-            kwargs['count'] = args.count
+        kwargs.update(
+            {k:args[k] for k in (
+                'user_id',
+                'screen_name',
+                'count',) if (k in args) and (args[k] is not None)})
 
         next_cursor = -1
         while next_cursor != 0:

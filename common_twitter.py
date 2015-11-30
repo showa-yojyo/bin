@@ -5,11 +5,12 @@
 from secret import twitter_instance
 from abc import ABCMeta
 from abc import abstractmethod
+from argparse import ArgumentParser
 from twitter import TwitterHTTPError
 import logging
 import sys
 
-__version__ = '1.4.1'
+__version__ = '1.4.2'
 
 SEP = '\t'
 
@@ -198,3 +199,31 @@ class AbstractTwitterManager(metaclass=ABCMeta):
         except TwitterHTTPError as e:
             self.logger.error('{}'.format(e))
             raise
+
+# parsers
+
+def _parser_single_user():
+    """An argument for user_id or screen_name."""
+
+    parser = None
+    def inner():
+        nonlocal parser
+        if parser:
+            return parser
+
+        parser = ArgumentParser(add_help=False)
+        group = parser.add_mutually_exclusive_group(required=True)
+        group.add_argument(
+            '-U', '--user-id',
+            nargs='?',
+            dest='user_id',
+            help='the ID of the user for whom to return results')
+        group.add_argument(
+            '-S', '--screen-name',
+            nargs='?',
+            dest='screen_name',
+            help='the screen name of the user for whom to return results')
+        return parser
+    return inner
+
+parser_user_single = _parser_single_user()

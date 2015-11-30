@@ -19,7 +19,7 @@ from itertools import count
 import sys
 import time
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 def configure():
     """Parse the command line parameters.
@@ -116,7 +116,7 @@ def main():
 
         for j in statuses:
             line = csv_format.format(**j)
-            print(line.replace('\r', '').replace('\n', ' '))
+            print(line.replace('\r', '').replace('\n', '\\n'))
 
         logger.info("[{:03d}] Fetched {}-{}.".format(i, max_id, since_id))
 

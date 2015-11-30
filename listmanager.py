@@ -28,6 +28,7 @@ Usage:
 
 from common_twitter import AbstractTwitterManager
 from common_twitter import SEP
+from common_twitter import USER_COLUMN_HEADER
 from common_twitter import format_list
 from common_twitter import format_user
 from common_twitter import get_list_csv_format
@@ -38,7 +39,7 @@ from itertools import count
 from itertools import islice
 import time
 
-__version__ = '1.7.1'
+__version__ = '1.7.2'
 
 class TwitterListManager(AbstractTwitterManager):
     """This class handles commands about a Twitter list."""
@@ -257,7 +258,9 @@ class TwitterListManager(AbstractTwitterManager):
 
         logger, args = self.logger, self.args
 
-        print(get_user_csv_format())
+        csv_header = USER_COLUMN_HEADER + ('status[text]', 'status[source]',)
+        csv_format = SEP.join(('{' + i + '}' for i in csv_header))
+        print(SEP.join(csv_header))
 
         next_cursor = -1
         while next_cursor != 0:
@@ -266,10 +269,13 @@ class TwitterListManager(AbstractTwitterManager):
                 owner_screen_name=args.owner_screen_name,
                 slug=args.slug,
                 count=args.count,
+                skip_status=False,
                 cursor=next_cursor)
 
             for user in response['users']:
-                print(format_user(user))
+                if 'status' in user:
+                    line = csv_format.format(**user)
+                    print(line.replace('\r', '').replace('\n', '\\n'))
 
             next_cursor = response['next_cursor']
             logger.info('next_cursor: {}'.format(next_cursor))

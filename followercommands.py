@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """followercommands.py
 """
-__version__ = '1.x.0'
+__version__ = '1.0.1'
 
 from common_twitter import AbstractTwitterCommand
+from common_twitter import parser_user_single
 from argparse import ArgumentParser
 from argparse import FileType
 
@@ -44,7 +45,7 @@ class CommandFollowersIds(AbstractTwitterCommand):
         parser = subparsers.add_parser(
             COMMAND_FOLLOWERS_IDS[0],
             aliases=COMMAND_FOLLOWERS_IDS[1:],
-            parents=[common_parser()],
+            parents=[parser_user_single(), common_parser()],
             help='print user IDs for every user following the specified user')
         return parser
 
@@ -58,7 +59,7 @@ class CommandFollowersList(AbstractTwitterCommand):
         parser = subparsers.add_parser(
             COMMAND_FOLLOWERS_LIST[0],
             aliases=COMMAND_FOLLOWERS_LIST[1:],
-            parents=[common_parser()],
+            parents=[parser_user_single(), common_parser()],
             help='list all of the users following the specified user')
         return parser
 
@@ -72,7 +73,7 @@ class CommandFriendsIds(AbstractTwitterCommand):
         parser = subparsers.add_parser(
             COMMAND_FRIENDS_IDS[0],
             aliases=COMMAND_FRIENDS_IDS[1:],
-            parents=[common_parser()],
+            parents=[parser_user_single(), common_parser()],
             help='print user IDs for every user the specified user is following')
         return parser
 
@@ -86,7 +87,7 @@ class CommandFriendsList(AbstractTwitterCommand):
         parser = subparsers.add_parser(
             COMMAND_FRIENDS_LIST[0],
             aliases=COMMAND_FRIENDS_LIST[1:],
-            parents=[common_parser()],
+            parents=[parser_user_single(), common_parser()],
             help='list all of the users the specified user is following')
         return parser
 
@@ -240,9 +241,6 @@ def _common_parser():
             return parser
 
         parser = ArgumentParser(add_help=False)
-        parser.add_argument(
-            'screen_name',
-            help='the screen name of the target user')
         parser.add_argument(
             '-c', '--count',
             type=int,

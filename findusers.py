@@ -19,7 +19,7 @@ import re
 import sys
 import time
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 def parse_page_range(text):
     """Parse a range of numbers in the form of M, M:N, or M:.
@@ -101,11 +101,11 @@ def main():
             count=args.count,
             include_entities=False)
 
-        logger.info("[{:03d}]: OK:".format(i))
+        logger.info("[{:03d}] OK:".format(i))
         for j in response:
             if 'status' in j:
                 line = csv_format.format(**j)
-                print(line.replace('\r', '').replace('\n', ' '))
+                print(line.replace('\r', '').replace('\n', '\\n'))
 
         time.sleep(2)
 
