@@ -4,9 +4,13 @@
 
 Usage:
   followmanager.py [--version] [--help]
-  followmanager.py <command> [-c | --count <n>] <screen-name>
+  followmanager.py <command> [-c | --count <n>] <userspec>
   followmanager.py friendships-lookup
     [-f | --file <filepath>] <screen-name>...
+
+where
+  <userspec> ::= (-U | --user-id <user_id>)
+               | (-S | --screen-name <screen_name>)
 """
 
 from common_twitter import AbstractTwitterManager
@@ -19,7 +23,7 @@ from itertools import islice
 from pprint import pprint
 import time
 
-__version__ = '1.0.1'
+__version__ = '1.8.0'
 
 class TwitterFollowerManager(AbstractTwitterManager):
     """This class handles commands about a Twitter followers."""
