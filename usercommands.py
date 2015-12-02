@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """usercommands.py
 """
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 from common_twitter import AbstractTwitterCommand
 from common_twitter import parser_user_single
@@ -127,15 +127,11 @@ class CommandUsersReportSpam(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_users_report_spam()
 
+_command_classes = tuple(v for k, v in locals().items() if k.startswith('CommandUsers'))
+
 def make_commands(manager):
     """Prototype"""
-
-    command_classes = (
-        CommandUsersLookup, CommandUsersShow, CommandUsersSearch,
-        CommandUsersProfileBanner, CommandUsersSuggestions,
-        CommandUsersReportSpam,)
-
-    return [cmd_t(manager) for cmd_t in command_classes]
+    return [cmd_t(manager) for cmd_t in _command_classes]
 
 def _parser_multiple_users():
     """Multiple arguments for user_id or screen_name."""

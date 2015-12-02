@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """followercommands.py
 """
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 from common_twitter import AbstractTwitterCommand
 from common_twitter import parser_user_single
@@ -210,22 +210,11 @@ class CommandFriendshipsUpdate(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_friendships_update()
 
+_command_classes = tuple(v for k, v in locals().items() if k.startswith('Command'))
+
 def make_commands(manager):
     """Prototype"""
-
-    command_classes = (
-        CommandFollowersIds,
-        CommandFollowersList,
-        CommandFriendsIds,
-        CommandFriendsList,
-        CommandFriendshipsIncoming,
-        CommandFriendshipsLookup,
-        CommandFriendshipsNoRetweetsIds,
-        CommandFriendshipsOutgoing,
-        CommandFriendshipsShow,
-        CommandFriendshipsUpdate,)
-
-    return [cmd_t(manager) for cmd_t in command_classes]
+    return [cmd_t(manager) for cmd_t in _command_classes]
 
 def _common_parser():
     """Return the parent parser object of the following subcommands:

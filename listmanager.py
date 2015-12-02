@@ -48,7 +48,7 @@ from itertools import islice
 from pprint import pprint
 import time
 
-__version__ = '1.8.0'
+__version__ = '1.8.1'
 
 class TwitterListManager(AbstractTwitterManager):
     """This class handles commands about a Twitter list."""
@@ -68,7 +68,7 @@ class TwitterListManager(AbstractTwitterManager):
         parser.add_argument('--version', action='version', version=__version__)
         return parser
 
-    def request_statuses(self):
+    def request_lists_statuses(self):
         """Show a timeline of tweets of the specified list."""
 
         request, logger, args = self.tw.lists.statuses, self.logger, vars(self.args)
@@ -128,43 +128,43 @@ class TwitterListManager(AbstractTwitterManager):
 
             kwargs['max_id'] = min_id - 1
 
-    def request_add(self):
+    def request_lists_members_create_alladd(self):
         """Add multiple members to a list."""
         self._manage_members(self.tw.lists.members.create_all)
 
-    def request_remove(self):
+    def request_lists_members_destroy_all(self):
         """Remove multiple members from a list."""
         self._manage_members(self.tw.lists.members.destroy_all)
 
-    def request_members(self):
+    def request_lists_members(self):
         """List the members of the specified list."""
         self._show_users(self.tw.lists.members)
 
-    def request_subscribers(self):
+    def request_lists_subscribers(self):
         """List the subscribers of the specified list."""
         self._show_users(self.tw.lists.subscribers)
 
-    def request_subscribe(self):
+    def request_lists_subscribers_create(self):
         """Subscribe the authenticated user to the specified list."""
-        self._manage_subscription(self.tw.lists.subscribe)
+        self._manage_subscription(self.tw.lists.subscribers.create)
 
-    def request_unsubscribe(self):
+    def request_lists_unsubscribe(self):
         """Unsubscribe the authenticated user to the specified list."""
-        self._manage_subscription(self.tw.lists.unsubscribe)
+        self._manage_subscription(self.tw.lists.subscribers.destroy)
 
-    def request_memberships(self):
+    def request_lists_memberships(self):
         """List lists the specified user has been added to."""
         self._show_lists(self.tw.lists.memberships)
 
-    def request_ownerships(self):
+    def request_lists_ownerships(self):
         """List lists owned by the specified user."""
         self._show_lists(self.tw.lists.ownerships)
 
-    def request_subscriptions(self):
+    def request_lists_subscriptions(self):
         """List lists the specified user is subscribed to."""
         self._show_lists(self.tw.lists.subscriptions)
 
-    def request_create(self):
+    def request_lists_create(self):
         """Create a new list for the authenticated user."""
 
         logger, args = self.logger, vars(self.args)
@@ -177,7 +177,7 @@ class TwitterListManager(AbstractTwitterManager):
         self.tw.lists.create(**kwargs)
         logger.info("List is created.")
 
-    def request_describe(self):
+    def request_lists_show(self):
         """Show the specified list."""
 
         args = vars(self.args)
@@ -189,7 +189,7 @@ class TwitterListManager(AbstractTwitterManager):
         print(get_list_csv_format())
         print(format_list(self.tw.lists.show(**kwargs)))
 
-    def request_update(self):
+    def request_lists_update(self):
         """Update the specified list."""
 
         logger, args = self.logger, vars(self.args)
@@ -205,7 +205,7 @@ class TwitterListManager(AbstractTwitterManager):
         pprint(self.tw.lists.update(**kwargs))
         logger.info("List is updated.")
 
-    def request_delete(self):
+    def request_lists_destroy(self):
         """Delete the specified list."""
 
         logger, args = self.logger, vars(self.args)

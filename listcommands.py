@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """listcommands.py
 """
-__version__ = '1.8.0'
+__version__ = '1.8.1'
 
 from common_twitter import AbstractTwitterCommand
 from common_twitter import parser_user_single
@@ -30,7 +30,7 @@ COMMAND_LISTS_DESTROY = ('lists-destroy', 'destroy', 'del')
 # GET lists/members/show - Check if the specified user is a member of the specified list.
 # POST lists/members/destroy - n/a
 
-class CommandListStatuses(AbstractTwitterCommand):
+class CommandListsStatuses(AbstractTwitterCommand):
     """Show a timeline of tweets of the specified list."""
 
     def create_parser(self, subparsers):
@@ -64,9 +64,9 @@ class CommandListStatuses(AbstractTwitterCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_statuses()
+        self.manager.request_lists_statuses()
 
-class CommandListAdd(AbstractTwitterCommand):
+class CommandListsMembersCreateAll(AbstractTwitterCommand):
     """Add multiple members to a list."""
 
     def create_parser(self, subparsers):
@@ -78,9 +78,9 @@ class CommandListAdd(AbstractTwitterCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_add()
+        self.manager.request_lists_members_create_all()
 
-class CommandListRemove(AbstractTwitterCommand):
+class CommandListsMembersDestroyAll(AbstractTwitterCommand):
     """Remove multiple members from a list."""
 
     def create_parser(self, subparsers):
@@ -92,9 +92,9 @@ class CommandListRemove(AbstractTwitterCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_remove()
+        self.manager.request_lists_members_destroy_all()
 
-class CommandListShow(AbstractTwitterCommand):
+class CommandListsMembers(AbstractTwitterCommand):
     """List the members of the specified list."""
 
     def create_parser(self, subparsers):
@@ -106,9 +106,9 @@ class CommandListShow(AbstractTwitterCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_members()
+        self.manager.request_lists_members()
 
-class CommandListSubscribe(AbstractTwitterCommand):
+class CommandListsSubscribersCreate(AbstractTwitterCommand):
     """Subscribe the authenticated user to the specified list."""
 
     def create_parser(self, subparsers):
@@ -120,9 +120,9 @@ class CommandListSubscribe(AbstractTwitterCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_subscribe()
+        self.manager.request_lists_subscribers_create()
 
-class CommandListUnsubscribe(AbstractTwitterCommand):
+class CommandListsSubscribersDestroy(AbstractTwitterCommand):
     """Unsubscribe the authenticated user to the specified list."""
 
     def create_parser(self, subparsers):
@@ -134,9 +134,9 @@ class CommandListUnsubscribe(AbstractTwitterCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_unsubscribe()
+        self.manager.request_lists_subscribers_destroy()
 
-class CommandListSubscribers(AbstractTwitterCommand):
+class CommandListsSubscribers(AbstractTwitterCommand):
     """List the subscribers of the specified list."""
 
     def create_parser(self, subparsers):
@@ -148,9 +148,9 @@ class CommandListSubscribers(AbstractTwitterCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_subscribers()
+        self.manager.request_lists_subscribers()
 
-class CommandListMemberships(AbstractTwitterCommand):
+class CommandListsMemberships(AbstractTwitterCommand):
     """List lists the specified user has been added to."""
 
     def create_parser(self, subparsers):
@@ -162,9 +162,9 @@ class CommandListMemberships(AbstractTwitterCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_memberships()
+        self.manager.request_lists_memberships()
 
-class CommandListOwnerships(AbstractTwitterCommand):
+class CommandListsOwnerships(AbstractTwitterCommand):
     """List lists owned by the specified user."""
 
     def create_parser(self, subparsers):
@@ -176,9 +176,9 @@ class CommandListOwnerships(AbstractTwitterCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_ownerships()
+        self.manager.request_lists_ownerships()
 
-class CommandListSubscriptions(AbstractTwitterCommand):
+class CommandListsSubscriptions(AbstractTwitterCommand):
     """List lists the specified user is subscribed to."""
 
     def create_parser(self, subparsers):
@@ -190,9 +190,9 @@ class CommandListSubscriptions(AbstractTwitterCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_subscriptions()
+        self.manager.request_lists_subscriptions()
 
-class CommandListCreate(AbstractTwitterCommand):
+class CommandListsCreate(AbstractTwitterCommand):
     """Create a new list for the authenticated user."""
 
     def create_parser(self, subparsers):
@@ -207,9 +207,9 @@ class CommandListCreate(AbstractTwitterCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_create()
+        self.manager.request_lists_create()
 
-class CommandListDescribe(AbstractTwitterCommand):
+class CommandListsShow(AbstractTwitterCommand):
     """Show the specified list."""
 
     def create_parser(self, subparsers):
@@ -221,9 +221,9 @@ class CommandListDescribe(AbstractTwitterCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_describe()
+        self.manager.request_lists_show()
 
-class CommandListUpdate(AbstractTwitterCommand):
+class CommandListsUpdate(AbstractTwitterCommand):
     """Update the specified list."""
 
     def create_parser(self, subparsers):
@@ -239,9 +239,9 @@ class CommandListUpdate(AbstractTwitterCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_update(self)
+        self.manager.request_lists_update(self)
 
-class CommandListDelete(AbstractTwitterCommand):
+class CommandListsDestroy(AbstractTwitterCommand):
     """Delete the specified list."""
 
     def create_parser(self, subparsers):
@@ -253,28 +253,13 @@ class CommandListDelete(AbstractTwitterCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_delete(self)
+        self.manager.request_lists_destroy(self)
+
+_command_classes = tuple(v for k, v in locals().items() if k.startswith('CommandList'))
 
 def make_commands(manager):
     """Prototype"""
-
-    command_classes = (
-        CommandListStatuses,
-        CommandListAdd,
-        CommandListRemove,
-        CommandListShow,
-        CommandListSubscribers,
-        CommandListSubscribe,
-        CommandListUnsubscribe,
-        CommandListMemberships,
-        CommandListOwnerships,
-        CommandListSubscriptions,
-        CommandListCreate,
-        CommandListDescribe,
-        CommandListUpdate,
-        CommandListDelete,)
-
-    return [cmd_t(manager) for cmd_t in command_classes]
+    return [cmd_t(manager) for cmd_t in _command_classes]
 
 def _parser_listspec():
     """(list_id | (slug (owner_id | owner_screen_name)))
