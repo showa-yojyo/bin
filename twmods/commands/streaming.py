@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """twstreamcommands.py:
 """
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
-from common_twitter import AbstractTwitterCommand
+from .. import AbstractTwitterCommand
 from argparse import ArgumentParser
 
 # Public API

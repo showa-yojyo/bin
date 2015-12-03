@@ -13,17 +13,17 @@ where
                | (-S | --screen-name <screen_name>)
 """
 
-from common_twitter import AbstractTwitterManager
-from common_twitter import format_user
-from common_twitter import get_user_csv_format
-from followercommands import make_commands
+from twmods import AbstractTwitterManager
+from twmods import format_user
+from twmods import get_user_csv_format
+from twmods.commands.followers import make_commands
 from argparse import ArgumentParser
 from itertools import count
 from itertools import islice
 from pprint import pprint
 import time
 
-__version__ = '1.8.0'
+__version__ = '1.8.1'
 
 class TwitterFollowerManager(AbstractTwitterManager):
     """This class handles commands about a Twitter followers."""

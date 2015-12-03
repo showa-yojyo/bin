@@ -10,16 +10,16 @@ Usage:
 """
 
 from secret import twitter_instance
-from common_twitter import SEP
-from common_twitter import USER_COLUMN_HEADER
-from common_twitter import make_logger
+from twmods import SEP
+from twmods import USER_COLUMN_HEADER
+from twmods import make_logger
 from argparse import ArgumentParser
 from argparse import ArgumentTypeError
 import re
 import sys
 import time
 
-__version__ = '1.2.1'
+__version__ = '1.2.3'
 
 def parse_page_range(text):
     """Parse a range of numbers in the form of M, M:N, or M:.

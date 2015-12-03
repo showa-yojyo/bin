@@ -14,15 +14,15 @@ Usage:
   usermanager.py spam <user-id | screen-name>
 """
 
-from common_twitter import AbstractTwitterManager
-from usercommands import make_commands
+from twmods import AbstractTwitterManager
+from twmods.commands.users import make_commands
 from argparse import ArgumentParser
 from itertools import count
 from itertools import islice
 from pprint import pprint
 import time
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 class TwitterUserManager(AbstractTwitterManager):
     """This class handles commands about a Twitter users."""

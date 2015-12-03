@@ -34,21 +34,21 @@ where
                 | (-S | --owner-screen-name <owner_screen_name>))
 """
 
-from common_twitter import AbstractTwitterManager
-from common_twitter import SEP
-from common_twitter import USER_COLUMN_HEADER
-from common_twitter import format_list
-from common_twitter import format_user
-from common_twitter import get_list_csv_format
-from common_twitter import get_user_csv_format
-from listcommands import make_commands
+from twmods import AbstractTwitterManager
+from twmods import SEP
+from twmods import USER_COLUMN_HEADER
+from twmods import format_list
+from twmods import format_user
+from twmods import get_list_csv_format
+from twmods import get_user_csv_format
+from twmods.commands.lists import make_commands
 from argparse import ArgumentParser
 from itertools import count
 from itertools import islice
 from pprint import pprint
 import time
 
-__version__ = '1.8.1'
+__version__ = '1.8.2'
 
 class TwitterListManager(AbstractTwitterManager):
     """This class handles commands about a Twitter list."""

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """listcommands.py
 """
-__version__ = '1.8.1'
+__version__ = '1.8.2'
 
-from common_twitter import AbstractTwitterCommand
-from common_twitter import parser_user_single
+from .. import AbstractTwitterCommand
+from .. import parser_user_single
 from argparse import ArgumentParser
 from argparse import FileType
 

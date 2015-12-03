@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""common_twitter.py: A modules commonly imported by Twitter-related scripts.
+"""__init__.py
 """
 
 from secret import twitter_instance

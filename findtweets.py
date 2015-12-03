@@ -11,15 +11,15 @@ Usage:
 """
 
 from secret import twitter_instance
-from common_twitter import SEP
-from common_twitter import make_logger
+from twmods import SEP
+from twmods import make_logger
 from argparse import ArgumentParser
 from argparse import ArgumentTypeError
 from itertools import count
 import sys
 import time
 
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 
 def configure():
     """Parse the command line parameters.

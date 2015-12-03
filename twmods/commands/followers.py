@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """followercommands.py
 """
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
-from common_twitter import AbstractTwitterCommand
-from common_twitter import parser_user_single
+from .. import AbstractTwitterCommand
+from .. import parser_user_single
 from argparse import ArgumentParser
 from argparse import FileType
 

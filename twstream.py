@@ -9,12 +9,12 @@ Usage:
 from secret import twitter_stream
 from twitter import TwitterHTTPError
 from twitter.stream import Timeout, HeartbeatTimeout, Hangup
-from common_twitter import AbstractTwitterManager
-from twstreamcommands import make_commands
+from twmods import AbstractTwitterManager
+from twmods.commands.streaming import make_commands
 from argparse import ArgumentParser
 from pprint import pprint
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 class TwitterStreamManager(AbstractTwitterManager):
     """Twitter Streaming API Utility"""
