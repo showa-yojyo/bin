@@ -3,9 +3,9 @@
 """List friends or followers of a specified Twitter user.
 
 Usage:
-  followmanager.py [--version] [--help]
-  followmanager.py <command> [-c | --count <n>] <userspec>
-  followmanager.py friendships-lookup
+  twfollower.py [--version] [--help]
+  twfollower.py <command> [-c | --count <n>] <userspec>
+  twfollower.py friendships-lookup
     [-f | --file <filepath>] <screen-name>...
 
 where
@@ -29,7 +29,7 @@ class TwitterFollowerManager(AbstractTwitterManager):
     """This class handles commands about a Twitter followers."""
 
     def __init__(self):
-        super().__init__('followmanager', make_commands(self))
+        super().__init__('twfollower', make_commands(self))
 
     def make_parser(self):
         """Create the command line parser.

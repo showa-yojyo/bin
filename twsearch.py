@@ -3,8 +3,8 @@
 """Find Twitter tweets.
 
 Usage:
-  findtweets.py [--version] [--help]
-  findtweets.py [-c | --count <n>]
+  twsearch.py [--version] [--help]
+  twsearch.py [-c | --count <n>]
     [-M | --max-id <status-id>]
     [-N | --max-count <n>]
     <query>
@@ -68,7 +68,7 @@ def main():
     parser = configure()
     args = parser.parse_args()
 
-    logger = make_logger('findtweets')
+    logger = make_logger('twsearch')
     tw = twitter_instance()
 
     csv_header = (

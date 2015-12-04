@@ -3,27 +3,27 @@
 """Manage a Twitter list.
 
 Usage:
-  listmanager.py [--version] [--help]
-  listmanager.py statuses [-c | --count <n>]
+  twlist.py [--version] [--help]
+  twlist.py statuses [-c | --count <n>]
     [-M | --max-id <status-id>] [-N | --max-count <n>]
     <listspec>
-  listmanager.py add <listspec>
+  twlist.py add <listspec>
     [-f | --file <filepath>] <screen-name>...
-  listmanager.py remove <listspec>
+  twlist.py remove <listspec>
     [-f | --file <filepath>] <screen-name>...
-  listmanager.py show [-c | --count <n>] <listspec>
-  listmanager.py subscribe <listspec>
-  listmanager.py unsubscribe <listspec>
-  listmanager.py subscribers [-c | --count <n>] <listspec>
-  listmanager.py memberships [-c | --count <n>] <userspec>
-  listmanager.py ownerships [-c | --count <n>] <userspec>
-  listmanager.py subscriptions [-c | --count <n>] <userspec>
-  listmanager.py create [-m | --mode <public | private>]
+  twlist.py show [-c | --count <n>] <listspec>
+  twlist.py subscribe <listspec>
+  twlist.py unsubscribe <listspec>
+  twlist.py subscribers [-c | --count <n>] <listspec>
+  twlist.py memberships [-c | --count <n>] <userspec>
+  twlist.py ownerships [-c | --count <n>] <userspec>
+  twlist.py subscriptions [-c | --count <n>] <userspec>
+  twlist.py create [-m | --mode <public | private>]
     [-d | --description <DESC>] <name>
-  listmanager.py describe <listspec>
-  listmanager.py update [-m | --mode <public | private>]
+  twlist.py describe <listspec>
+  twlist.py update [-m | --mode <public | private>]
     [-d | --desccription <DESC>] [--name <NAME>] <listspec>
-  listmanager.py destroy <listspec>
+  twlist.py destroy <listspec>
 
 where
   <userspec> ::= (-U | --user-id <user_id>)
@@ -54,7 +54,7 @@ class TwitterListManager(AbstractTwitterManager):
     """This class handles commands about a Twitter list."""
 
     def __init__(self):
-        super().__init__('listmanager', make_commands(self))
+        super().__init__('twlist', make_commands(self))
 
     def make_parser(self):
         """Create the command line parser.

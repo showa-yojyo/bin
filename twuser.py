@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""usermanager.py: A utility script to manage Twitter users.
+"""twuser.py: A utility script to manage Twitter users.
 
 Usage:
-  usermanager.py [--version] [--help]
-  usermanager.py lookup
+  twuser.py [--version] [--help]
+  twuser.py lookup
     [-f | --file <filepath>] <screen-name>...
-  usermanager.py show [--include-entities]
-  usermanager.py search [-p | --page <n>] <user-id | screen-name>
+  twuser.py show [--include-entities]
+  twuser.py search [-p | --page <n>] <user-id | screen-name>
     [-c | --count <n>] [--include-entities] <query>
-  usermanager.py banner <user-id | screen-name>
-  usermanager.py suggestions [-l | --lang <LANG>]
-  usermanager.py spam <user-id | screen-name>
+  twuser.py banner <user-id | screen-name>
+  twuser.py suggestions [-l | --lang <LANG>]
+  twuser.py spam <user-id | screen-name>
 """
 
 from twmods import AbstractTwitterManager
@@ -28,7 +28,7 @@ class TwitterUserManager(AbstractTwitterManager):
     """This class handles commands about a Twitter users."""
 
     def __init__(self):
-        super().__init__('usermanager', make_commands(self))
+        super().__init__('twuser', make_commands(self))
 
     def make_parser(self):
         """Create the command line parser.
