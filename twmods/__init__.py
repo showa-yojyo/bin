@@ -6,109 +6,12 @@ from secret import twitter_instance
 from abc import ABCMeta
 from abc import abstractmethod
 from argparse import ArgumentParser
+from json import dump
 from twitter import TwitterHTTPError
 import logging
 import sys
 
-__version__ = '1.4.2'
-
-SEP = '\t'
-
-USER_COLUMN_HEADER = (
-    'id',
-    'screen_name',
-    'name',
-    'protected',
-    'lang',
-    'location',
-    'created_at',
-    'friends_count',
-    'followers_count',
-    'description',
-    'url',)
-
-def get_user_csv_format(delim=SEP):
-    """Return the format string for user csv lines.
-
-    Args:
-        delim: A character for CSV delimiter. Default to TAB'.
-        use_status: True if JSON data returned by Twitter have `status` attribute.
-
-    Returns:
-        A tab-separated value string.
-    """
-    return delim.join(USER_COLUMN_HEADER)
-
-USER_CSV_FORMAT = SEP.join(('{' + i + '}' for i in USER_COLUMN_HEADER))
-
-def format_user(user):
-    """Return a string that shows user information.
-
-    Args:
-        user: An instance of the Twitter API user response object.
-
-    Returns:
-        A tab-separated value string.
-    """
-    return USER_CSV_FORMAT.format(**user).replace('\r', '').replace('\n', '\\n')
-
-TWEET_COLUMN_HEADER = (
-    'id',
-    'created_at',
-    'text',
-    'favorite_count',
-    'retweet_count',)
-
-def get_tweet_csv_format(delim=SEP):
-    """Return the format string for tweet csv lines.
-
-    Args:
-        delim: A character for CSV delimiter.
-
-    Returns:
-        A tab-separated value string.
-    """
-    return delim.join(TWEET_COLUMN_HEADER)
-
-TWEET_CSV_FORMAT = SEP.join(('{' + i + '}' for i in TWEET_COLUMN_HEADER))
-
-def format_tweet(tweet):
-    """Return a string that shows tweet information.
-
-    Args:
-        tweet: An instance of the Twitter API twitter response object.
-
-    Returns:
-        A tab-separated value string.
-    """
-    return TWEET_CSV_FORMAT.format(**tweet).replace('\r', '').replace('\n', '\\n')
-
-LIST_COLUMN_HEADER = (
-    'id',
-    'slug',
-    'full_name',
-    'created_at',
-    'mode',
-    'member_count',
-    'subscriber_count',
-    'description',)
-
-def get_list_csv_format(delim=SEP):
-    """Return the format string for tweet csv lines.
-
-    Args:
-        delim: A character for CSV delimiter.
-
-    Returns:
-        A tab-separated value string.
-    """
-
-    return delim.join(LIST_COLUMN_HEADER)
-
-LIST_CSV_FORMAT = SEP.join(('{' + i + '}' for i in LIST_COLUMN_HEADER))
-
-def format_list(list):
-    return LIST_CSV_FORMAT.format(**list).replace('\r', '').replace('\n', '\\n')
+__version__ = '1.5.0'
 
 def make_logger(name=None):
     """Set up a logger with the specified name.
@@ -227,3 +130,8 @@ def _parser_single_user():
     return inner
 
 parser_user_single = _parser_single_user()
+
+def output(data, fp=sys.stdout):
+    """Output statuses, users, etc. to fp as JSON formatted data."""
+    dump(data, fp, ensure_ascii=False, indent=4)
+    fp.write("\n")

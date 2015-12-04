@@ -14,16 +14,15 @@ where
 """
 
 from twmods import AbstractTwitterManager
-from twmods import format_user
-from twmods import get_user_csv_format
+from twmods import output
 from twmods.commands.followers import make_commands
 from argparse import ArgumentParser
 from itertools import count
 from itertools import islice
-from pprint import pprint
+import sys
 import time
 
-__version__ = '1.8.1'
+__version__ = '1.9.0'
 
 class TwitterFollowerManager(AbstractTwitterManager):
     """This class handles commands about a Twitter followers."""
@@ -83,6 +82,7 @@ class TwitterFollowerManager(AbstractTwitterManager):
         if args.file:
             users.extend(line.rstrip() for line in args.file)
 
+        results = []
         # You are limited to adding up to 100 members to a list at a time.
         up_to = 100
         for i in count(0, up_to):
@@ -93,9 +93,11 @@ class TwitterFollowerManager(AbstractTwitterManager):
 
             logger.info("[{:04d}]-[{:04d}] Waiting...".format(i, i + up_to))
             response = request(user_id=csv)
-            pprint(response)
+            results.extend(response)
             logger.info("[{:04d}]-[{:04d}] Processed: {}".format(i, i + up_to, csv))
             time.sleep(2)
+
+        output(results)
 
     def request_friendships_no_retweets_ids(self):
         """Request GET friendships/no_retweets/ids for Twitter."""
@@ -116,7 +118,8 @@ class TwitterFollowerManager(AbstractTwitterManager):
             'source_screen_name',
             'target_screen_name',)}
         response = self.tw.friendships.show(**kwargs)
-        pprint(response['relationship'])
+
+        output(response['relationship'])
 
     def request_friendships_update(self):
         """Request GET friendships/update for Twitter."""
@@ -130,7 +133,7 @@ class TwitterFollowerManager(AbstractTwitterManager):
 
         self.logger.info('update parameters {}'.format(kwargs))
         response = self.tw.friendships.update(**kwargs)
-        pprint(response['relationship'])
+        output(response['relationship'])
 
     def _list_ids(self, request):
         """Print user IDs."""
@@ -163,9 +166,6 @@ class TwitterFollowerManager(AbstractTwitterManager):
 
         logger, args = self.logger, vars(self.args)
 
-        # Print CSV header.
-        print(get_user_csv_format())
-
         kwargs = dict(
             skip_status=True,
             include_user_entities=False,)
@@ -175,6 +175,7 @@ class TwitterFollowerManager(AbstractTwitterManager):
                 'screen_name',
                 'count',) if (k in args) and (args[k] is not None)})
 
+        results = []
         next_cursor = -1
         while next_cursor != 0:
             # Request.
@@ -182,11 +183,12 @@ class TwitterFollowerManager(AbstractTwitterManager):
                 cursor=next_cursor,
                 **kwargs)
 
-            for user in users['users']:
-                print(format_user(user))
+            results.extend(users['users'])
 
             next_cursor = users['next_cursor']
             logger.info('next_cursor: {}'.format(next_cursor))
+
+        output(results)
 
 def main(command_line=None):
     """The main function.

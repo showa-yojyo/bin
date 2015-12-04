@@ -15,14 +15,15 @@ Usage:
 """
 
 from twmods import AbstractTwitterManager
+from twmods import output
 from twmods.commands.users import make_commands
 from argparse import ArgumentParser
 from itertools import count
 from itertools import islice
-from pprint import pprint
+import sys
 import time
 
-__version__ = '1.0.1'
+__version__ = '1.1.0'
 
 class TwitterUserManager(AbstractTwitterManager):
     """This class handles commands about a Twitter users."""
@@ -59,6 +60,8 @@ class TwitterUserManager(AbstractTwitterManager):
         # up to 100 users per request
         up_to = 100
 
+        results = []
+
         if user_ids:
             for i in count(0, up_to):
                 chunk = islice(user_ids, i, i + up_to)
@@ -68,7 +71,7 @@ class TwitterUserManager(AbstractTwitterManager):
 
                 logger.info("[{:04d}]-[{:04d}] Waiting...".format(i, i + up_to))
                 response = request(user_id=csv)
-                pprint(response)
+                results.extend(response)
                 logger.info("[{:04d}]-[{:04d}] Processed: {}".format(i, i + up_to, csv))
                 time.sleep(2)
 
@@ -88,9 +91,12 @@ class TwitterUserManager(AbstractTwitterManager):
 
                 logger.info("[{:04d}]-[{:04d}] Waiting...".format(i, i + up_to))
                 response = request(screen_name=csv)
-                pprint(response)
+                results.extend(response)
+
                 logger.info("[{:04d}]-[{:04d}] Processed: {}".format(i, i + up_to, csv))
                 time.sleep(2)
+
+        output(results)
 
     def request_users_show(self):
         """Request GET users/show for Twitter."""
@@ -103,7 +109,8 @@ class TwitterUserManager(AbstractTwitterManager):
         logger.info('tw.users.show args: {}'.format(kwargs))
 
         response = self.tw.users.show(**kwargs)
-        pprint(response)
+
+        output(response)
 
     def request_users_search(self):
         """Request GET users/search for Twitter."""
@@ -116,7 +123,7 @@ class TwitterUserManager(AbstractTwitterManager):
             'include_entities')
                 if k in args}
         response = self.tw.users.search(**kwargs)
-        pprint(response)
+        output(response)
 
     def request_users_profile_banner(self):
         """Request GET users/profile_banner for Twitter."""
@@ -128,7 +135,7 @@ class TwitterUserManager(AbstractTwitterManager):
         logger.info('tw.users.profile_banner args: {}'.format(kwargs))
 
         response = self.tw.users.profile_banner(**kwargs)
-        pprint(response)
+        output(response)
 
     def request_users_suggestions(self):
         """Request GET users/suggestions for Twitter."""
@@ -139,7 +146,7 @@ class TwitterUserManager(AbstractTwitterManager):
             kwargs['lang'] = args.lang
 
         response = self.tw.users.suggestions(**kwargs)
-        pprint(response)
+        output(response)
 
     def request_users_report_spam(self):
         """Request POST users/report_spam for Twitter."""
@@ -148,8 +155,9 @@ class TwitterUserManager(AbstractTwitterManager):
         kwargs = {k:args[k] for k in (
             'user_id', 'screen_name',)
                 if k in args}
+
         response = self.tw.users.report_spam(**kwargs)
-        pprint(response)
+        output(response)
 
 def main(command_line=None):
     """The main function.

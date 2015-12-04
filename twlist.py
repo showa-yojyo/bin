@@ -35,20 +35,15 @@ where
 """
 
 from twmods import AbstractTwitterManager
-from twmods import SEP
-from twmods import USER_COLUMN_HEADER
-from twmods import format_list
-from twmods import format_user
-from twmods import get_list_csv_format
-from twmods import get_user_csv_format
+from twmods import output
 from twmods.commands.lists import make_commands
 from argparse import ArgumentParser
 from itertools import count
 from itertools import islice
-from pprint import pprint
+import sys
 import time
 
-__version__ = '1.8.2'
+__version__ = '1.9.0'
 
 class TwitterListManager(AbstractTwitterManager):
     """This class handles commands about a Twitter list."""
@@ -82,26 +77,15 @@ class TwitterListManager(AbstractTwitterManager):
             'count', 'max_id')
                 if (k in args) and (args[k] is not None)})
 
-        csv_header = (
-            'created_at',
-            'user[screen_name]',
-            'user[name]',
-            #'source',
-            'favorited',
-            'retweet_count',
-            'text',)
-        csv_format = SEP.join(('{' + i + '}' for i in csv_header))
-
-        # Print CSV header.
-        print(SEP.join(csv_header))
-
         total_statuses = 0
 
-        pcount = args.count
-        max_count = args.max_count
+        # XXX
+        pcount = args.get('count', 20)
+        max_count = args.get('max_count', 20)
         if max_count < pcount:
             max_count = pcount
 
+        results = []
         for i in count():
             logger.info("[{:03d}] Waiting...".format(i))
 
@@ -115,10 +99,7 @@ class TwitterListManager(AbstractTwitterManager):
             else:
                 break
 
-            for j in response:
-                line = csv_format.format(**j)
-                print(line.replace('\r', '').replace('\n', '\\n'))
-
+            results.extend(response)
             logger.info("[{:03d}] min_id={} Fetched.".format(i, min_id))
 
             if max_count <= total_statuses:
@@ -127,6 +108,8 @@ class TwitterListManager(AbstractTwitterManager):
                 break
 
             kwargs['max_id'] = min_id - 1
+
+        output(results)
 
     def request_lists_members_create_alladd(self):
         """Add multiple members to a list."""
@@ -186,8 +169,7 @@ class TwitterListManager(AbstractTwitterManager):
             'owner_id', 'owner_screen_name',)
                 if (k in args) and (args[k] is not None)}
 
-        print(get_list_csv_format())
-        print(format_list(self.tw.lists.show(**kwargs)))
+        output(self.tw.lists.show(**kwargs))
 
     def request_lists_update(self):
         """Update the specified list."""
@@ -202,7 +184,7 @@ class TwitterListManager(AbstractTwitterManager):
             'description')
                 if (k in args) and (args[k] is not None)}
 
-        pprint(self.tw.lists.update(**kwargs))
+        output(self.tw.lists.update(**kwargs))
         logger.info("List is updated.")
 
     def request_lists_destroy(self):
@@ -213,7 +195,8 @@ class TwitterListManager(AbstractTwitterManager):
             'list_id', 'slug',
             'owner_id', 'owner_screen_name',)
                 if (k in args) and (args[k] is not None)}
-        pprint(self.tw.lists.destroy(**kwargs))
+
+        output(self.tw.lists.destroy(**kwargs))
         logger.info("List is deleted.")
 
     def _manage_members(self, request):
@@ -270,10 +253,7 @@ class TwitterListManager(AbstractTwitterManager):
             'count',)
                 if (k in args) and (args[k] is not None)}
 
-        csv_header = USER_COLUMN_HEADER + ('status[text]', 'status[source]',)
-        csv_format = SEP.join(('{' + i + '}' for i in csv_header))
-        print(SEP.join(csv_header))
-
+        results = []
         next_cursor = -1
         while next_cursor != 0:
             # Request.
@@ -282,13 +262,12 @@ class TwitterListManager(AbstractTwitterManager):
                 cursor=next_cursor,
                 **kwargs)
 
-            for user in response['users']:
-                if 'status' in user:
-                    line = csv_format.format(**user)
-                    print(line.replace('\r', '').replace('\n', '\\n'))
+            results.extend(response['users'])
 
             next_cursor = response['next_cursor']
             logger.info('next_cursor: {}'.format(next_cursor))
+
+        output(results)
 
     def _show_lists(self, request):
         """Show lists related to the specified user.
@@ -304,19 +283,19 @@ class TwitterListManager(AbstractTwitterManager):
             'count',)
                 if (k in args) and (args[k] is not None)}
 
-        print(get_list_csv_format())
-
+        results = []
         next_cursor = -1
         while next_cursor != 0:
             response = request(
                 cursor=next_cursor,
                 **kwargs)
 
-            for i in response['lists']:
-                print(format_list(i))
+            results.extend(response['lists'])
 
             next_cursor = response['next_cursor']
             logger.info('next_cursor: {}'.format(next_cursor))
+
+        output(results)
 
     def _manage_subscription(self, request):
         """Subscribe or unsubscribe."""
@@ -328,7 +307,8 @@ class TwitterListManager(AbstractTwitterManager):
                 if (k in args) and (args[k] is not None)}
 
         response = request(**kwargs)
-        pprint(response)
+
+        output(response)
         self.logger.info("Finished to {request}".format(request=request))
 
 def main(command_line=None):

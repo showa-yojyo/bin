@@ -11,15 +11,15 @@ Usage:
 """
 
 from secret import twitter_instance
-from twmods import SEP
 from twmods import make_logger
+from twmods import output
 from argparse import ArgumentParser
 from argparse import ArgumentTypeError
 from itertools import count
 import sys
 import time
 
-__version__ = '1.1.2'
+__version__ = '1.2.0'
 
 def configure():
     """Parse the command line parameters.
@@ -71,24 +71,12 @@ def main():
     logger = make_logger('twsearch')
     tw = twitter_instance()
 
-    csv_header = (
-        'id',
-        'created_at',
-        'user[screen_name]',
-        'user[description]',
-        'text',
-        'source',)
-    csv_format = SEP.join(('{' + i + '}' for i in csv_header))
-
     kwargs = dict(
         q=args.query,
         count=args.count,
         include_entities=False)
     if args.max_id:
         kwargs['max_id'] = args.max_id
-
-    # Print CSV header.
-    print(SEP.join(csv_header))
 
     total_statuses = 0
 
@@ -98,6 +86,7 @@ def main():
     if max_count < pcount:
         max_count = pcount
 
+    results = []
     for i in count():
         logger.info("[{:03d}] Waiting...".format(i))
 
@@ -114,10 +103,7 @@ def main():
         else:
             break
 
-        for j in statuses:
-            line = csv_format.format(**j)
-            print(line.replace('\r', '').replace('\n', '\\n'))
-
+        results.extend(statuses)
         logger.info("[{:03d}] Fetched {}-{}.".format(i, max_id, since_id))
 
         if max_count <= total_statuses:
@@ -127,6 +113,8 @@ def main():
 
         kwargs['max_id'] = since_id - 1
         time.sleep(2)
+
+    output(results)
 
 if __name__ == '__main__':
     main()
