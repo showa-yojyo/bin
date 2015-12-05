@@ -76,6 +76,10 @@ class CommandUsersSearch(AbstractTwitterCommand):
             choices=range(1, 21),
             metavar='{1..20}',
             help='the number of potential user results to retrieve per page')
+        parser.add_argument(
+            '--full',
+            action='store_true',
+            help='retrieve data as much as possible')
         return parser
 
     def __call__(self):

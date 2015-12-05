@@ -14,6 +14,7 @@ Usage:
   twuser.py spam <user-id | screen-name>
 """
 
+from twitter import TwitterHTTPError
 from twmods import AbstractTwitterManager
 from twmods import output
 from twmods.commands.users import make_commands
@@ -116,14 +117,45 @@ class TwitterUserManager(AbstractTwitterManager):
         """Request GET users/search for Twitter."""
 
         logger, args = self.logger, vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'q',
-            'pages',
-            'count',
-            'include_entities')
-                if k in args}
-        response = self.tw.users.search(**kwargs)
-        output(response)
+        request = self.tw.users.search
+        results = None
+        if args['full']:
+            UP_TO = 20
+            MAX_PAGE = 1000 // UP_TO
+            kwargs = {k:args[k] for k in (
+                'q',
+                'include_entities')
+                    if (k in args) and (args[k] is not None)}
+
+            results = []
+            kwargs['count'] = UP_TO
+            try:
+                for i in range(MAX_PAGE):
+                    kwargs['page'] = i + 1
+                    logger.info('users.search params={}'.format(kwargs))
+                    response = request(**kwargs)
+                    if not response:
+                        break
+
+                    results.extend(response)
+                    if len(response) < UP_TO:
+                        break
+
+                    time.sleep(2)
+            except TwitterHTTPError as e:
+                logger.error('{}'.format(e))
+                #raise
+        else:
+            kwargs = {k:args[k] for k in (
+                'q',
+                'page',
+                'count',
+                'include_entities')
+                    if (k in args) and (args[k] is not None)}
+
+            logger.info('users.search params={}'.format(kwargs))
+            results = request(**kwargs)
+        output(results)
 
     def request_users_profile_banner(self):
         """Request GET users/profile_banner for Twitter."""
