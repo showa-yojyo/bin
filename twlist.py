@@ -37,13 +37,14 @@ where
 from twmods import AbstractTwitterManager
 from twmods import output
 from twmods.commands.lists import make_commands
+from twitter import TwitterHTTPError
 from argparse import ArgumentParser
 from itertools import count
 from itertools import islice
 import sys
 import time
 
-__version__ = '1.9.0'
+__version__ = '1.9.1'
 
 class TwitterListManager(AbstractTwitterManager):
     """This class handles commands about a Twitter list."""
@@ -64,7 +65,7 @@ class TwitterListManager(AbstractTwitterManager):
         return parser
 
     def request_lists_statuses(self):
-        """Show a timeline of tweets of the specified list."""
+        """Request GET lists/statuses for Twitter."""
 
         request, logger, args = self.tw.lists.statuses, self.logger, vars(self.args)
 
@@ -111,44 +112,44 @@ class TwitterListManager(AbstractTwitterManager):
 
         output(results)
 
-    def request_lists_members_create_alladd(self):
-        """Add multiple members to a list."""
+    def request_lists_members_create_all(self):
+        """Request POST lists/members/create_all for Twitter."""
         self._manage_members(self.tw.lists.members.create_all)
 
     def request_lists_members_destroy_all(self):
-        """Remove multiple members from a list."""
+        """Request POST lists/members/destroy_all for Twitter."""
         self._manage_members(self.tw.lists.members.destroy_all)
 
     def request_lists_members(self):
-        """List the members of the specified list."""
+        """Request GET lists/members for Twitter."""
         self._show_users(self.tw.lists.members)
 
     def request_lists_subscribers(self):
-        """List the subscribers of the specified list."""
+        """Request GET lists/subscribers for Twitter."""
         self._show_users(self.tw.lists.subscribers)
 
     def request_lists_subscribers_create(self):
-        """Subscribe the authenticated user to the specified list."""
+        """Request POST lists/subscribers_create for Twitter."""
         self._manage_subscription(self.tw.lists.subscribers.create)
 
-    def request_lists_unsubscribe(self):
-        """Unsubscribe the authenticated user to the specified list."""
+    def request_lists_subscribers_destroy(self):
+        """Request POST lists/subscribers/destroy for Twitter."""
         self._manage_subscription(self.tw.lists.subscribers.destroy)
 
     def request_lists_memberships(self):
-        """List lists the specified user has been added to."""
+        """Request GET lists/memberships for Twitter."""
         self._show_lists(self.tw.lists.memberships)
 
     def request_lists_ownerships(self):
-        """List lists owned by the specified user."""
+        """Request GET lists/ownerships for Twitter."""
         self._show_lists(self.tw.lists.ownerships)
 
     def request_lists_subscriptions(self):
-        """List lists the specified user is subscribed to."""
+        """Request GET lists/subscriptions for Twitter."""
         self._show_lists(self.tw.lists.subscriptions)
 
     def request_lists_create(self):
-        """Create a new list for the authenticated user."""
+        """Request POST lists/create for Twitter."""
 
         logger, args = self.logger, vars(self.args)
         kwargs = {k:args[k] for k in (
@@ -161,7 +162,7 @@ class TwitterListManager(AbstractTwitterManager):
         logger.info("List is created.")
 
     def request_lists_show(self):
-        """Show the specified list."""
+        """Request GET lists/show for Twitter."""
 
         args = vars(self.args)
         kwargs = {k:args[k] for k in (
@@ -172,7 +173,7 @@ class TwitterListManager(AbstractTwitterManager):
         output(self.tw.lists.show(**kwargs))
 
     def request_lists_update(self):
-        """Update the specified list."""
+        """Request POST lists/update for Twitter."""
 
         logger, args = self.logger, vars(self.args)
 
@@ -188,7 +189,7 @@ class TwitterListManager(AbstractTwitterManager):
         logger.info("List is updated.")
 
     def request_lists_destroy(self):
-        """Delete the specified list."""
+        """Request POST lists/destroy for Twitter."""
 
         logger, args = self.logger, vars(self.args)
         kwargs = {k:args[k] for k in (
@@ -213,7 +214,7 @@ class TwitterListManager(AbstractTwitterManager):
         if args.file:
             users.extend(line.rstrip() for line in args.file)
 
-        args = var(args)
+        args = vars(args)
         kwargs = {k:args[k] for k in (
             'list_id', 'slug',
             'owner_id', 'owner_screen_name',)
@@ -255,17 +256,19 @@ class TwitterListManager(AbstractTwitterManager):
 
         results = []
         next_cursor = -1
-        while next_cursor != 0:
-            # Request.
-            response = request(
-                skip_status=False,
-                cursor=next_cursor,
-                **kwargs)
 
-            results.extend(response['users'])
-
-            next_cursor = response['next_cursor']
-            logger.info('next_cursor: {}'.format(next_cursor))
+        try:
+            while next_cursor != 0:
+                response = request(
+                    skip_status=False,
+                    cursor=next_cursor,
+                    **kwargs)
+                results.extend(response['users'])
+                next_cursor = response['next_cursor']
+                logger.info('next_cursor: {}'.format(next_cursor))
+        except TwitterHTTPError as e:
+            logger.info('{}'.format(e))
+            #raise
 
         output(results)
 
@@ -285,15 +288,18 @@ class TwitterListManager(AbstractTwitterManager):
 
         results = []
         next_cursor = -1
-        while next_cursor != 0:
-            response = request(
-                cursor=next_cursor,
-                **kwargs)
 
-            results.extend(response['lists'])
-
-            next_cursor = response['next_cursor']
-            logger.info('next_cursor: {}'.format(next_cursor))
+        try:
+            while next_cursor != 0:
+                response = request(
+                    cursor=next_cursor,
+                    **kwargs)
+                results.extend(response['lists'])
+                next_cursor = response['next_cursor']
+                logger.info('next_cursor: {}'.format(next_cursor))
+        except TwitterHTTPError as e:
+            logger.info('{}'.format(e))
+            #raise
 
         output(results)
 

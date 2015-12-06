@@ -13,6 +13,7 @@ where
                | (-S | --screen-name <screen_name>)
 """
 
+from twitter import TwitterHTTPError
 from twmods import AbstractTwitterManager
 from twmods import output
 from twmods.commands.followers import make_commands
@@ -22,7 +23,7 @@ from itertools import islice
 import sys
 import time
 
-__version__ = '1.9.0'
+__version__ = '1.9.1'
 
 class TwitterFollowerManager(AbstractTwitterManager):
     """This class handles commands about a Twitter followers."""
@@ -177,16 +178,18 @@ class TwitterFollowerManager(AbstractTwitterManager):
 
         results = []
         next_cursor = -1
-        while next_cursor != 0:
-            # Request.
-            users = request(
-                cursor=next_cursor,
-                **kwargs)
 
-            results.extend(users['users'])
-
-            next_cursor = users['next_cursor']
-            logger.info('next_cursor: {}'.format(next_cursor))
+        try:
+            while next_cursor != 0:
+                users = request(
+                    cursor=next_cursor,
+                    **kwargs)
+                results.extend(users['users'])
+                next_cursor = users['next_cursor']
+                logger.info('next_cursor: {}'.format(next_cursor))
+        except TwitterHTTPError as e:
+            logger.info('{}'.format(e))
+            #raise
 
         output(results)
 
