@@ -5,6 +5,7 @@
 from .. import AbstractTwitterCommand
 from .. import cache
 from .. import parser_user_single
+from .. import parser_count_users_many
 from argparse import ArgumentParser
 from argparse import FileType
 
@@ -48,7 +49,7 @@ class CommandFollowersIds(AbstractTwitterFollowersCommand):
         parser = subparsers.add_parser(
             COMMAND_FOLLOWERS_IDS[0],
             aliases=COMMAND_FOLLOWERS_IDS[1:],
-            parents=[parser_user_single(), parser_count()],
+            parents=[parser_user_single(), parser_count_users_many()], # 20, 5000
             help='print user IDs for every user following the specified user')
         return parser
 
@@ -62,7 +63,7 @@ class CommandFollowersList(AbstractTwitterFollowersCommand):
         parser = subparsers.add_parser(
             COMMAND_FOLLOWERS_LIST[0],
             aliases=COMMAND_FOLLOWERS_LIST[1:],
-            parents=[parser_user_single(), parser_count()],
+            parents=[parser_user_single(), parser_count_users()], # 20, 200
             help='list all of the users following the specified user')
         return parser
 
@@ -76,7 +77,7 @@ class CommandFriendsIds(AbstractTwitterFollowersCommand):
         parser = subparsers.add_parser(
             COMMAND_FRIENDS_IDS[0],
             aliases=COMMAND_FRIENDS_IDS[1:],
-            parents=[parser_user_single(), parser_count()],
+            parents=[parser_user_single(), parser_count_users_many()], # 20, 5000
             help='print user IDs for every user the specified user is following')
         return parser
 
@@ -90,7 +91,7 @@ class CommandFriendsList(AbstractTwitterFollowersCommand):
         parser = subparsers.add_parser(
             COMMAND_FRIENDS_LIST[0],
             aliases=COMMAND_FRIENDS_LIST[1:],
-            parents=[parser_user_single(), parser_count()],
+            parents=[parser_user_single(), parser_count_users()], # 20, 200
             help='list all of the users the specified user is following')
         return parser
 
@@ -218,11 +219,11 @@ def make_commands(manager):
     return [cmd_t(manager) for cmd_t in AbstractTwitterFollowersCommand.__subclasses__()]
 
 @cache
-def parser_count():
+def parser_count_users():
     """Return the parent parser object of the following subcommands:
 
-    * friends
-    * followers
+    * friends/lists
+    * followers/lists
     """
 
     parser = ArgumentParser(add_help=False)
@@ -230,7 +231,6 @@ def parser_count():
         '-c', '--count',
         type=int,
         nargs='?',
-        #default=20,
         choices=range(1, 201),
         metavar='{1..200}',
         help='number of users to return per page')

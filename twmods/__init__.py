@@ -11,7 +11,7 @@ from twitter import TwitterHTTPError
 import logging
 import sys
 
-__version__ = '1.5.0'
+__version__ = '1.6.0'
 
 def make_logger(name=None):
     """Set up a logger with the specified name.
@@ -132,6 +132,26 @@ def parser_user_single():
         nargs='?',
         dest='screen_name',
         help='the screen name of the user for whom to return results')
+    return parser
+
+@cache
+def parser_count_users_many():
+    """Return the parent parser object of the following subcommands:
+
+    * friends/ids
+    * followers/ids
+    * lists/members
+    * lists/subscribers
+    """
+
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '-c', '--count',
+        type=int,
+        nargs='?',
+        choices=range(1, 5001),
+        metavar='{1..5000}',
+        help='number of users to return per page')
     return parser
 
 def output(data, fp=sys.stdout):

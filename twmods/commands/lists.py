@@ -5,6 +5,7 @@
 from .. import AbstractTwitterCommand
 from .. import cache
 from .. import parser_user_single
+from .. import parser_count_users_many
 from argparse import ArgumentParser
 from argparse import FileType
 
@@ -46,9 +47,8 @@ class CommandListsStatuses(AbstractTwitterListsCommand):
             '-c', '--count',
             type=int,
             nargs='?',
-            default=20,
-            choices=range(1, 201),
-            metavar='{1..200}',
+            choices=range(1, 201), #?
+            metavar='{1..200}', #?
             help='number of tweets to return per page')
         parser.add_argument(
             '-M', '--max_id',
@@ -104,7 +104,7 @@ class CommandListsMembers(AbstractTwitterListsCommand):
         parser = subparsers.add_parser(
             COMMAND_LISTS_MEMBERS[0],
             aliases=COMMAND_LISTS_MEMBERS[1:],
-            parents=[parser_listspec(), parser_users()],
+            parents=[parser_listspec(), parser_count_users_many()], # 20, 5000
             help='list members of the specified list')
         return parser
 
@@ -146,7 +146,7 @@ class CommandListsSubscribers(AbstractTwitterListsCommand):
         parser = subparsers.add_parser(
             COMMAND_LISTS_SUBSCRIBERS[0],
             aliases=COMMAND_LISTS_SUBSCRIBERS[1:],
-            parents=[parser_listspec(), parser_users()],
+            parents=[parser_listspec(), parser_count_users_many()], # 20, 5000
             help='list subscribers of the specified list')
         return parser
 
@@ -160,7 +160,7 @@ class CommandListsMemberships(AbstractTwitterListsCommand):
         parser = subparsers.add_parser(
             COMMAND_LISTS_MEMBERSHIPS[0],
             aliases=COMMAND_LISTS_MEMBERSHIPS[1:],
-            parents=[parser_user_single(), parser_ls()],
+            parents=[parser_user_single(), parser_count_lists()], # 20, 1000
             help='list lists the specified user has been added to')
         return parser
 
@@ -174,7 +174,7 @@ class CommandListsOwnerships(AbstractTwitterListsCommand):
         parser = subparsers.add_parser(
             COMMAND_LISTS_OWNERSHIPS[0],
             aliases=COMMAND_LISTS_OWNERSHIPS[1:],
-            parents=[parser_user_single(), parser_ls()],
+            parents=[parser_user_single(), parser_count_lists()], # 20, 1000
             help='list lists owned by the specified user')
         return parser
 
@@ -188,7 +188,7 @@ class CommandListsSubscriptions(AbstractTwitterListsCommand):
         parser = subparsers.add_parser(
             COMMAND_LISTS_SUBSCRIPTIONS[0],
             aliases=COMMAND_LISTS_SUBSCRIPTIONS[1:],
-            parents=[parser_user_single(), parser_ls()],
+            parents=[parser_user_single(), parser_count_lists()], # 20, 1000
             help='list lists the specified user is subscribed to')
         return parser
 
@@ -319,11 +319,12 @@ def parser_users_batch():
     return parser
 
 @cache
-def parser_users():
+def parser_count_lists():
     """Return the parent parser object of the following subcommands:
 
-    * show
-    * subscribers
+    * lists/ownerships
+    * lists/memberships
+    * lists/subscriptions
     """
 
     parser = ArgumentParser(add_help=False)
@@ -331,27 +332,6 @@ def parser_users():
         '-c', '--count',
         type=int,
         nargs='?',
-        default=20,
-        choices=range(1, 5001),
-        metavar='{1..5000}',
-        help='the number of users to return per page')
-    return parser
-
-@cache
-def parser_ls():
-    """Return the parent parser object of the following subcommands:
-
-    * ownerships
-    * memberships
-    * subscriptions
-    """
-
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        '-c', '--count',
-        type=int,
-        nargs='?',
-        default=20,
         choices=range(1, 1001),
         metavar='{1..1000}',
         help='the amount of results to return per page')
