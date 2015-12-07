@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """usercommands.py
 """
-__version__ = '1.0.3'
 
 from .. import AbstractTwitterCommand
 from .. import cache
@@ -27,7 +26,10 @@ COMMAND_USERS_REPORT_SPAM = ('users-report-spam', 'spam')
 # GET users/suggestions/:slug/members - n/a
 # POST users/report_spam <- COMMAND_USERS_REPORT_SPAM
 
-class CommandUsersLookup(AbstractTwitterCommand):
+class AbstractTwitterUsersCommand(AbstractTwitterCommand):
+    pass
+
+class CommandUsersLookup():
     """Print fully-hydrated user objects."""
 
     def create_parser(self, subparsers):
@@ -41,7 +43,7 @@ class CommandUsersLookup(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_users_lookup()
 
-class CommandUsersShow(AbstractTwitterCommand):
+class CommandUsersShow(AbstractTwitterUsersCommand):
     """Print information about the user."""
 
     def create_parser(self, subparsers):
@@ -55,7 +57,7 @@ class CommandUsersShow(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_users_show()
 
-class CommandUsersSearch(AbstractTwitterCommand):
+class CommandUsersSearch(AbstractTwitterUsersCommand):
     """Search public user accounts."""
 
     def create_parser(self, subparsers):
@@ -86,7 +88,7 @@ class CommandUsersSearch(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_users_search()
 
-class CommandUsersProfileBanner(AbstractTwitterCommand):
+class CommandUsersProfileBanner(AbstractTwitterUsersCommand):
     """Print a map of the available size variations 
     of the specified user's profile banner.
     """
@@ -102,7 +104,7 @@ class CommandUsersProfileBanner(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_users_profile_banner()
 
-class CommandUsersSuggestions(AbstractTwitterCommand):
+class CommandUsersSuggestions(AbstractTwitterUsersCommand):
     """Print the list of suggested user categories."""
 
     def create_parser(self, subparsers):
@@ -118,7 +120,7 @@ class CommandUsersSuggestions(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_users_suggestions()
 
-class CommandUsersReportSpam(AbstractTwitterCommand):
+class CommandUsersReportSpam(AbstractTwitterUsersCommand):
     """Report the specified user as a spam account to Twitter."""
 
     def create_parser(self, subparsers):
@@ -132,11 +134,9 @@ class CommandUsersReportSpam(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_users_report_spam()
 
-_command_classes = tuple(v for k, v in locals().items() if k.startswith('CommandUsers'))
-
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in _command_classes]
+    return [cmd_t(manager) for cmd_t in AbstractTwitterUsersCommand.__subclasses__()]
 
 @cache
 def parser_user_multiple():

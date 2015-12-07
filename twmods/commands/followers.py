@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """followercommands.py
 """
-__version__ = '1.0.4'
 
 from .. import AbstractTwitterCommand
 from .. import cache
@@ -39,7 +38,10 @@ COMMAND_FRIENDSHIPS_UPDATE = ('friendships-update', 'update')
 # GET friendships/show - COMMAND_FRIENDSHIPS_SHOW
 # POST friendships/update - COMMAND_FRIENDSHIPS_UPDATE
 
-class CommandFollowersIds(AbstractTwitterCommand):
+class AbstractTwitterFollowersCommand(AbstractTwitterCommand):
+    pass
+
+class CommandFollowersIds(AbstractTwitterFollowersCommand):
     """Print user IDs for every user following the specified user."""
 
     def create_parser(self, subparsers):
@@ -53,7 +55,7 @@ class CommandFollowersIds(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_followers_ids()
 
-class CommandFollowersList(AbstractTwitterCommand):
+class CommandFollowersList(AbstractTwitterFollowersCommand):
     """List all of the users following the specified user."""
 
     def create_parser(self, subparsers):
@@ -67,7 +69,7 @@ class CommandFollowersList(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_followers_list()
 
-class CommandFriendsIds(AbstractTwitterCommand):
+class CommandFriendsIds(AbstractTwitterFollowersCommand):
     """Print user IDs for every user the specified user is following."""
 
     def create_parser(self, subparsers):
@@ -81,7 +83,7 @@ class CommandFriendsIds(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_friends_ids()
 
-class CommandFriendsList(AbstractTwitterCommand):
+class CommandFriendsList(AbstractTwitterFollowersCommand):
     """List all of the users the specified user is following."""
 
     def create_parser(self, subparsers):
@@ -95,7 +97,7 @@ class CommandFriendsList(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_friends_list()
 
-class CommandFriendshipsIncoming(AbstractTwitterCommand):
+class CommandFriendshipsIncoming(AbstractTwitterFollowersCommand):
     """Print IDs for every user who has a pending request to follow you."""
 
     def create_parser(self, subparsers):
@@ -108,7 +110,7 @@ class CommandFriendshipsIncoming(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_friendships_incoming()
 
-class CommandFriendshipsLookup(AbstractTwitterCommand):
+class CommandFriendshipsLookup(AbstractTwitterFollowersCommand):
     """Print the relationships of you to specified users."""
 
     def create_parser(self, subparsers):
@@ -122,7 +124,7 @@ class CommandFriendshipsLookup(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_friendships_lookup()
 
-class CommandFriendshipsNoRetweetsIds(AbstractTwitterCommand):
+class CommandFriendshipsNoRetweetsIds(AbstractTwitterFollowersCommand):
     """Print IDs that you do not want to receive retweets from."""
 
     def create_parser(self, subparsers):
@@ -135,7 +137,7 @@ class CommandFriendshipsNoRetweetsIds(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_friendships_no_retweets_ids()
 
-class CommandFriendshipsOutgoing(AbstractTwitterCommand):
+class CommandFriendshipsOutgoing(AbstractTwitterFollowersCommand):
     """Print IDs for protected user for whom you have a pending follow request."""
 
     def create_parser(self, subparsers):
@@ -148,7 +150,7 @@ class CommandFriendshipsOutgoing(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_friendships_outgoing()
 
-class CommandFriendshipsShow(AbstractTwitterCommand):
+class CommandFriendshipsShow(AbstractTwitterFollowersCommand):
     """Describe detailed information about the relationship between two arbitrary users."""
 
     def create_parser(self, subparsers):
@@ -169,7 +171,7 @@ class CommandFriendshipsShow(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_friendships_show()
 
-class CommandFriendshipsUpdate(AbstractTwitterCommand):
+class CommandFriendshipsUpdate(AbstractTwitterFollowersCommand):
     """Allows one to enable or disable retweets and device
     notifications from the specified user.
     """
@@ -211,11 +213,9 @@ class CommandFriendshipsUpdate(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_friendships_update()
 
-_command_classes = tuple(v for k, v in locals().items() if k.startswith('Command'))
-
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in _command_classes]
+    return [cmd_t(manager) for cmd_t in AbstractTwitterFollowersCommand.__subclasses__()]
 
 @cache
 def parser_count():

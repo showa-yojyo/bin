@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """twstreamcommands.py:
 """
-__version__ = '1.1.2'
 
 from .. import AbstractTwitterCommand
 from .. import cache
@@ -29,7 +28,10 @@ COMMAND_SITE = ('site',)
 # GET statuses/firehose
 COMMAND_STATUSES_FIREHOSE = ('statuses-firehose', 'firehose', 'fire')
 
-class CommandStatusesSample(AbstractTwitterCommand):
+class AbstractTwitterStreamingCommand(AbstractTwitterCommand):
+    pass
+
+class CommandStatusesSample(AbstractTwitterStreamingCommand):
     """Print a small random sample of all public statuses."""
 
     def create_parser(self, subparsers):
@@ -42,7 +44,7 @@ class CommandStatusesSample(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_statuses_sample()
 
-class CommandStatusesFilter(AbstractTwitterCommand):
+class CommandStatusesFilter(AbstractTwitterStreamingCommand):
     """Print public statuses that match one or more filter predicates."""
 
     def create_parser(self, subparsers):
@@ -56,7 +58,7 @@ class CommandStatusesFilter(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_statuses_filter()
 
-class CommandUser(AbstractTwitterCommand):
+class CommandUser(AbstractTwitterStreamingCommand):
     """Stream messages for a single user."""
 
     def create_parser(self, subparsers):
@@ -70,7 +72,7 @@ class CommandUser(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_user()
 
-class CommandSite(AbstractTwitterCommand):
+class CommandSite(AbstractTwitterStreamingCommand):
     """Stream messages for a set of users."""
 
     def create_parser(self, subparsers):
@@ -84,7 +86,7 @@ class CommandSite(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_site()
 
-class CommandStatusesFirehose(AbstractTwitterCommand):
+class CommandStatusesFirehose(AbstractTwitterStreamingCommand):
     """Print all public statuses."""
 
     def create_parser(self, subparsers):
@@ -141,8 +143,6 @@ def parser_with_and_replies():
 
     return parser
 
-_command_classes = tuple(v for k, v in locals().items() if k.startswith('Command'))
-
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in _command_classes]
+    return [cmd_t(manager) for cmd_t in AbstractTwitterStreamingCommand.__subclasses__()]
