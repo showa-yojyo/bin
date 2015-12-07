@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """twstreamcommands.py:
 """
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 
 from .. import AbstractTwitterCommand
+from .. import cache
 from argparse import ArgumentParser
 
 # Public API
@@ -96,64 +97,49 @@ class CommandStatusesFirehose(AbstractTwitterCommand):
     def __call__(self):
         self.manager.request_statuses_firehose()
 
-def _parser_track_and_locations():
-    parser = None
-    def inner():
-        nonlocal parser
-        if parser:
-            return parser
+@cache
+def parser_track_and_locations():
+    """TBW"""
 
-        parser = ArgumentParser(add_help=False)
-        parser.add_argument(
-            '--track',
-            metavar='CSV',
-            help='A comma-separated list of phrases to filter tweets')
-        parser.add_argument(
-            '--locations',
-            metavar='CSV',
-            help='A comma-separated list of coordinates specifying a set of bounding boxes to filter tweets')
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '--track',
+        metavar='CSV',
+        help='A comma-separated list of phrases to filter tweets')
+    parser.add_argument(
+        '--locations',
+        metavar='CSV',
+        help='A comma-separated list of coordinates specifying a set of bounding boxes to filter tweets')
 
-        return parser
-    return inner
-parser_track_and_locations = _parser_track_and_locations()
+    return parser
 
-def _parser_follow():
-    parser = None
-    def inner():
-        nonlocal parser
-        if parser:
-            return parser
+@cache
+def parser_follow():
+    """TBW"""
 
-        parser = ArgumentParser(add_help=False)
-        parser.add_argument(
-            '--follow',
-            metavar='CSV',
-            help='A comma-separated list of user IDs to filter tweets')
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '--follow',
+        metavar='CSV',
+        help='A comma-separated list of user IDs to filter tweets')
 
-        return parser
-    return inner
-parser_follow = _parser_follow()
+    return parser
 
-def _parser_with_and_replies():
-    parser = None
-    def inner():
-        nonlocal parser
-        if parser:
-            return parser
+@cache
+def parser_with_and_replies():
+    """TBW"""
 
-        parser = ArgumentParser(add_help=False)
-        parser.add_argument(
-            '--with',
-            choices=('user', 'followings',),
-            help='the types of messages')
-        parser.add_argument(
-            '--replies',
-            choices=('all',),
-            help='show all replies')
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '--with',
+        choices=('user', 'followings',),
+        help='the types of messages')
+    parser.add_argument(
+        '--replies',
+        choices=('all',),
+        help='show all replies')
 
-        return parser
-    return inner
-parser_with_and_replies = _parser_with_and_replies()
+    return parser
 
 _command_classes = tuple(v for k, v in locals().items() if k.startswith('Command'))
 

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """followercommands.py
 """
-__version__ = '1.0.3'
+__version__ = '1.0.4'
 
 from .. import AbstractTwitterCommand
+from .. import cache
 from .. import parser_user_single
 from argparse import ArgumentParser
 from argparse import FileType
@@ -45,7 +46,7 @@ class CommandFollowersIds(AbstractTwitterCommand):
         parser = subparsers.add_parser(
             COMMAND_FOLLOWERS_IDS[0],
             aliases=COMMAND_FOLLOWERS_IDS[1:],
-            parents=[parser_user_single(), common_parser()],
+            parents=[parser_user_single(), parser_count()],
             help='print user IDs for every user following the specified user')
         return parser
 
@@ -59,7 +60,7 @@ class CommandFollowersList(AbstractTwitterCommand):
         parser = subparsers.add_parser(
             COMMAND_FOLLOWERS_LIST[0],
             aliases=COMMAND_FOLLOWERS_LIST[1:],
-            parents=[parser_user_single(), common_parser()],
+            parents=[parser_user_single(), parser_count()],
             help='list all of the users following the specified user')
         return parser
 
@@ -73,7 +74,7 @@ class CommandFriendsIds(AbstractTwitterCommand):
         parser = subparsers.add_parser(
             COMMAND_FRIENDS_IDS[0],
             aliases=COMMAND_FRIENDS_IDS[1:],
-            parents=[parser_user_single(), common_parser()],
+            parents=[parser_user_single(), parser_count()],
             help='print user IDs for every user the specified user is following')
         return parser
 
@@ -87,7 +88,7 @@ class CommandFriendsList(AbstractTwitterCommand):
         parser = subparsers.add_parser(
             COMMAND_FRIENDS_LIST[0],
             aliases=COMMAND_FRIENDS_LIST[1:],
-            parents=[parser_user_single(), common_parser()],
+            parents=[parser_user_single(), parser_count()],
             help='list all of the users the specified user is following')
         return parser
 
@@ -216,53 +217,37 @@ def make_commands(manager):
     """Prototype"""
     return [cmd_t(manager) for cmd_t in _command_classes]
 
-def _common_parser():
+@cache
+def parser_count():
     """Return the parent parser object of the following subcommands:
 
     * friends
     * followers
     """
 
-    parser = None
-    def inner():
-        nonlocal parser
-        if parser:
-            return parser
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '-c', '--count',
+        type=int,
+        nargs='?',
+        #default=20,
+        choices=range(1, 201),
+        metavar='{1..200}',
+        help='number of users to return per page')
+    return parser
 
-        parser = ArgumentParser(add_help=False)
-        parser.add_argument(
-            '-c', '--count',
-            type=int,
-            nargs='?',
-            #default=20,
-            choices=range(1, 201),
-            metavar='{1..200}',
-            help='number of users to return per page')
-        return parser
-    return inner
-
-common_parser = _common_parser()
-
-def _parser_users_batch():
+@cache
+def parser_users_batch():
     """user_id version."""
 
-    parser = None
-    def inner():
-        nonlocal parser
-        if parser:
-            return parser
-
-        parser = ArgumentParser(add_help=False)
-        parser.add_argument(
-            'user_id',
-            nargs='*',
-            help='a list of user IDs')
-        parser.add_argument(
-            '-f', '--file',
-            type=FileType('r'),
-            default=None,
-            help='a file which lists user IDs')
-        return parser
-    return inner
-
-parser_users_batch = _parser_users_batch()
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        'user_id',
+        nargs='*',
+        help='a list of user IDs')
+    parser.add_argument(
+        '-f', '--file',
+        type=FileType('r'),
+        default=None,
+        help='a file which lists user IDs')
+    return parser

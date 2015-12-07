@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """usercommands.py
 """
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 from .. import AbstractTwitterCommand
+from .. import cache
 from .. import parser_user_single
 from argparse import ArgumentParser
 from argparse import FileType
@@ -137,59 +138,43 @@ def make_commands(manager):
     """Prototype"""
     return [cmd_t(manager) for cmd_t in _command_classes]
 
-def _parser_multiple_users():
+@cache
+def parser_user_multiple():
     """Multiple arguments for user_id or screen_name."""
 
-    parser = None
-    def inner():
-        nonlocal parser
-        if parser:
-            return parser
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '-U', '--user-id',
+        nargs='*',
+        dest='user_id',
+        help='the ID of the user for whom to return results')
+    parser.add_argument(
+        '-S', '--screen-name',
+        nargs='*',
+        dest='screen_name',
+        help='the screen name of the user for whom to return results')
+    parser.add_argument(
+        '-UF', '--file-user-id',
+        type=FileType('r'),
+        default=None,
+        dest='file_user_id',
+        help='a file which lists user IDs')
+    parser.add_argument(
+        '-SF', '--file-screen-name',
+        type=FileType('r'),
+        default=None,
+        dest='file_screen_name',
+        help='a file which lists screen names')
+    return parser
 
-        parser = ArgumentParser(add_help=False)
-        parser.add_argument(
-            '-U', '--user-id',
-            nargs='*',
-            dest='user_id',
-            help='the ID of the user for whom to return results')
-        parser.add_argument(
-            '-S', '--screen-name',
-            nargs='*',
-            dest='screen_name',
-            help='the screen name of the user for whom to return results')
-        parser.add_argument(
-            '-UF', '--file-user-id',
-            type=FileType('r'),
-            default=None,
-            dest='file_user_id',
-            help='a file which lists user IDs')
-        parser.add_argument(
-            '-SF', '--file-screen-name',
-            type=FileType('r'),
-            default=None,
-            dest='file_screen_name',
-            help='a file which lists screen names')
-        return parser
-    return inner
-
-parser_user_multiple = _parser_multiple_users()
-
-def _parser_include_entities():
+@cache
+def parser_include_entities():
     """An argument for include_entities."""
 
-    parser = None
-    def inner():
-        nonlocal parser
-        if parser:
-            return parser
-
-        parser = ArgumentParser(add_help=False)
-        parser.add_argument(
-            '-E', '--include-entities',
-            action='store_true',
-            dest='include_entities',
-            help='include entity nodes in tweet objects')
-        return parser
-    return inner
-
-parser_include_entities = _parser_include_entities()
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '-E', '--include-entities',
+        action='store_true',
+        dest='include_entities',
+        help='include entity nodes in tweet objects')
+    return parser
