@@ -5,9 +5,9 @@
 from .. import AbstractTwitterCommand
 from .. import cache
 from .. import parser_user_single
+from .. import parser_user_multiple
 from .. import parser_count_users_many
 from argparse import ArgumentParser
-from argparse import FileType
 
 # Available subcommands.
 # names[0] and names[1:] are the official name and aliases, respectively.
@@ -118,7 +118,7 @@ class CommandFriendshipsLookup(AbstractTwitterFollowersCommand):
         parser = subparsers.add_parser(
             COMMAND_FRIENDSHIPS_LOOKUP[0],
             aliases=COMMAND_FRIENDSHIPS_LOOKUP[1:],
-            parents=[parser_users_batch()],
+            parents=[parser_user_multiple()],
             help='print the relationships of you to specified users')
         return parser
 
@@ -234,20 +234,4 @@ def parser_count_users():
         choices=range(1, 201),
         metavar='{1..200}',
         help='number of users to return per page')
-    return parser
-
-@cache
-def parser_users_batch():
-    """user_id version."""
-
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        'user_id',
-        nargs='*',
-        help='a list of user IDs')
-    parser.add_argument(
-        '-f', '--file',
-        type=FileType('r'),
-        default=None,
-        help='a file which lists user IDs')
     return parser

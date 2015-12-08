@@ -5,8 +5,8 @@
 from .. import AbstractTwitterCommand
 from .. import cache
 from .. import parser_user_single
+from .. import parser_user_multiple
 from argparse import ArgumentParser
-from argparse import FileType
 
 # Available subcommands.
 # names[0] and names[1:] are the official name and aliases, respectively.
@@ -137,35 +137,6 @@ class CommandUsersReportSpam(AbstractTwitterUsersCommand):
 def make_commands(manager):
     """Prototype"""
     return [cmd_t(manager) for cmd_t in AbstractTwitterUsersCommand.__subclasses__()]
-
-@cache
-def parser_user_multiple():
-    """Multiple arguments for user_id or screen_name."""
-
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        '-U', '--user-id',
-        nargs='*',
-        dest='user_id',
-        help='the ID of the user for whom to return results')
-    parser.add_argument(
-        '-S', '--screen-name',
-        nargs='*',
-        dest='screen_name',
-        help='the screen name of the user for whom to return results')
-    parser.add_argument(
-        '-UF', '--file-user-id',
-        type=FileType('r'),
-        default=None,
-        dest='file_user_id',
-        help='a file which lists user IDs')
-    parser.add_argument(
-        '-SF', '--file-screen-name',
-        type=FileType('r'),
-        default=None,
-        dest='file_screen_name',
-        help='a file which lists screen names')
-    return parser
 
 @cache
 def parser_include_entities():

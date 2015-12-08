@@ -5,9 +5,9 @@
 from .. import AbstractTwitterCommand
 from .. import cache
 from .. import parser_user_single
+from .. import parser_user_multiple
 from .. import parser_count_users_many
 from argparse import ArgumentParser
-from argparse import FileType
 
 # Available subcommands.
 COMMAND_LISTS_STATUSES = ('lists-statuses', 'statuses', 'stat', 'st')
@@ -76,7 +76,7 @@ class CommandListsMembersCreateAll(AbstractTwitterListsCommand):
         parser = subparsers.add_parser(
             COMMAND_LISTS_MEMBERS_CREATE_ALL[0],
             aliases=COMMAND_LISTS_MEMBERS_CREATE_ALL[1:],
-            parents=[parser_listspec(), parser_users_batch()],
+            parents=[parser_listspec(), parser_user_multiple()],
             help='add multiple members to a list')
         return parser
 
@@ -90,7 +90,7 @@ class CommandListsMembersDestroyAll(AbstractTwitterListsCommand):
         parser = subparsers.add_parser(
             COMMAND_LISTS_MEMBERS_DESTROY_ALL[0],
             aliases=COMMAND_LISTS_MEMBERS_DESTROY_ALL[1:],
-            parents=[parser_listspec(), parser_users_batch()],
+            parents=[parser_listspec(), parser_user_multiple()],
             help='remove multiple members from a list')
         return parser
 
@@ -288,34 +288,14 @@ def parser_listspec():
     # TODO: required only if <slug> is supplied
     owner = parser.add_mutually_exclusive_group(required=False)
     owner.add_argument(
-        '-I', '--owner-id',
+        '-OI', '--owner-id',
         metavar='<owner_id>',
         help='the user ID of the user who owns the list being requested by a slug')
     owner.add_argument(
-        '-S', '--owner-screen-name',
+        '-OS', '--owner-screen-name',
         metavar='<owner_screen_name>',
         help='the screen name of the user who owns the list being requested by a slug')
 
-    return parser
-
-@cache
-def parser_users_batch():
-    """Return the parent parser object of the following subcommands:
-
-    * add
-    * remove
-    """
-
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        'screen_name',
-        nargs='*',
-        help='a list of screen names, up to 100 are allowed in a single request')
-    parser.add_argument(
-        '-f', '--file',
-        type=FileType('r'),
-        default=None,
-        help='a file which lists screen names to be added or removed')
     return parser
 
 @cache

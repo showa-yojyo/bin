@@ -20,7 +20,6 @@ from twmods import output
 from twmods.commands.users import make_commands
 from argparse import ArgumentParser
 from itertools import count
-from itertools import islice
 import sys
 import time
 
@@ -46,58 +45,7 @@ class TwitterUserManager(AbstractTwitterManager):
 
     def request_users_lookup(self):
         """Request GET users/lookup for Twitter."""
-
-        request = self.tw.users.lookup
-        logger, args = self.logger, self.args
-        logger.info('tw.users.lookup args: {}'.format(args))
-
-        # user_id
-        user_ids = []
-        if args.user_id:
-            user_ids.extend(args.user_id)
-        if args.file_user_id:
-            user_ids.extend(line.rstrip() for line in args.file_user_id)
-
-        # up to 100 users per request
-        up_to = 100
-
-        results = []
-
-        if user_ids:
-            for i in count(0, up_to):
-                chunk = islice(user_ids, i, i + up_to)
-                csv = ','.join(chunk)
-                if not csv:
-                    break
-
-                logger.info("[{:04d}]-[{:04d}] Waiting...".format(i, i + up_to))
-                response = request(user_id=csv)
-                results.extend(response)
-                logger.info("[{:04d}]-[{:04d}] Processed: {}".format(i, i + up_to, csv))
-                time.sleep(2)
-
-        # screen_name
-        screen_names = []
-        if args.screen_name:
-            screen_names.extend(args.screen_name)
-        if args.file_screen_name:
-            screen_names.extend(line.rstrip() for line in args.file_screen_name)
-
-        if screen_names:
-            for i in count(0, up_to):
-                chunk = islice(screen_names, i, i + up_to)
-                csv = ','.join(chunk)
-                if not csv:
-                    break
-
-                logger.info("[{:04d}]-[{:04d}] Waiting...".format(i, i + up_to))
-                response = request(screen_name=csv)
-                results.extend(response)
-
-                logger.info("[{:04d}]-[{:04d}] Processed: {}".format(i, i + up_to, csv))
-                time.sleep(2)
-
-        output(results)
+        self._request_users_csv(self.tw.users.lookup)
 
     def request_users_show(self):
         """Request GET users/show for Twitter."""

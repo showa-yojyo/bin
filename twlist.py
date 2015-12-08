@@ -40,11 +40,10 @@ from twmods.commands.lists import make_commands
 from twitter import TwitterHTTPError
 from argparse import ArgumentParser
 from itertools import count
-from itertools import islice
 import sys
 import time
 
-__version__ = '1.9.1'
+__version__ = '1.9.2'
 
 class TwitterListManager(AbstractTwitterManager):
     """This class handles commands about a Twitter list."""
@@ -206,13 +205,6 @@ class TwitterListManager(AbstractTwitterManager):
         Args:
             request: Select lists.members.create_all or lists.members.destroy_all.
         """
-        logger, args = self.logger, self.args
-
-        # Obtain the target users.
-        users = []
-        users.extend(args.screen_name)
-        if args.file:
-            users.extend(line.rstrip() for line in args.file)
 
         args = vars(args)
         kwargs = {k:args[k] for k in (
@@ -220,24 +212,7 @@ class TwitterListManager(AbstractTwitterManager):
             'owner_id', 'owner_screen_name',)
                 if (k in args) and (args[k] is not None)}
 
-        # Note that lists can't have more than 5000 members
-        # and you are limited to adding up to 100 members to a list at a time.
-        up_to = 15
-        for i in range(0, 5000, up_to):
-            chunk = islice(users, i, i + up_to)
-            csv = ','.join(chunk)
-            if not csv:
-                break
-
-            logger.info("[{:04d}]-[{:04d}] Waiting...".format(i, i + up_to))
-
-            # Request.
-            request(
-                screen_name=csv,
-                **kwargs,)
-
-            logger.info("[{:04d}]-[{:04d}] Processed: {}".format(i, i + up_to, csv))
-            time.sleep(10)
+        self._request_users_csv(self, request, up_to=15, **kwargs)
 
     def _show_users(self, request):
         """Show users related tp the specified list.

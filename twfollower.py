@@ -19,11 +19,10 @@ from twmods import output
 from twmods.commands.followers import make_commands
 from argparse import ArgumentParser
 from itertools import count
-from itertools import islice
 import sys
 import time
 
-__version__ = '1.9.1'
+__version__ = '1.9.2'
 
 class TwitterFollowerManager(AbstractTwitterManager):
     """This class handles commands about a Twitter followers."""
@@ -73,32 +72,7 @@ class TwitterFollowerManager(AbstractTwitterManager):
 
     def request_friendships_lookup(self):
         """Request GET friendships/lookup for Twitter."""
-
-        request = self.tw.friendships.lookup
-        logger, args = self.logger, self.args
-
-        # Obtain the target users.
-        users = []
-        users.extend(args.user_id)
-        if args.file:
-            users.extend(line.rstrip() for line in args.file)
-
-        results = []
-        # You are limited to adding up to 100 members to a list at a time.
-        up_to = 100
-        for i in count(0, up_to):
-            chunk = islice(users, i, i + up_to)
-            csv = ','.join(chunk)
-            if not csv:
-                break
-
-            logger.info("[{:04d}]-[{:04d}] Waiting...".format(i, i + up_to))
-            response = request(user_id=csv)
-            results.extend(response)
-            logger.info("[{:04d}]-[{:04d}] Processed: {}".format(i, i + up_to, csv))
-            time.sleep(2)
-
-        output(results)
+        self._request_users_csv(self.tw.friendships.lookup)
 
     def request_friendships_no_retweets_ids(self):
         """Request GET friendships/no_retweets/ids for Twitter."""
