@@ -12,7 +12,7 @@ from twitter import TwitterHTTPError
 import logging
 import sys
 
-__version__ = '1.6.1'
+__version__ = '1.7.1'
 
 def make_logger(name=None):
     """Set up a logger with the specified name.
@@ -240,7 +240,19 @@ def parser_count_users_many():
         nargs='?',
         choices=range(1, 5001),
         metavar='{1..5000}',
-        help='number of users to return per page')
+        help='the number of users to return per page')
+    return parser
+
+@cache
+def parser_cursor():
+    """Return the parent parser object that accepts cursor parameter."""
+
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '--cursor',
+        type=int,
+        nargs='?',
+        help='break the results into pages')
     return parser
 
 def output(data, fp=sys.stdout):

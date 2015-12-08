@@ -7,6 +7,7 @@ from .. import cache
 from .. import parser_user_single
 from .. import parser_user_multiple
 from .. import parser_count_users_many
+from .. import parser_cursor
 from argparse import ArgumentParser
 
 # Available subcommands.
@@ -160,7 +161,7 @@ class CommandListsMemberships(AbstractTwitterListsCommand):
         parser = subparsers.add_parser(
             COMMAND_LISTS_MEMBERSHIPS[0],
             aliases=COMMAND_LISTS_MEMBERSHIPS[1:],
-            parents=[parser_user_single(), parser_count_lists()], # 20, 1000
+            parents=[parser_user_single(), parser_count_lists(), parser_cursor()], # 20, 1000
             help='list lists the specified user has been added to')
         return parser
 
@@ -174,7 +175,7 @@ class CommandListsOwnerships(AbstractTwitterListsCommand):
         parser = subparsers.add_parser(
             COMMAND_LISTS_OWNERSHIPS[0],
             aliases=COMMAND_LISTS_OWNERSHIPS[1:],
-            parents=[parser_user_single(), parser_count_lists()], # 20, 1000
+            parents=[parser_user_single(), parser_count_lists(), parser_cursor()], # 20, 1000
             help='list lists owned by the specified user')
         return parser
 
@@ -188,7 +189,7 @@ class CommandListsSubscriptions(AbstractTwitterListsCommand):
         parser = subparsers.add_parser(
             COMMAND_LISTS_SUBSCRIPTIONS[0],
             aliases=COMMAND_LISTS_SUBSCRIPTIONS[1:],
-            parents=[parser_user_single(), parser_count_lists()], # 20, 1000
+            parents=[parser_user_single(), parser_count_lists(), parser_cursor()], # 20, 1000
             help='list lists the specified user is subscribed to')
         return parser
 

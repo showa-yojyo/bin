@@ -7,6 +7,7 @@ from .. import cache
 from .. import parser_user_single
 from .. import parser_user_multiple
 from .. import parser_count_users_many
+from .. import parser_cursor
 from argparse import ArgumentParser
 
 # Available subcommands.
@@ -49,7 +50,7 @@ class CommandFollowersIds(AbstractTwitterFollowersCommand):
         parser = subparsers.add_parser(
             COMMAND_FOLLOWERS_IDS[0],
             aliases=COMMAND_FOLLOWERS_IDS[1:],
-            parents=[parser_user_single(), parser_count_users_many()], # 20, 5000
+            parents=[parser_user_single(), parser_count_users_many(), parser_cursor()], # 20, 5000
             help='print user IDs for every user following the specified user')
         return parser
 
@@ -63,7 +64,7 @@ class CommandFollowersList(AbstractTwitterFollowersCommand):
         parser = subparsers.add_parser(
             COMMAND_FOLLOWERS_LIST[0],
             aliases=COMMAND_FOLLOWERS_LIST[1:],
-            parents=[parser_user_single(), parser_count_users()], # 20, 200
+            parents=[parser_user_single(), parser_count_users(), parser_cursor()], # 20, 200
             help='list all of the users following the specified user')
         return parser
 
@@ -77,7 +78,7 @@ class CommandFriendsIds(AbstractTwitterFollowersCommand):
         parser = subparsers.add_parser(
             COMMAND_FRIENDS_IDS[0],
             aliases=COMMAND_FRIENDS_IDS[1:],
-            parents=[parser_user_single(), parser_count_users_many()], # 20, 5000
+            parents=[parser_user_single(), parser_count_users_many(), parser_cursor()], # 20, 5000
             help='print user IDs for every user the specified user is following')
         return parser
 
@@ -91,7 +92,7 @@ class CommandFriendsList(AbstractTwitterFollowersCommand):
         parser = subparsers.add_parser(
             COMMAND_FRIENDS_LIST[0],
             aliases=COMMAND_FRIENDS_LIST[1:],
-            parents=[parser_user_single(), parser_count_users()], # 20, 200
+            parents=[parser_user_single(), parser_count_users(), parser_cursor()], # 20, 200
             help='list all of the users the specified user is following')
         return parser
 
@@ -105,6 +106,7 @@ class CommandFriendshipsIncoming(AbstractTwitterFollowersCommand):
         parser = subparsers.add_parser(
             COMMAND_FRIENDSHIPS_INCOMING[0],
             aliases=COMMAND_FRIENDSHIPS_INCOMING[1:],
+            parents=[parser_cursor()],
             help='print IDs for every user who has a pending request to follow you')
         return parser
 
@@ -145,6 +147,7 @@ class CommandFriendshipsOutgoing(AbstractTwitterFollowersCommand):
         parser = subparsers.add_parser(
             COMMAND_FRIENDSHIPS_OUTGOING[0],
             aliases=COMMAND_FRIENDSHIPS_OUTGOING[1:],
+            parents=[parser_cursor()],
             help='print IDs for protected user for whom you have a pending follow request')
         return parser
 

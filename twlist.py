@@ -43,7 +43,7 @@ from itertools import count
 import sys
 import time
 
-__version__ = '1.9.2'
+__version__ = '1.9.3'
 
 class TwitterListManager(AbstractTwitterManager):
     """This class handles commands about a Twitter list."""
@@ -223,24 +223,24 @@ class TwitterListManager(AbstractTwitterManager):
 
         logger, args = self.logger, vars(self.args)
 
-        kwargs = {k:args[k] for k in (
-            'list_id', 'slug',
-            'owner_id', 'owner_screen_name',
-            'count',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = dict(
+            cursor=-1,
+            skip_status=False,)
+        kwargs.update(
+            {k:args[k] for k in (
+                'list_id', 'slug',
+                'owner_id', 'owner_screen_name',
+                'count',
+                'cursor',) if (k in args) and (args[k] is not None)})
 
         results = []
-        next_cursor = -1
-
         try:
-            while next_cursor != 0:
-                response = request(
-                    skip_status=False,
-                    cursor=next_cursor,
-                    **kwargs)
+            while kwargs['cursor'] != 0:
+                response = request(**kwargs)
                 results.extend(response['users'])
                 next_cursor = response['next_cursor']
                 logger.info('next_cursor: {}'.format(next_cursor))
+                kwargs['cursor'] = next_cursor
         except TwitterHTTPError as e:
             logger.info('{}'.format(e))
             #raise
@@ -256,22 +256,22 @@ class TwitterListManager(AbstractTwitterManager):
 
         logger, args = self.logger, vars(self.args)
 
-        kwargs = {k:args[k] for k in (
+        kwargs = dict(
+            cursor=-1)
+        kwargs.update({k:args[k] for k in (
             'user_id', 'screen_name',
-            'count',)
-                if (k in args) and (args[k] is not None)}
+            'count',
+            'cursor',)
+                if (k in args) and (args[k] is not None)})
 
         results = []
-        next_cursor = -1
-
         try:
-            while next_cursor != 0:
-                response = request(
-                    cursor=next_cursor,
-                    **kwargs)
+            while kwargs['cursor'] != 0:
+                response = request(**kwargs)
                 results.extend(response['lists'])
                 next_cursor = response['next_cursor']
                 logger.info('next_cursor: {}'.format(next_cursor))
+                kwargs['cursor'] = next_cursor
         except TwitterHTTPError as e:
             logger.info('{}'.format(e))
             #raise
