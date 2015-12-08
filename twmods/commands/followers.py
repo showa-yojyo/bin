@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""followercommands.py
+"""followercommands.py: Implementation of class AbstractTwitterFollowersCommand
+and its subclasses.
 """
 
 from .. import AbstractTwitterCommand
@@ -184,11 +185,9 @@ class CommandFriendshipsUpdate(AbstractTwitterFollowersCommand):
         parser = subparsers.add_parser(
             COMMAND_FRIENDSHIPS_UPDATE[0],
             aliases=COMMAND_FRIENDSHIPS_UPDATE[1:],
+            parents=[parser_user_single()],
             help='enable or disable retweets and device notifications from the specified user')
 
-        parser.add_argument(
-            'screen_name',
-            help='the screen_name of the user for whom to befriend')
         device = parser.add_mutually_exclusive_group()
         device.add_argument(
             '--device',

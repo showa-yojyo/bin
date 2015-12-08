@@ -1,12 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""List friends or followers of a specified Twitter user.
+"""twfollower.py: A utility script to manage friends and followers
+of a specified Twitter user.
 
 Usage:
   twfollower.py [--version] [--help]
-  twfollower.py <command> [-c | --count <n>] <userspec>
-  twfollower.py friendships-lookup
-    [-f | --file <filepath>] <screen-name>...
+  twfollower.py followers-ids [-c | --count <n>] [--cursor <n>]
+    <userspec>
+  twfollower.py followers-list [--cursor <n>] <userspec>
+  twfollower.py friends-ids [-c | --count <n>] [--cursor <n>]
+    <userspec>
+  twfollower.py friends-list [--cursor <n>] <userspec>
+  twfollower.py friendships-incoming [--cursor <n>]
+  twfollower.py friendships-lookup [<userspec>...]
+    [-UF | --file-user-id <path>] [-SF | --file-screen-name <path>]
+  twfollower.py friendships-no_retweets-ids
+  twfollower.py friendships-outgoing [--cursor <n>]
+  twfollower.py friendships-show <source_screen_name>
+    <target_screen_name>
+  twfollower.py friendships-update [--[no-]device] [--[no-]retweets]
+    <userspec>
 
 where
   <userspec> ::= (-U | --user-id <user_id>)
@@ -19,10 +32,9 @@ from twmods import output
 from twmods.commands.followers import make_commands
 from argparse import ArgumentParser
 from itertools import count
-import sys
 import time
 
-__version__ = '1.9.3'
+__version__ = '1.9.4'
 
 class TwitterFollowerManager(AbstractTwitterManager):
     """This class handles commands about a Twitter followers."""
@@ -111,7 +123,11 @@ class TwitterFollowerManager(AbstractTwitterManager):
         output(response['relationship'])
 
     def _list_ids(self, request):
-        """Print user IDs."""
+        """Print user IDs.
+
+        Args:
+            request: A PTT request method for Twitter API.
+        """
 
         logger, args = self.logger, vars(self.args)
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""usercommands.py
+"""usercommands.py: Implementation of class AbstractTwitterUsersCommand
+and its subclasses.
 """
 
 from .. import AbstractTwitterCommand

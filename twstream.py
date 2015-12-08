@@ -3,7 +3,20 @@
 """twstream.py: Twitter Streaming API Utility
 
 Usage:
-  twstream.py [common-options] <command> [command-options]
+  twstream.py [--version] [--help]
+  twstream.py <common-options> statuses-sample
+  twstream.py <common-options> statuses-filter [--follow <CSV>]
+    [--with {user,followings}] [--replies {all}]
+  twstream.py <common-options> user [--track <CSV>]
+    [--locations <CSV>] [--with {user,followings}] [--replies {all}]
+  twstream.py <common-options> site [--follow <CSV>]
+    [--with {user,followings}] [--replies {all}]
+  twstream.py <common-options> statuses-firehose
+
+where
+  <common-options> ::= [-o | --timeout <n>] [-H | --heartbeat <n>]
+  [-b | --block] [--delimited <length>] [--stall-warnings]
+  [--filter-level {none,low,medium}] [--language <language>]
 """
 
 from secret import twitter_stream
@@ -14,7 +27,7 @@ from twmods.commands.streaming import make_commands
 from argparse import ArgumentParser
 from pprint import pprint
 
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 
 class TwitterStreamManager(AbstractTwitterManager):
     """Twitter Streaming API Utility"""

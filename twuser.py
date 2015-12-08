@@ -4,14 +4,19 @@
 
 Usage:
   twuser.py [--version] [--help]
-  twuser.py lookup
-    [-f | --file <filepath>] <screen-name>...
-  twuser.py show [--include-entities]
-  twuser.py search [-p | --page <n>] <user-id | screen-name>
-    [-c | --count <n>] [--include-entities] <query>
-  twuser.py banner <user-id | screen-name>
-  twuser.py suggestions [-l | --lang <LANG>]
-  twuser.py spam <user-id | screen-name>
+  twuser.py users-lookup [<userspec>...]
+    [-UF | --file-user-id <path>]
+    [-SF | --file-screen-name <path>]
+  twuser.py users-show [--include-entities] <userspec>
+  twuser.py users-search [--full] [-p | --page <n>]
+    [-c | --count <n>] [-E | --include-entities] <query>
+  twuser.py users-profile-banner <userspec>
+  twuser.py users-suggestions [-l | --lang <LANG>]
+  twuser.py users-report-spam <userspec>
+
+where
+  <userspec> ::= (-U | --user-id <user_id>)
+               | (-S | --screen-name <screen_name>)
 """
 
 from twitter import TwitterHTTPError
@@ -20,10 +25,9 @@ from twmods import output
 from twmods.commands.users import make_commands
 from argparse import ArgumentParser
 from itertools import count
-import sys
 import time
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 class TwitterUserManager(AbstractTwitterManager):
     """This class handles commands about a Twitter users."""

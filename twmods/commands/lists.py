@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""listcommands.py
+"""listcommands.py: Implementation of class AbstractTwitterListsCommand
+and its subclasses.
 """
 
 from .. import AbstractTwitterCommand
