@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""usercommands.py: Implementation of class AbstractTwitterUsersCommand
+"""users.py: Implementation of class AbstractTwitterUsersCommand
 and its subclasses.
 """
 
@@ -7,6 +7,7 @@ from .. import AbstractTwitterCommand
 from .. import cache
 from .. import parser_user_single
 from .. import parser_user_multiple
+from .. import parser_include_entities
 from argparse import ArgumentParser
 
 # Available subcommands.
@@ -138,15 +139,3 @@ class CommandUsersReportSpam(AbstractTwitterUsersCommand):
 def make_commands(manager):
     """Prototype"""
     return [cmd_t(manager) for cmd_t in AbstractTwitterUsersCommand.__subclasses__()]
-
-@cache
-def parser_include_entities():
-    """An argument for include_entities."""
-
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        '-E', '--include-entities',
-        action='store_true',
-        dest='include_entities',
-        help='include entity nodes in tweet objects')
-    return parser

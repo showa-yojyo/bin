@@ -81,6 +81,8 @@ class AbstractTwitterManager(metaclass=ABCMeta):
             cmd_parser.set_defaults(func=cmd)
 
         self.args = root_parser.parse_args(command_line)
+        if not 'func' in self.args:
+            self.args.func = root_parser.print_help
 
     @abstractmethod
     def make_parser(self):
@@ -253,6 +255,18 @@ def parser_cursor():
         type=int,
         nargs='?',
         help='break the results into pages')
+    return parser
+
+@cache
+def parser_include_entities():
+    """An argument for include_entities."""
+
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '-E', '--include-entities',
+        action='store_true',
+        dest='include_entities',
+        help='include entity nodes in tweet objects')
     return parser
 
 def output(data, fp=sys.stdout):

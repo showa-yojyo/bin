@@ -28,7 +28,11 @@ Usage:
     [--media-ids <media_id>] <text>
   twstatus.py statuses/retweet/:id  [--trim-user] <status_id>
 
-  twstatus.py statuses/oembed <TODO>
+  twstatus.py statuses/oembed [--max-width <n>] [--hide-media]
+    [--hide-thread] [--omit-script] [--omit-script]
+    [--align {none,center,left,right}] [--related <csv-of-screen-names>]
+    [--lang <lang>] [--widget-type {video}] [--hide-tweet]
+    <status_id | url>
   twstatus.py statuses/retweeters/ids [--cursor <n>] [--stringify-ids]
     <status_id>
   twstatus.py statuses/lookup [-E | --include-entities] [--trim-user]
@@ -42,7 +46,7 @@ where
 __version__ = '1.0.0'
 
 from twmods import AbstractTwitterManager
-#from twmods.commands.statuses import make_commands
+from twmods.commands.statuses import make_commands
 from twmods import output
 from argparse import ArgumentParser
 
@@ -50,7 +54,7 @@ class TwitterStatusManager(AbstractTwitterManager):
     """This class handles commands about Twitter statuses."""
 
     def __init__(self):
-        super().__init__('twstatus', [])
+        super().__init__('twstatus', make_commands(self))
 
     def make_parser(self):
         """Create the command line parser.
@@ -199,7 +203,18 @@ class TwitterStatusManager(AbstractTwitterManager):
 
     def request_statuses_oembed(self):
         """Request GET statuses/oembed for Twitter."""
-        raise NotImplementedError()
+
+        request = self.tw.statuses.oembed
+        logger, args = self.logger, vars(self.args)
+
+        kwargs = {k:args[k] for k in (
+            'id', 'url',
+            'maxwidth', 'hide_media', 'hide_thread', 'omit_script',
+            'align', 'related', 'lang', 'widget_type', 'hide_tweet',)
+                if (k in args) and (args[k] is not None)}
+
+        response = request(**kwargs)
+        output(response)
 
     def request_statuses_retweeters_ids(self):
         """Request GET statuses/retweeters/ids for Twitter."""
