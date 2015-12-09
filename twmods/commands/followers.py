@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""followercommands.py: Implementation of class AbstractTwitterFollowersCommand
+"""followers.py: Implementation of class AbstractTwitterFollowersCommand
 and its subclasses.
 """
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""twstreamcommands.py: Implementation of class AbstractTwitterStreamingCommand
+"""streaming.py: Implementation of class AbstractTwitterStreamingCommand
 and its subclasses.
 """
 
