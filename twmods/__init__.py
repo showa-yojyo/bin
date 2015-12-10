@@ -12,7 +12,7 @@ from twitter import TwitterHTTPError
 import logging
 import sys
 
-__version__ = '1.7.1'
+__version__ = '1.7.2'
 
 def make_logger(name=None):
     """Set up a logger with the specified name.
@@ -180,7 +180,9 @@ def cache(func):
 
 @cache
 def parser_user_single():
-    """An argument for user_id or screen_name."""
+    """Return the parent parser object for --user-id and
+    --screen_name arguments.
+    """
 
     parser = ArgumentParser(add_help=False)
     group = parser.add_mutually_exclusive_group(required=True)
@@ -198,7 +200,9 @@ def parser_user_single():
 
 @cache
 def parser_user_multiple():
-    """Multiple arguments for user_id or screen_name."""
+    """Return the parent parser object for --user-id and
+    --screen_name arguments.
+    """
 
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -227,7 +231,9 @@ def parser_user_multiple():
 
 @cache
 def parser_count_users_many():
-    """Return the parent parser object of the following subcommands:
+    """Return the parent parser object for --count optional argument.
+
+    The following subcommands use this parser:
 
     * friends/ids
     * followers/ids
@@ -247,7 +253,9 @@ def parser_count_users_many():
 
 @cache
 def parser_cursor():
-    """Return the parent parser object that accepts cursor parameter."""
+    """Return the parent parser object for --cursor optional
+    argument.
+    """
 
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -259,7 +267,9 @@ def parser_cursor():
 
 @cache
 def parser_include_entities():
-    """An argument for include_entities."""
+    """Return the parent parser object for --include-entities
+    optional argument.
+    """
 
     parser = ArgumentParser(add_help=False)
     parser.add_argument(

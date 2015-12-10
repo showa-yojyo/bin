@@ -9,92 +9,95 @@ from argparse import ArgumentParser
 
 # Public API
 # GET statuses/sample
-COMMAND_STATUSES_SAMPLE = ('statuses-sample', 'sample')
+STREAMING_STATUSES_SAMPLE = ('statuses/sample', 'sample')
 
 # POST statuses/filter
-COMMAND_STATUSES_FILTER = ('statuses-filter', 'filter')
+STREAMING_STATUSES_FILTER = ('statuses/filter', 'filter')
 
 # User Streams (domain='userstream.twitter.com')
 # GET user
-COMMAND_USER = ('user',)
+STREAMING_USER = ('user',)
 
 # Site Streams (domain='sitestream.twitter.com')
 # GET site
-COMMAND_SITE = ('site',)
+STREAMING_SITE = ('site',)
 
 # GET c/:stream_id/info
 # ?
 
 # Firehose
 # GET statuses/firehose
-COMMAND_STATUSES_FIREHOSE = ('statuses-firehose', 'firehose', 'fire')
+STREAMING_STATUSES_FIREHOSE = ('statuses/firehose', 'firehose', 'fire')
 
 class AbstractTwitterStreamingCommand(AbstractTwitterCommand):
     pass
 
-class CommandStatusesSample(AbstractTwitterStreamingCommand):
+class StatusesSample(AbstractTwitterStreamingCommand):
     """Print a small random sample of all public statuses."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_STATUSES_SAMPLE[0],
-            aliases=COMMAND_STATUSES_SAMPLE[1:],
-            help='print a small random sample of all public statuses')
+            STREAMING_STATUSES_SAMPLE[0],
+            aliases=STREAMING_STATUSES_SAMPLE[1:],
+            help=self.__doc__)
         return parser
 
     def __call__(self):
         self.manager.request_statuses_sample()
 
-class CommandStatusesFilter(AbstractTwitterStreamingCommand):
+class StatusesFilter(AbstractTwitterStreamingCommand):
     """Print public statuses that match one or more filter predicates."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_STATUSES_FILTER[0],
-            aliases=COMMAND_STATUSES_FILTER[1:],
-            parents=[parser_follow(), parser_track_and_locations(),],
-            help='print public statuses that match one or more filter predicates')
+            STREAMING_STATUSES_FILTER[0],
+            aliases=STREAMING_STATUSES_FILTER[1:],
+            parents=[parser_follow(),
+                     parser_track_and_locations(),],
+            help=self.__doc__)
         return parser
 
     def __call__(self):
         self.manager.request_statuses_filter()
 
-class CommandUser(AbstractTwitterStreamingCommand):
+class User(AbstractTwitterStreamingCommand):
     """Stream messages for a single user."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_USER[0],
-            #aliases=COMMAND_USER[1:],
-            parents=[parser_track_and_locations(), parser_with_and_replies()],
-            help='stream messages for a single user')
+            STREAMING_USER[0],
+            #aliases=STREAMING_USER[1:],
+            parents=[parser_track_and_locations(),
+                     parser_with_and_replies()],
+            help=self.__doc__)
         return parser
 
     def __call__(self):
         self.manager.request_user()
 
-class CommandSite(AbstractTwitterStreamingCommand):
+class Site(AbstractTwitterStreamingCommand):
     """Stream messages for a set of users."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_SITE[0],
-            #aliases=COMMAND_SITE[1:],
-            parents=[parser_follow(), parser_with_and_replies()],
-            help='stream messages for a set of users')
+            STREAMING_SITE[0],
+            #aliases=STREAMING_SITE[1:],
+            parents=[parser_follow(),
+                     parser_with_and_replies()],
+            help=self.__doc__)
         return parser
 
     def __call__(self):
         self.manager.request_site()
 
-class CommandStatusesFirehose(AbstractTwitterStreamingCommand):
+class StatusesFirehose(AbstractTwitterStreamingCommand):
     """Print all public statuses."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_STATUSES_FIREHOSE[0],
-            aliases=COMMAND_STATUSES_FIREHOSE[1:],
-            help='print all public statuses')
+            STREAMING_STATUSES_FIREHOSE[0],
+            aliases=STREAMING_STATUSES_FIREHOSE[1:],
+            help=self.__doc__)
         return parser
 
     def __call__(self):
@@ -102,7 +105,9 @@ class CommandStatusesFirehose(AbstractTwitterStreamingCommand):
 
 @cache
 def parser_track_and_locations():
-    """TBW"""
+    """Return the parent parser object for --track and --locations
+    optional arguments.
+    """
 
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -118,7 +123,9 @@ def parser_track_and_locations():
 
 @cache
 def parser_follow():
-    """TBW"""
+    """Return the parent parser object for --follow optional
+    argument.
+    """
 
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -130,7 +137,9 @@ def parser_follow():
 
 @cache
 def parser_with_and_replies():
-    """TBW"""
+    """Return the parent parser object for --with and --replies
+    optional arguments.
+    """
 
     parser = ArgumentParser(add_help=False)
     parser.add_argument(

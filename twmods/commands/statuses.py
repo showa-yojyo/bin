@@ -324,7 +324,9 @@ class RetweetersIds(AbstractTwitterStatusesCommand):
         self.manager.request_statuses_retweeters_ids()
 
 class Lookup(AbstractTwitterStatusesCommand):
-    """Output fully-hydrated tweet objects for up to 100 tweets per request."""
+    """Output fully-hydrated tweet objects for up to 100 tweets per
+    request.
+    """
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
@@ -383,7 +385,9 @@ def parser_count_retweets():
 
 @cache
 def parser_since_max_ids():
-    """Return the parent parser object for --since-id and --max-id option."""
+    """Return the parent parser object for --since-id and --max-id
+    optional arguments.
+    """
 
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -405,7 +409,9 @@ def parser_since_max_ids():
 
 @cache
 def parser_trim_user():
-    """Return the parent parser object for --trim-user option."""
+    """Return the parent parser object for --trim-user optional
+    argument.
+    """
 
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -417,7 +423,9 @@ def parser_trim_user():
 
 @cache
 def parser_contributor_details():
-    """Return the parent parser object for --contributor-details option."""
+    """Return the parent parser object for --contributor-details
+    optional argument.
+    """
 
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -429,7 +437,9 @@ def parser_contributor_details():
 
 @cache
 def parser_exclude_replies():
-    """Return the parent parser object for --exclude-replies option."""
+    """Return the parent parser object for --exclude-replies optional
+    argument.
+    """
 
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -441,7 +451,9 @@ def parser_exclude_replies():
 
 @cache
 def parser_include_rts():
-    """Return the parent parser object for --include-rts option."""
+    """Return the parent parser object for --include-rts optional
+    argument.
+    """
 
     parser = ArgumentParser(add_help=False)
     parser.add_argument(

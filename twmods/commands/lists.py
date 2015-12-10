@@ -12,20 +12,20 @@ from .. import parser_cursor
 from argparse import ArgumentParser
 
 # Available subcommands.
-COMMAND_LISTS_STATUSES = ('lists-statuses', 'statuses', 'stat', 'st')
-COMMAND_LISTS_MEMBERS_CREATE_ALL = ('lists-members-create_all', 'add')
-COMMAND_LISTS_MEMBERS_DESTROY_ALL = ('lists-members-destroy_all', 'remove')
-COMMAND_LISTS_MEMBERS = ('lists-members', 'show')
-COMMAND_LISTS_SUBSCRIBERS = ('lists-subscribers', 'subscribers', 'sb')
-COMMAND_LISTS_SUBSCRIBERS_CREATE = ('lists-subscribers-create', 'subscribe', 'subscr')
-COMMAND_LISTS_SUBSCRIBERS_DESTROY = ('lists-subscribers-destroy', 'unsubscribe', 'unsubscr')
-COMMAND_LISTS_MEMBERSHIPS = ('lists-memberships', 'memberships', 'mem')
-COMMAND_LISTS_OWNERSHIPS = ('lists-ownerships', 'ownerships', 'ow')
-COMMAND_LISTS_SUBSCRIPTIONS = ('lists-subscriptions', 'subscriptions', 'sp')
-COMMAND_LISTS_CREATE = ('lists-create', 'create')
-COMMAND_LISTS_SHOW = ('lists-show', 'describe', 'desc')
-COMMAND_LISTS_UPDATE = ('lists-update', 'update', 'up')
-COMMAND_LISTS_DESTROY = ('lists-destroy', 'destroy', 'del')
+LISTS_STATUSES = ('lists/statuses', 'statuses', 'stat', 'st')
+LISTS_MEMBERS_CREATE_ALL = ('lists/members/create_all', 'add')
+LISTS_MEMBERS_DESTROY_ALL = ('lists/members/destroy_all', 'remove')
+LISTS_MEMBERS = ('lists/members', 'show')
+LISTS_SUBSCRIBERS = ('lists/subscribers', 'subscribers', 'sb')
+LISTS_SUBSCRIBERS_CREATE = ('lists/subscribers/create', 'subscribe', 'subscr')
+LISTS_SUBSCRIBERS_DESTROY = ('lists/subscribers/destroy', 'unsubscribe', 'unsubscr')
+LISTS_MEMBERSHIPS = ('lists/memberships', 'memberships', 'mem')
+LISTS_OWNERSHIPS = ('lists/ownerships', 'ownerships', 'ow')
+LISTS_SUBSCRIPTIONS = ('lists/subscriptions', 'subscriptions', 'sp')
+LISTS_CREATE = ('lists/create', 'create')
+LISTS_SHOW = ('lists/show', 'describe', 'desc')
+LISTS_UPDATE = ('lists/update', 'update', 'up')
+LISTS_DESTROY = ('lists/destroy', 'destroy', 'del')
 
 # GET lists/list - ALMOST EQUIVALENT to ownerships + subscriptions
 # GET lists/subscribers/show - Check if the specified user is a subscriber of the specified list. 
@@ -36,15 +36,15 @@ COMMAND_LISTS_DESTROY = ('lists-destroy', 'destroy', 'del')
 class AbstractTwitterListsCommand(AbstractTwitterCommand):
     pass
 
-class CommandListsStatuses(AbstractTwitterListsCommand):
+class Statuses(AbstractTwitterListsCommand):
     """Show a timeline of tweets of the specified list."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_LISTS_STATUSES[0],
-            aliases=COMMAND_LISTS_STATUSES[1:],
+            LISTS_STATUSES[0],
+            aliases=LISTS_STATUSES[1:],
             parents=[parser_listspec()],
-            help='show a timeline of tweets of the specified list')
+            help=self.__doc__)
         parser.add_argument(
             '-c', '--count',
             type=int,
@@ -71,141 +71,151 @@ class CommandListsStatuses(AbstractTwitterListsCommand):
     def __call__(self):
         self.manager.request_lists_statuses()
 
-class CommandListsMembersCreateAll(AbstractTwitterListsCommand):
+class MembersCreateAll(AbstractTwitterListsCommand):
     """Add multiple members to a list."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_LISTS_MEMBERS_CREATE_ALL[0],
-            aliases=COMMAND_LISTS_MEMBERS_CREATE_ALL[1:],
-            parents=[parser_listspec(), parser_user_multiple()],
-            help='add multiple members to a list')
+            LISTS_MEMBERS_CREATE_ALL[0],
+            aliases=LISTS_MEMBERS_CREATE_ALL[1:],
+            parents=[parser_listspec(),
+                     parser_user_multiple()],
+            help=self.__doc__)
         return parser
 
     def __call__(self):
         self.manager.request_lists_members_create_all()
 
-class CommandListsMembersDestroyAll(AbstractTwitterListsCommand):
+class MembersDestroyAll(AbstractTwitterListsCommand):
     """Remove multiple members from a list."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_LISTS_MEMBERS_DESTROY_ALL[0],
-            aliases=COMMAND_LISTS_MEMBERS_DESTROY_ALL[1:],
-            parents=[parser_listspec(), parser_user_multiple()],
-            help='remove multiple members from a list')
+            LISTS_MEMBERS_DESTROY_ALL[0],
+            aliases=LISTS_MEMBERS_DESTROY_ALL[1:],
+            parents=[parser_listspec(),
+                     parser_user_multiple()],
+            help=self.__doc__)
         return parser
 
     def __call__(self):
         self.manager.request_lists_members_destroy_all()
 
-class CommandListsMembers(AbstractTwitterListsCommand):
+class Members(AbstractTwitterListsCommand):
     """List the members of the specified list."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_LISTS_MEMBERS[0],
-            aliases=COMMAND_LISTS_MEMBERS[1:],
-            parents=[parser_listspec(), parser_count_users_many()], # 20, 5000
-            help='list members of the specified list')
+            LISTS_MEMBERS[0],
+            aliases=LISTS_MEMBERS[1:],
+            parents=[parser_listspec(),
+                     parser_count_users_many()], # 20, 5000
+            help=self.__doc__)
         return parser
 
     def __call__(self):
         self.manager.request_lists_members()
 
-class CommandListsSubscribersCreate(AbstractTwitterListsCommand):
+class SubscribersCreate(AbstractTwitterListsCommand):
     """Subscribe the authenticated user to the specified list."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_LISTS_SUBSCRIBERS_CREATE[0],
-            aliases=COMMAND_LISTS_SUBSCRIBERS_CREATE[1:],
+            LISTS_SUBSCRIBERS_CREATE[0],
+            aliases=LISTS_SUBSCRIBERS_CREATE[1:],
             parents=[parser_listspec()],
-            help='subscribe you to the specified list')
+            help=self.__doc__)
         return parser
 
     def __call__(self):
         self.manager.request_lists_subscribers_create()
 
-class CommandListsSubscribersDestroy(AbstractTwitterListsCommand):
+class SubscribersDestroy(AbstractTwitterListsCommand):
     """Unsubscribe the authenticated user to the specified list."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_LISTS_SUBSCRIBERS_DESTROY[0],
-            aliases=COMMAND_LISTS_SUBSCRIBERS_DESTROY[1:],
+            LISTS_SUBSCRIBERS_DESTROY[0],
+            aliases=LISTS_SUBSCRIBERS_DESTROY[1:],
             parents=[parser_listspec()],
-            help='unsubscribe you to the specified list')
+            help=self.__doc__)
         return parser
 
     def __call__(self):
         self.manager.request_lists_subscribers_destroy()
 
-class CommandListsSubscribers(AbstractTwitterListsCommand):
+class Subscribers(AbstractTwitterListsCommand):
     """List the subscribers of the specified list."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_LISTS_SUBSCRIBERS[0],
-            aliases=COMMAND_LISTS_SUBSCRIBERS[1:],
-            parents=[parser_listspec(), parser_count_users_many()], # 20, 5000
-            help='list subscribers of the specified list')
+            LISTS_SUBSCRIBERS[0],
+            aliases=LISTS_SUBSCRIBERS[1:],
+            parents=[parser_listspec(),
+                     parser_count_users_many()], # 20, 5000
+            help=self.__doc__)
         return parser
 
     def __call__(self):
         self.manager.request_lists_subscribers()
 
-class CommandListsMemberships(AbstractTwitterListsCommand):
+class Memberships(AbstractTwitterListsCommand):
     """List lists the specified user has been added to."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_LISTS_MEMBERSHIPS[0],
-            aliases=COMMAND_LISTS_MEMBERSHIPS[1:],
-            parents=[parser_user_single(), parser_count_lists(), parser_cursor()], # 20, 1000
-            help='list lists the specified user has been added to')
+            LISTS_MEMBERSHIPS[0],
+            aliases=LISTS_MEMBERSHIPS[1:],
+            parents=[parser_user_single(),
+                     parser_count_lists(), # 20, 1000
+                     parser_cursor()],
+            help=self.__doc__)
         return parser
 
     def __call__(self):
         self.manager.request_lists_memberships()
 
-class CommandListsOwnerships(AbstractTwitterListsCommand):
+class Ownerships(AbstractTwitterListsCommand):
     """List lists owned by the specified user."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_LISTS_OWNERSHIPS[0],
-            aliases=COMMAND_LISTS_OWNERSHIPS[1:],
-            parents=[parser_user_single(), parser_count_lists(), parser_cursor()], # 20, 1000
-            help='list lists owned by the specified user')
+            LISTS_OWNERSHIPS[0],
+            aliases=LISTS_OWNERSHIPS[1:],
+            parents=[parser_user_single(),
+                     parser_count_lists(), # 20, 1000
+                     parser_cursor()],
+            help=self.__doc__)
         return parser
 
     def __call__(self):
         self.manager.request_lists_ownerships()
 
-class CommandListsSubscriptions(AbstractTwitterListsCommand):
+class Subscriptions(AbstractTwitterListsCommand):
     """List lists the specified user is subscribed to."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_LISTS_SUBSCRIPTIONS[0],
-            aliases=COMMAND_LISTS_SUBSCRIPTIONS[1:],
-            parents=[parser_user_single(), parser_count_lists(), parser_cursor()], # 20, 1000
-            help='list lists the specified user is subscribed to')
+            LISTS_SUBSCRIPTIONS[0],
+            aliases=LISTS_SUBSCRIPTIONS[1:],
+            parents=[parser_user_single(),
+                     parser_count_lists(), # 20, 1000
+                     parser_cursor()],
+            help=self.__doc__)
         return parser
 
     def __call__(self):
         self.manager.request_lists_subscriptions()
 
-class CommandListsCreate(AbstractTwitterListsCommand):
+class Create(AbstractTwitterListsCommand):
     """Create a new list for the authenticated user."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_LISTS_CREATE[0],
-            aliases=COMMAND_LISTS_CREATE[1:],
+            LISTS_CREATE[0],
+            aliases=LISTS_CREATE[1:],
             parents=[parser_prop()],
-            help='create a new list')
+            help=self.__doc__)
         parser.add_argument(
             'name',
             help='the name for the list')
@@ -214,29 +224,30 @@ class CommandListsCreate(AbstractTwitterListsCommand):
     def __call__(self):
         self.manager.request_lists_create()
 
-class CommandListsShow(AbstractTwitterListsCommand):
+class Show(AbstractTwitterListsCommand):
     """Show the specified list."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_LISTS_SHOW[0],
-            aliases=COMMAND_LISTS_SHOW[1:],
+            LISTS_SHOW[0],
+            aliases=LISTS_SHOW[1:],
             parents=[parser_listspec()],
-            help='show the specified list')
+            help=self.__doc__)
         return parser
 
     def __call__(self):
         self.manager.request_lists_show()
 
-class CommandListsUpdate(AbstractTwitterListsCommand):
+class Update(AbstractTwitterListsCommand):
     """Update the specified list."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_LISTS_UPDATE[0],
-            aliases=COMMAND_LISTS_UPDATE[1:],
-            parents=[parser_listspec(), parser_prop()],
-            help='update the specified list')
+            LISTS_UPDATE[0],
+            aliases=LISTS_UPDATE[1:],
+            parents=[parser_listspec(),
+                     parser_prop()],
+            help=self.__doc__)
         parser.add_argument(
             '--name',
             nargs='?',
@@ -246,15 +257,15 @@ class CommandListsUpdate(AbstractTwitterListsCommand):
     def __call__(self):
         self.manager.request_lists_update(self)
 
-class CommandListsDestroy(AbstractTwitterListsCommand):
+class Destroy(AbstractTwitterListsCommand):
     """Delete the specified list."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            COMMAND_LISTS_DESTROY[0],
-            aliases=COMMAND_LISTS_DESTROY[1:],
+            LISTS_DESTROY[0],
+            aliases=LISTS_DESTROY[1:],
             parents=[parser_listspec()],
-            help='delete the specified list')
+            help=self.__doc__)
         return parser
 
     def __call__(self):
