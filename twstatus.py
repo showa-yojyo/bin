@@ -130,11 +130,11 @@ class TwitterStatusManager(AbstractTwitterManager):
     def request_statuses_retweets_id(self):
         """Request GET statuses/retweets/:id for Twitter."""
 
-        request = self.tw.statuses.retweets # !?
+        request = self.tw.statuses.retweets
         logger, args = self.logger, vars(self.args)
 
         kwargs = {k:args[k] for k in (
-            'id', 'count', 'trim_user',)
+            '_id', 'count', 'trim_user',)
                 if (k in args) and (args[k] is not None)}
 
         response = request(**kwargs)
@@ -143,11 +143,11 @@ class TwitterStatusManager(AbstractTwitterManager):
     def request_statuses_show_id(self):
         """Request GET statuses/show/:id for Twitter."""
 
-        request = self.tw.statuses.show # !?
+        request = self.tw.statuses.show
         logger, args = self.logger, vars(self.args)
 
         kwargs = {k:args[k] for k in (
-            'id', 'trim_user', 'include_my_retweet', 'include_entities',)
+            '_id', 'trim_user', 'include_my_retweet', 'include_entities',)
                 if (k in args) and (args[k] is not None)}
 
         response = request(**kwargs)
@@ -160,7 +160,7 @@ class TwitterStatusManager(AbstractTwitterManager):
         logger, args = self.logger, vars(self.args)
 
         kwargs = {k:args[k] for k in (
-            'id', 'trim_user',)
+            '_id', 'trim_user',)
                 if (k in args) and (args[k] is not None)}
 
         response = request(**kwargs)
@@ -189,7 +189,7 @@ class TwitterStatusManager(AbstractTwitterManager):
         logger, args = self.logger, vars(self.args)
 
         kwargs = {k:args[k] for k in (
-            'id', 'trim_user',)
+            '_id', 'trim_user',)
                 if (k in args) and (args[k] is not None)}
 
         response = request(**kwargs)
@@ -208,7 +208,7 @@ class TwitterStatusManager(AbstractTwitterManager):
         logger, args = self.logger, vars(self.args)
 
         kwargs = {k:args[k] for k in (
-            'id', 'url',
+            '_id', 'url',
             'maxwidth', 'hide_media', 'hide_thread', 'omit_script',
             'align', 'related', 'lang', 'widget_type', 'hide_tweet',)
                 if (k in args) and (args[k] is not None)}
@@ -223,7 +223,7 @@ class TwitterStatusManager(AbstractTwitterManager):
         logger, args = self.logger, vars(self.args)
 
         kwargs = {k:args[k] for k in (
-            'id', 'cursor', 'stringify_ids',)
+            '_id', 'cursor', 'stringify_ids',)
                 if (k in args) and (args[k] is not None)}
 
         response = request(**kwargs)
@@ -236,7 +236,7 @@ class TwitterStatusManager(AbstractTwitterManager):
         logger, args = self.logger, vars(self.args)
 
         kwargs = {k:args[k] for k in (
-            'id', 'trim_user', 'include_entities', 'map',)
+            '_id', 'trim_user', 'include_entities', 'map',)
                 if (k in args) and (args[k] is not None)}
 
         response = request(**kwargs)

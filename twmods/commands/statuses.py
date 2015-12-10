@@ -126,7 +126,7 @@ class RetweetsId(AbstractTwitterStatusesCommand):
             aliases=STATUSES_RETWEETS_ID[1:],
             parents=[parser_count_retweets(), # 100
                      parser_trim_user(),
-                     parser_status_id()],
+                     parser_status_id()], # 'id'
             help=self.__doc__)
         return parser
 
@@ -142,7 +142,7 @@ class ShowId(AbstractTwitterStatusesCommand):
             aliases=STATUSES_SHOW_ID[1:],
             parents=[parser_trim_user(),
                      parser_include_entities(),
-                     parser_status_id()],
+                     parser_status_id()], # 'id'
             help=self.__doc__)
         parser.add_argument(
             '--include-my-retweet',
@@ -162,7 +162,7 @@ class DestroyId(AbstractTwitterStatusesCommand):
             STATUSES_DESTROY_ID[0],
             aliases=STATUSES_DESTROY_ID[1:],
             parents=[parser_trim_user(),
-                     parser_status_id()],
+                     parser_status_id()], # ?
             help=self.__doc__)
         return parser
 
@@ -214,8 +214,7 @@ class Update(AbstractTwitterStatusesCommand):
         parser.add_argument(
             '--media-ids',
             dest='media_ids',
-            action='store_true',
-            help='a list of media_ids to associate with the tweet')
+            help='a list of media ids to associate with the tweet')
         parser.add_argument(
             'text',
             help='the text of your status update, typically up to 140 characters')
@@ -233,7 +232,7 @@ class RetweetId(AbstractTwitterStatusesCommand):
             STATUSES_RETWEET_ID[0],
             aliases=STATUSES_RETWEET_ID[1:],
             parents=[parser_trim_user(),
-                     parser_status_id()],
+                     parser_status_id()], # ?'id'
             help=self.__doc__)
         return parser
 
@@ -249,13 +248,14 @@ class Oembed(AbstractTwitterStatusesCommand):
         parser = subparsers.add_parser(
             STATUSES_OEMBED[0],
             aliases=STATUSES_OEMBED[1:],
-            parents=[],
+            #parents=[],
             help=self.__doc__)
 
         # This command has many optional parameters to implement manually.
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument(
             '--id',
+            dest='_id',
             help='the ID of the desired tweet')
         group.add_argument(
             '--url',
@@ -316,7 +316,7 @@ class RetweetersIds(AbstractTwitterStatusesCommand):
             STATUSES_RETWEETERS_IDS[0],
             aliases=STATUSES_RETWEETERS_IDS[1:],
             parents=[parser_cursor(),
-                     parser_status_id()],
+                     parser_status_id()], # '_id'
             help=self.__doc__)
         return parser
 
@@ -340,7 +340,7 @@ class Lookup(AbstractTwitterStatusesCommand):
             action='store_true',
             help='show invisible tweets for you by an explicitly null values')
         parser.add_argument(
-            'id',
+            '_id',
             metavar='<status_id>',
             help='a comma separated list of tweet IDs, up to 100 are allowed in a single request')
 
@@ -469,7 +469,7 @@ def parser_status_id():
 
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-        'id',
+        '_id',
         type=int,
         nargs='?',
         metavar='<status_id>',
