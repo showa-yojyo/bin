@@ -5,10 +5,15 @@ and its subclasses.
 
 from .. import AbstractTwitterCommand
 from .. import cache
-from .. import parser_user_single
-from .. import parser_user_multiple
-from .. import parser_count_users_many
-from .. import parser_cursor
+from .. import (parser_user_single,
+                parser_user_multiple,
+                parser_count_statuses,
+                parser_count_users_many,
+                parser_cursor,
+                parser_since_max_ids,
+                parser_include_entities,
+                parser_include_rts,
+                parser_skip_status)
 from argparse import ArgumentParser
 
 # Available subcommands.
@@ -43,29 +48,13 @@ class Statuses(AbstractTwitterListsCommand):
         parser = subparsers.add_parser(
             LISTS_STATUSES[0],
             aliases=LISTS_STATUSES[1:],
-            parents=[parser_listspec()],
+            parents=[parser_listspec(),
+                     parser_since_max_ids(),
+                     parser_count_statuses(),
+                     parser_include_entities(),
+                     parser_include_rts()],
             help=self.__doc__)
-        parser.add_argument(
-            '-c', '--count',
-            type=int,
-            nargs='?',
-            choices=range(1, 201), #?
-            metavar='{1..200}', #?
-            help='number of tweets to return per page')
-        parser.add_argument(
-            '-M', '--max_id',
-            type=int,
-            nargs='?',
-            metavar='<status-id>',
-            help='results with an ID less than or equal to the specified ID')
-        parser.add_argument(
-            '-N', '--max-count',
-            type=int,
-            nargs='?',
-            default=100,
-            choices=range(1, 10001),
-            metavar='{1..10000}',
-            help='the maximum number of tweets to show')
+
         return parser
 
     def __call__(self):
@@ -109,7 +98,10 @@ class Members(AbstractTwitterListsCommand):
             LISTS_MEMBERS[0],
             aliases=LISTS_MEMBERS[1:],
             parents=[parser_listspec(),
-                     parser_count_users_many()], # 20, 5000
+                     parser_count_users_many(), # 20, 5000
+                     parser_cursor(),
+                     parser_include_entities(),
+                     parser_skip_status()],
             help=self.__doc__)
         return parser
 
@@ -152,7 +144,10 @@ class Subscribers(AbstractTwitterListsCommand):
             LISTS_SUBSCRIBERS[0],
             aliases=LISTS_SUBSCRIBERS[1:],
             parents=[parser_listspec(),
-                     parser_count_users_many()], # 20, 5000
+                     parser_count_users_many(), # 20, 5000
+                     parser_cursor(),
+                     parser_include_entities(),
+                     parser_skip_status()],
             help=self.__doc__)
         return parser
 
@@ -170,6 +165,11 @@ class Memberships(AbstractTwitterListsCommand):
                      parser_count_lists(), # 20, 1000
                      parser_cursor()],
             help=self.__doc__)
+        parser.add_argument(
+            '--filter-to-owned-lists',
+            dest='filter_to_owned_lists',
+            action='store_true',
+            help='print just lists the authenticating user owns')
         return parser
 
     def __call__(self):

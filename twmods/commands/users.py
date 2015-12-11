@@ -5,9 +5,10 @@ and its subclasses.
 
 from .. import AbstractTwitterCommand
 from .. import cache
-from .. import parser_user_single
-from .. import parser_user_multiple
-from .. import parser_include_entities
+from .. import (parser_full,
+                parser_user_single,
+                parser_user_multiple,
+                parser_include_entities)
 from argparse import ArgumentParser
 
 # Available subcommands.
@@ -67,7 +68,7 @@ class Search(AbstractTwitterUsersCommand):
         parser = subparsers.add_parser(
             USERS_SEARCH[0],
             aliases=USERS_SEARCH[1:],
-            parents=[parser_include_entities()],
+            parents=[parser_full(), parser_include_entities()],
             help=self.__doc__)
         parser.add_argument(
             'q',
@@ -82,10 +83,6 @@ class Search(AbstractTwitterUsersCommand):
             choices=range(1, 21),
             metavar='{1..20}',
             help='the number of potential user results to retrieve per page')
-        parser.add_argument(
-            '--full',
-            action='store_true',
-            help='retrieve data as much as possible')
         return parser
 
     def __call__(self):

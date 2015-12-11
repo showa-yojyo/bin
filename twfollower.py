@@ -7,10 +7,12 @@ Usage:
   twfollower.py [--version] [--help]
   twfollower.py followers-ids [-c | --count <n>] [--cursor <n>]
     <userspec>
-  twfollower.py followers-list [--cursor <n>] <userspec>
+  twfollower.py followers-list [--cursor <n>] [--skip-status]
+    [--include-user-entities] <userspec>
   twfollower.py friends-ids [-c | --count <n>] [--cursor <n>]
     <userspec>
-  twfollower.py friends-list [--cursor <n>] <userspec>
+  twfollower.py friends-list [--cursor <n>] [--skip-status]
+    [--include-user-entities] <userspec>
   twfollower.py friendships-incoming [--cursor <n>]
   twfollower.py friendships-lookup [<userspec>...]
     [-UF | --file-user-id <path>] [-SF | --file-screen-name <path>]
@@ -142,7 +144,7 @@ class TwitterFollowerManager(AbstractTwitterManager):
                 'cursor',) if (k in args) and (args[k] is not None)})
         logger.info('_list_ids arg: {}'.format(kwargs))
 
-        while kwargs['cursor'] != 0:
+        while kwargs['cursor']:
             response = request(**kwargs)
             print('\n'.join(response['ids']))
             next_cursor = response['next_cursor']
@@ -158,20 +160,16 @@ class TwitterFollowerManager(AbstractTwitterManager):
 
         logger, args = self.logger, vars(self.args)
 
-        kwargs = dict(
-            cursor=-1,
-            skip_status=True,
-            include_user_entities=False,)
+        kwargs = dict(cursor=-1)
         kwargs.update(
             {k:args[k] for k in (
-                'user_id',
-                'screen_name',
-                'count',
-                'cursor',) if (k in args) and (args[k] is not None)})
+                'user_id', 'screen_name',
+                'count', 'cursor', 'include_user_entities')
+             if (k in args) and (args[k] is not None)})
 
         results = []
         try:
-            while kwargs['cursor'] != 0:
+            while kwargs['cursor']:
                 response = request(**kwargs)
                 results.extend(response['users'])
                 next_cursor = response['next_cursor']

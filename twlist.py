@@ -5,19 +5,22 @@
 Usage:
   twlist.py [--version] [--help]
   twlist.py lists-statuses [-c | --count <n>]
-    [-M | --max-id <status-id>] [-N | --max-count <n>] <listspec>
+    [--since-id <status_id>] [--max-id <status_id>]
+    [-E | --include-entities] [--include-rts] <listspec>
   twlist.py lists-members-create_all [<userspec>...]
     [-UF | --file-user-id <path>] [-SF | --file-screen-name <path>]
     <listspec>
   twlist.py lists-members-destroy_all [<userspec>...]
     [-UF | --file-user-id <path>] [-SF | --file-screen-name <path>]
     <listspec>
-  twlist.py lists-members [-c | --count <n>] <listspec>
-  twlist.py lists-subscribers [-c | --count <n>] <listspec>
+  twlist.py lists-members [-c | --count <n>] [--cursor <n>]
+    [-E | --include-entities] [--skip-status] <listspec>
+  twlist.py lists-subscribers [-c | --count <n>] [--cursor <n>]
+    [-E | --include-entities] [--skip-status] <listspec>
   twlist.py lists-subscribers-create <listspec>
   twlist.py lists-subscribers-destroy <listspec>
   twlist.py lists-memberships [-c | --count <n>] [--cursor <n>]
-    <userspec>
+    [--filter-to-owned-lists] <userspec>
   twlist.py lists-ownerships [-c | --count <n>] [--cursor <n>]
     <userspec>
   twlist.py lists-subscriptions [-c | --count <n>] [--cursor <n>]
@@ -46,7 +49,7 @@ from argparse import ArgumentParser
 from itertools import count
 import time
 
-__version__ = '1.9.4'
+__version__ = '1.9.5'
 
 class TwitterListManager(AbstractTwitterManager):
     """This class handles commands about a Twitter list."""
@@ -71,48 +74,15 @@ class TwitterListManager(AbstractTwitterManager):
 
         request, logger, args = self.tw.lists.statuses, self.logger, vars(self.args)
 
-        kwargs = dict(
-            include_rts=False,
-            include_entities=False,)
-        kwargs.update({k:args[k] for k in (
+        kwargs = {k:args[k] for k in (
             'list_id', 'slug',
             'owner_id', 'owner_screen_name',
-            'count', 'max_id')
-                if (k in args) and (args[k] is not None)})
+            'since_id', 'max_id', 'count',
+            'include_rts', 'include_entities',)
+                if (k in args) and (args[k] is not None)}
 
-        total_statuses = 0
-
-        # XXX
-        pcount = args.get('count', 20)
-        max_count = args.get('max_count', 20)
-        if max_count < pcount:
-            max_count = pcount
-
-        results = []
-        for i in count():
-            logger.info("[{:03d}] Waiting...".format(i))
-
-            # Request.
-            response = request(**kwargs)
-            if response:
-                max_id = response[0]['id']
-                min_id = response[-1]['id']
-                mcount = len(response)
-                total_statuses += mcount
-            else:
-                break
-
-            results.extend(response)
-            logger.info("[{:03d}] min_id={} Fetched.".format(i, min_id))
-
-            if max_count <= total_statuses:
-                logger.info("mcount={} max_count={} total_statuses={}".format(
-                    mcount, max_count, total_statuses))
-                break
-
-            kwargs['max_id'] = min_id - 1
-
-        output(results)
+        response = request(**kwargs)
+        output(response)
 
     def request_lists_members_create_all(self):
         """Request POST lists/members/create_all for Twitter."""
@@ -226,19 +196,16 @@ class TwitterListManager(AbstractTwitterManager):
 
         logger, args = self.logger, vars(self.args)
 
-        kwargs = dict(
-            cursor=-1,
-            skip_status=False,)
-        kwargs.update(
-            {k:args[k] for k in (
-                'list_id', 'slug',
-                'owner_id', 'owner_screen_name',
-                'count',
-                'cursor',) if (k in args) and (args[k] is not None)})
+        kwargs = dict(cursor=-1)
+        kwargs.update({k:args[k] for k in (
+            'list_id', 'slug',
+            'owner_id', 'owner_screen_name',
+            'count', 'include_entities', 'skip_status',
+            'cursor',) if (k in args) and (args[k] is not None)})
 
         results = []
         try:
-            while kwargs['cursor'] != 0:
+            while kwargs['cursor']:
                 response = request(**kwargs)
                 results.extend(response['users'])
                 next_cursor = response['next_cursor']
@@ -259,17 +226,16 @@ class TwitterListManager(AbstractTwitterManager):
 
         logger, args = self.logger, vars(self.args)
 
-        kwargs = dict(
-            cursor=-1)
+        kwargs = dict(cursor=-1)
         kwargs.update({k:args[k] for k in (
             'user_id', 'screen_name',
-            'count',
-            'cursor',)
+            'count', 'cursor',
+            'filter_to_owned_lists')
                 if (k in args) and (args[k] is not None)})
 
         results = []
         try:
-            while kwargs['cursor'] != 0:
+            while kwargs['cursor']:
                 response = request(**kwargs)
                 results.extend(response['lists'])
                 next_cursor = response['next_cursor']

@@ -12,7 +12,7 @@ from twitter import TwitterHTTPError
 import logging
 import sys
 
-__version__ = '1.7.2'
+__version__ = '1.8.0'
 
 def make_logger(name=None):
     """Set up a logger with the specified name.
@@ -179,6 +179,17 @@ def cache(func):
 # parsers
 
 @cache
+def parser_full():
+    """Return the parent parser object for --full optional flag."""
+
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '-F', '--full',
+        action='store_true',
+        help='retrieve data as much as possible')
+    return parser
+
+@cache
 def parser_user_single():
     """Return the parent parser object for --user-id and
     --screen_name arguments.
@@ -230,6 +241,20 @@ def parser_user_multiple():
     return parser
 
 @cache
+def parser_count_statuses():
+    """Return the parent parser object for --count option."""
+
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '-c', '--count',
+        type=int,
+        nargs='?',
+        choices=range(1, 201),
+        metavar='{1..200}',
+        help='the number of tweets to return per page')
+    return parser
+
+@cache
 def parser_count_users_many():
     """Return the parent parser object for --count optional argument.
 
@@ -266,6 +291,30 @@ def parser_cursor():
     return parser
 
 @cache
+def parser_since_max_ids():
+    """Return the parent parser object for --since-id and --max-id
+    optional arguments.
+    """
+
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '--since-id',
+        dest='since_id',
+        type=int,
+        nargs='?',
+        metavar='<status_id>',
+        help='return results with an ID greater than the specified ID')
+    parser.add_argument(
+        '--max-id',
+        dest='max_id',
+        type=int,
+        nargs='?',
+        metavar='<status_id>',
+        help='return results with an ID less than or equal to the specified ID')
+
+    return parser
+
+@cache
 def parser_include_entities():
     """Return the parent parser object for --include-entities
     optional argument.
@@ -277,6 +326,43 @@ def parser_include_entities():
         action='store_true',
         dest='include_entities',
         help='include entity nodes in tweet objects')
+    return parser
+
+@cache
+def parser_include_rts():
+    """Return the parent parser object for --include-rts optional
+    argument.
+    """
+
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '--include-rts',
+        dest='include_rts',
+        action='store_true',
+        help='show native retweets in the timeline')
+    return parser
+
+@cache
+def parser_include_user_entities():
+    """Return the parent parser object for --include-user-entities
+    optional argument.
+    """
+
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+            '--include-user-entities',
+            dest='include_user_entities',
+            action='store_true',
+            help='include the user entities node')
+    return parser
+
+@cache
+def parser_skip_status():
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '--skip-status',
+        action='store_true',
+        help='exclude statuses from user objects')
     return parser
 
 def output(data, fp=sys.stdout):

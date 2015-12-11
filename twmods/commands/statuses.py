@@ -5,9 +5,13 @@ and its subclasses.
 
 from .. import AbstractTwitterCommand
 from .. import cache
-from .. import parser_user_single
-from .. import parser_cursor
-from .. import parser_include_entities
+from .. import (parser_user_single,
+                parser_count_statuses,
+                parser_cursor,
+                parser_since_max_ids,
+                parser_include_entities,
+                parser_include_rts,
+                parser_include_user_entities)
 from argparse import ArgumentParser
 
 # commands
@@ -103,13 +107,9 @@ class RetweetsOfMe(AbstractTwitterStatusesCommand):
             parents=[parser_count_retweets(), # 20, 100
                      parser_since_max_ids(),
                      parser_trim_user(),
-                     parser_include_entities()],
+                     parser_include_entities(),
+                     parser_include_user_entities()],
             help=self.__doc__)
-        parser.add_argument(
-            '--include-user-entities',
-            dest='include_user_entities',
-            action='store_true',
-            help='include the user entities node')
         return parser
 
     def __call__(self):
@@ -356,20 +356,6 @@ def make_commands(manager):
 # parsers
 
 @cache
-def parser_count_statuses():
-    """Return the parent parser object for --count option."""
-
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        '-c', '--count',
-        type=int,
-        nargs='?',
-        choices=range(1, 201),
-        metavar='{1..200}',
-        help='the number of tweets to return per page')
-    return parser
-
-@cache
 def parser_count_retweets():
     """Return the parent parser object for --count option."""
 
@@ -381,30 +367,6 @@ def parser_count_retweets():
         choices=range(1, 101),
         metavar='{1..100}',
         help='the number of tweets to return per page')
-    return parser
-
-@cache
-def parser_since_max_ids():
-    """Return the parent parser object for --since-id and --max-id
-    optional arguments.
-    """
-
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        '--since-id',
-        dest='since_id',
-        type=int,
-        nargs='?',
-        metavar='<status_id>',
-        help='return results with an ID greater than the specified ID')
-    parser.add_argument(
-        '--max-id',
-        dest='max_id',
-        type=int,
-        nargs='?',
-        metavar='<status_id>',
-        help='return results with an ID less than or equal to the specified ID')
-
     return parser
 
 @cache
@@ -447,20 +409,6 @@ def parser_exclude_replies():
         dest='exclude_replies',
         action='store_true',
         help='prevent replies from appearing in the timeline')
-    return parser
-
-@cache
-def parser_include_rts():
-    """Return the parent parser object for --include-rts optional
-    argument.
-    """
-
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument(
-        '--include-rts',
-        dest='include_rts',
-        action='store_true',
-        help='show native retweets in the timeline')
     return parser
 
 @cache

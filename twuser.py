@@ -8,7 +8,7 @@ Usage:
     [-UF | --file-user-id <path>]
     [-SF | --file-screen-name <path>]
   twuser.py users-show [--include-entities] <userspec>
-  twuser.py users-search [--full] [-p | --page <n>]
+  twuser.py users-search [-F | --full] [-p | --page <n>]
     [-c | --count <n>] [-E | --include-entities] <query>
   twuser.py users-profile-banner <userspec>
   twuser.py users-suggestions [-l | --lang <LANG>]
@@ -27,7 +27,7 @@ from argparse import ArgumentParser
 from itertools import count
 import time
 
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 
 class TwitterUserManager(AbstractTwitterManager):
     """This class handles commands about a Twitter users."""

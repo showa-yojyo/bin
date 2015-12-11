@@ -5,10 +5,12 @@ and its subclasses.
 
 from .. import AbstractTwitterCommand
 from .. import cache
-from .. import parser_user_single
-from .. import parser_user_multiple
-from .. import parser_count_users_many
-from .. import parser_cursor
+from .. import (parser_user_single,
+                parser_user_multiple,
+                parser_count_users_many,
+                parser_cursor,
+                parser_skip_status,
+                parser_include_user_entities)
 from argparse import ArgumentParser
 
 # Available subcommands.
@@ -71,7 +73,9 @@ class FollowersList(AbstractTwitterFollowersCommand):
             aliases=FOLLOWERS_LIST[1:],
             parents=[parser_user_single(),
                      parser_count_users(), # 20, 200
-                     parser_cursor()],
+                     parser_cursor(),
+                     parser_skip_status(),
+                     parser_include_user_entities()],
             help=self.__doc__)
         return parser
 
@@ -105,7 +109,9 @@ class FriendsList(AbstractTwitterFollowersCommand):
             aliases=FRIENDS_LIST[1:],
             parents=[parser_user_single(),
                      parser_count_users(), # 20, 200
-                     parser_cursor()],
+                     parser_cursor(),
+                     parser_skip_status(),
+                     parser_include_user_entities()],
             help=self.__doc__)
         return parser
 
@@ -182,11 +188,28 @@ class FriendshipsShow(AbstractTwitterFollowersCommand):
             aliases=FRIENDSHIPS_SHOW[1:],
             help=self.__doc__)
 
-        parser.add_argument(
-            'source_screen_name',
+        source = parser.add_mutually_exclusive_group(required=True)
+        source.add_argument(
+            '-U', '--source-user-id',
+            nargs='?',
+            dest='source_user_id',
+            help='the user_id of the subject user')
+        source.add_argument(
+            '-S', '--source-screen-name',
+            nargs='?',
+            dest='source_screen_name',
             help='the screen_name of the subject user')
-        parser.add_argument(
-            'target_screen_name',
+
+        target = parser.add_mutually_exclusive_group(required=True)
+        target.add_argument(
+            '-V', '--target-user-id',
+            nargs='?',
+            dest='target_user_id',
+            help='the user_id of the target user')
+        target.add_argument(
+            '-T', '--target_screen_name',
+            nargs='?',
+            dest='target_screen_name',
             help='the screen_name of the target user')
 
         return parser
