@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Find Twitter tweets.
 
-Usage:
+description = "A utility script to search Twitter statuses."
+
+usage = """
   twsearch.py [--version] [--help]
   twsearch.py [-F | --full] [-g | --geocode <geocode>]
     [--lang <language>] [--locale <locale>]
@@ -15,15 +16,16 @@ Usage:
 
 from secret import twitter_instance
 from twitter import TwitterHTTPError
+from twmods import epilog
 from twmods import make_logger
 from twmods import output
 from twmods import (parser_full,
                     parser_since_max_ids,
                     parser_include_entities)
 from argparse import ArgumentParser
-from argparse import ArgumentTypeError
 import time
 
+__doc__ = '\n'.join((description, usage, epilog))
 __version__ = '1.3.2'
 
 COUNT_MAX = 100
@@ -37,12 +39,16 @@ def configure():
     """
 
     parser = ArgumentParser(
-        description='Twitter Tweets Finder',
+        description=description,
         parents=[parser_full(),
                  parser_since_max_ids(),
-                 parser_include_entities()])
-    parser.add_argument('--version', action='version', version=__version__)
-
+                 parser_include_entities()],
+        epilog=epilog,
+        usage=usage)
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=__version__)
     parser.add_argument(
         'q',
         metavar='<query>',

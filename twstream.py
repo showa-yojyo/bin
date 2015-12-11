@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""twstream.py: Twitter Streaming API Utility
 
-Usage:
+description = "Twitter Streaming API Utility"
+
+usage = """
   twstream.py [--version] [--help]
   twstream.py <common-options> statuses-sample
   twstream.py <common-options> statuses-filter [--follow <CSV>]
@@ -23,11 +24,13 @@ from secret import twitter_stream
 from twitter import TwitterHTTPError
 from twitter.stream import Timeout, HeartbeatTimeout, Hangup
 from twmods import AbstractTwitterManager
+from twmods import epilog
 from twmods.commands.streaming import make_commands
 from argparse import ArgumentParser
 from pprint import pprint
 
-__version__ = '1.1.2'
+__doc__ = '\n'.join((description, usage, epilog))
+__version__ = '1.1.3'
 
 class TwitterStreamManager(AbstractTwitterManager):
     """Twitter Streaming API Utility"""
@@ -43,8 +46,12 @@ class TwitterStreamManager(AbstractTwitterManager):
             parameters.
         """
 
-        parser = ArgumentParser(description='Twitter Streaming API Utility')
-        parser.add_argument('--version', action='version', version=__version__)
+        parser = ArgumentParser(
+            description=description, epilog=epilog, usage=usage)
+        parser.add_argument(
+            '--version',
+            action='version',
+            version=__version__)
 
         parser.add_argument(
             '-o', '--timeout',

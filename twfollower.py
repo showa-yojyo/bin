@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""twfollower.py: A utility script to manage friends and followers
-of a specified Twitter user.
 
-Usage:
+description = """A utility script to manage friends, followers, and
+friendships of a specified Twitter user."""
+
+usage = """
   twfollower.py [--version] [--help]
   twfollower.py followers-ids [-c | --count <n>] [--cursor <n>]
     <userspec>
@@ -30,13 +31,15 @@ where
 
 from twitter import TwitterHTTPError
 from twmods import AbstractTwitterManager
+from twmods import epilog
 from twmods import output
 from twmods.commands.followers import make_commands
 from argparse import ArgumentParser
 from itertools import count
 import time
 
-__version__ = '1.9.4'
+__doc__ = '\n'.join((description, usage, epilog))
+__version__ = '1.9.6'
 
 class TwitterFollowerManager(AbstractTwitterManager):
     """This class handles commands about a Twitter followers."""
@@ -52,8 +55,12 @@ class TwitterFollowerManager(AbstractTwitterManager):
             parameters.
         """
 
-        parser = ArgumentParser(description='Twitter Followers Viewer')
-        parser.add_argument('--version', action='version', version=__version__)
+        parser = ArgumentParser(
+            description=description, epilog=epilog, usage=usage)
+        parser.add_argument(
+            '--version',
+            action='version',
+            version=__version__)
         return parser
 
     def request_friends_ids(self):

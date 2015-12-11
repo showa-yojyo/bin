@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""twlist.py: A utility script to manage a Twitter list.
 
-Usage:
+description = "A utility script to manage a Twitter list."
+
+usage = """
   twlist.py [--version] [--help]
   twlist.py lists-statuses [-c | --count <n>]
     [--since-id <status_id>] [--max-id <status_id>]
@@ -42,6 +43,7 @@ where
 """
 
 from twmods import AbstractTwitterManager
+from twmods import epilog
 from twmods import output
 from twmods.commands.lists import make_commands
 from twitter import TwitterHTTPError
@@ -49,7 +51,8 @@ from argparse import ArgumentParser
 from itertools import count
 import time
 
-__version__ = '1.9.5'
+__doc__ = '\n'.join((description, usage, epilog))
+__version__ = '1.9.6'
 
 class TwitterListManager(AbstractTwitterManager):
     """This class handles commands about a Twitter list."""
@@ -65,8 +68,12 @@ class TwitterListManager(AbstractTwitterManager):
             parameters.
         """
 
-        parser = ArgumentParser(description='Twitter List Manager')
-        parser.add_argument('--version', action='version', version=__version__)
+        parser = ArgumentParser(
+            description=description, epilog=epilog, usage=usage)
+        parser.add_argument(
+            '--version',
+            action='version',
+            version=__version__)
         return parser
 
     def request_lists_statuses(self):

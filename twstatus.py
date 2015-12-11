@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""twstatus.py: A utility script to manage Twitter statuses.
 
-Usage:
+description = "A utility script to manage Twitter statuses."
+
+usage = """
   twstatus.py [--version] [--help]
   twstatus.py statuses/mentions_timeline [-c | --count <n>]
     [--since-id <status_id>] [--max-id <status_id>] [--trim-user]
@@ -43,12 +44,14 @@ where
                | (-S | --screen-name <screen_name>)
 """
 
-__version__ = '1.0.0'
-
 from twmods import AbstractTwitterManager
-from twmods.commands.statuses import make_commands
+from twmods import epilog
 from twmods import output
+from twmods.commands.statuses import make_commands
 from argparse import ArgumentParser
+
+__doc__ = '\n'.join((description, usage, epilog))
+__version__ = '1.0.1'
 
 class TwitterStatusManager(AbstractTwitterManager):
     """This class handles commands about Twitter statuses."""
@@ -64,8 +67,12 @@ class TwitterStatusManager(AbstractTwitterManager):
             parameters.
         """
 
-        parser = ArgumentParser(description='Twitter Status Manager')
-        parser.add_argument('--version', action='version', version=__version__)
+        parser = ArgumentParser(
+            description=description, epilog=epilog, usage=usage)
+        parser.add_argument(
+            '--version',
+            action='version',
+            version=__version__)
         return parser
 
     def request_statuses_mentions_timeline(self):

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""twuser.py: A utility script to manage Twitter users.
 
-Usage:
+description = "A utility script to manage Twitter users."
+
+usage = """
   twuser.py [--version] [--help]
   twuser.py users-lookup [<userspec>...]
     [-UF | --file-user-id <path>]
@@ -21,12 +22,14 @@ where
 
 from twitter import TwitterHTTPError
 from twmods import AbstractTwitterManager
+from twmods import epilog
 from twmods import output
 from twmods.commands.users import make_commands
 from argparse import ArgumentParser
 from itertools import count
 import time
 
+__doc__ = '\n'.join((description, usage, epilog))
 __version__ = '1.1.2'
 
 class TwitterUserManager(AbstractTwitterManager):
@@ -43,8 +46,12 @@ class TwitterUserManager(AbstractTwitterManager):
             parameters.
         """
 
-        parser = ArgumentParser(description='a utility script to manage Twitter users')
-        parser.add_argument('--version', action='version', version=__version__)
+        parser = ArgumentParser(
+            description=description, epilog=epilog, usage=usage)
+        parser.add_argument(
+            '--version',
+            action='version',
+            version=__version__)
         return parser
 
     def request_users_lookup(self):

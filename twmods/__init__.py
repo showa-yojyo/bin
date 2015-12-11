@@ -12,6 +12,8 @@ from twitter import TwitterHTTPError
 import logging
 import sys
 
+epilog = "GitHub repository: https://github.com/showa-yojyo/bin"
+
 __version__ = '1.8.0'
 
 def make_logger(name=None):
