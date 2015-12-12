@@ -216,7 +216,7 @@ class Update(AbstractTwitterStatusesCommand):
             dest='media_ids',
             help='a list of media ids to associate with the tweet')
         parser.add_argument(
-            'text',
+            'status',
             help='the text of your status update, typically up to 140 characters')
 
         return parser

@@ -13,7 +13,7 @@ from secret import twitter_instance
 from twmods import (epilog, output)
 
 __doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 def configure():
     """Parse the command line parameters.
@@ -62,7 +62,7 @@ def main(args=None):
     kwargs = dict(media=raw_data)
 
     # A maximum of 100 additional owners may be specified.
-    if 'additional_owners' in args:
+    if args.additional_owners:
         kwargs['additional_owners'] = args.additional_owners
 
     # Uploaded media files will be available for use for 60 minutes
