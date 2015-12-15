@@ -7,14 +7,16 @@ from abc import ABCMeta
 from abc import abstractmethod
 from argparse import ArgumentParser
 from argparse import FileType
+from itertools import (count, islice)
 from json import dump
 from twitter import TwitterHTTPError
 import logging
 import sys
+import time
 
 epilog = "GitHub repository: https://github.com/showa-yojyo/bin"
 
-__version__ = '1.9.0'
+__version__ = '1.9.1'
 
 def make_logger(name=None):
     """Set up a logger with the specified name.

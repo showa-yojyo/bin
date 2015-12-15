@@ -52,7 +52,7 @@ from itertools import count
 import time
 
 __doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.9.6'
+__version__ = '1.9.7'
 
 class TwitterListManager(AbstractTwitterManager):
     """This class handles commands about a Twitter list."""
@@ -186,13 +186,13 @@ class TwitterListManager(AbstractTwitterManager):
             request: Select lists.members.create_all or lists.members.destroy_all.
         """
 
-        args = vars(args)
+        args = vars(self.args)
         kwargs = {k:args[k] for k in (
             'list_id', 'slug',
             'owner_id', 'owner_screen_name',)
                 if (k in args) and (args[k] is not None)}
 
-        self._request_users_csv(self, request, up_to=15, **kwargs)
+        self._request_users_csv(request, up_to=15, **kwargs)
 
     def _show_users(self, request):
         """Show users related tp the specified list.
