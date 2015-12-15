@@ -17,12 +17,12 @@ usage = """
 """
 
 from twmods import AbstractTwitterManager
-from twmods import (epilog, output)
+from twmods import (epilog, output, request_decorator)
 from twmods.commands.geo import make_commands
 from argparse import ArgumentParser
 
 __doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 class TwitterGeoManager(AbstractTwitterManager):
     "Demonstrate Twitter's GET geo/xxx endpoints."
@@ -48,15 +48,6 @@ class TwitterGeoManager(AbstractTwitterManager):
             version=__version__)
 
         return parser
-
-    def request_decorator(method):
-        def inner(self):
-            kwargs, request = method(self)
-            self.logger.info('args={}'.format(kwargs))
-            output(request(**kwargs))
-            self.logger.info('finished')
-
-        return inner
 
     @request_decorator
     def request_id_place_id(self):

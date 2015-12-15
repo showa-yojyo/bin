@@ -14,7 +14,7 @@ import sys
 
 epilog = "GitHub repository: https://github.com/showa-yojyo/bin"
 
-__version__ = '1.8.0'
+__version__ = '1.9.0'
 
 def make_logger(name=None):
     """Set up a logger with the specified name.
@@ -166,6 +166,15 @@ class AbstractTwitterManager(metaclass=ABCMeta):
                 time.sleep(2)
 
         output(results)
+
+def request_decorator(method):
+    def inner(manager):
+        kwargs, request = method(manager)
+        manager.logger.info('args={}'.format(kwargs))
+        output(request(**kwargs))
+        manager.logger.info('finished')
+
+    return inner
 
 def cache(func):
     instance = None
