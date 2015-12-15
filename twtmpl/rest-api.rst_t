@@ -1,0 +1,27 @@
+======================================================================
+{{ title }}
+======================================================================
+
+.. contents::
+
+{% for i in endpoints -%}
+{%- set endpoint = i -%}
+{%- set script_name = i.split(' ')[1].replace('/', '-').replace(':', '') + '.py' -%}
+{{ endpoint }}
+======================================================================
+
+.. literalinclude:: /_sample/ptt/{{ script_name }}
+   :language: python3
+
+* [1]
+* [2]
+
+次に実行例を示す。
+
+.. code-block:: console
+
+   $ {{ script_name }}
+
+{% endfor %}
+.. include:: /_include/python-refs-core.txt
+.. include:: /_include/python-refs-twitter.txt
