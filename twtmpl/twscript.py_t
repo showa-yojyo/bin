@@ -65,14 +65,14 @@ class {{ manager_class_name }}(AbstractTwitterManager):
 {%- set name_sanitized = sanitize(remove_category(name)) -%}
 {%- set mgr_method_name = 'request_' + sanitize(name) %}
     @request_decorator
-    def request_{{ mgr_method_name }}(self):
+    def {{ mgr_method_name }}(self):
         """Request {{ i }} for Twitter."""
 
-        request, args = self.tw.{{ command_module }}_{{ name|replace('/', '.')|replace(':', '_') }}, vars(self.args)
+        request, args = self.tw.{{ name|replace('/', '.')|replace(':', '_') }}, vars(self.args)
         #kwargs = {k:args[k] for k in (
         #    'param1', 'param2',)
         #        if (k in args) and (args[k] is not None)}
-        output(request(**kwargs))
+        return kwargs, request
 {% endfor %}
 def main(command_line=None):
     """The main function.
