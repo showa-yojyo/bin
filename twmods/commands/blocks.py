@@ -68,9 +68,7 @@ class CommandIds(AbstractTwitterBlockCommand):
         parser = subparsers.add_parser(
             BLOCK_IDS[0],
             aliases=BLOCK_IDS[1:],
-            parents=[parser_cursor(),
-                     parser_include_entities(),
-                     parser_skip_status()],
+            parents=[parser_cursor()],
             help=self.__doc__)
         return parser
 

@@ -6,6 +6,7 @@ and its subclasses.
 from .. import AbstractTwitterCommand
 from .. import cache
 from .. import (parser_full,
+                parser_page,
                 parser_user_single,
                 parser_user_multiple,
                 parser_include_entities)
@@ -68,15 +69,13 @@ class Search(AbstractTwitterUsersCommand):
         parser = subparsers.add_parser(
             USERS_SEARCH[0],
             aliases=USERS_SEARCH[1:],
-            parents=[parser_full(), parser_include_entities()],
+            parents=[parser_full(),
+                     parser_page(),
+                     parser_include_entities()],
             help=self.__doc__)
         parser.add_argument(
             'q',
             help='the search query to run against people search')
-        parser.add_argument(
-            '-p', '--page',
-            type=int,
-            help='the page ranges of results to retrieve')
         parser.add_argument(
             '-c', '--count',
             type=int,

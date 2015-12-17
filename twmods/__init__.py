@@ -16,7 +16,7 @@ import time
 
 epilog = "GitHub repository: https://github.com/showa-yojyo/bin"
 
-__version__ = '1.9.1'
+__version__ = '1.10.0'
 
 def make_logger(name=None):
     """Set up a logger with the specified name.
@@ -301,6 +301,15 @@ def parser_cursor():
         type=int,
         nargs='?',
         help='break the results into pages')
+    return parser
+
+@cache
+def parser_page():
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '-p', '--page',
+        type=int,
+        help='the page of results to retrieve')
     return parser
 
 @cache
