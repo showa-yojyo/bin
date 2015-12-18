@@ -383,6 +383,7 @@ def parser_skip_status():
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         '--skip-status',
+        dest='skip_status',
         action='store_true',
         help='exclude statuses from user objects')
     return parser
