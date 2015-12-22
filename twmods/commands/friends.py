@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-"""followers.py: Implementation of class AbstractTwitterFollowersCommand
+"""friends.py: Implementation of class AbstractTwitterFriendCommand
 and its subclasses.
 """
 
 from .. import AbstractTwitterCommand
 from .. import (parser_user_single,
-                parser_user_multiple,
                 parser_count_users,
                 parser_count_users_many,
                 parser_cursor,
@@ -13,26 +12,24 @@ from .. import (parser_user_single,
                 parser_include_user_entities)
 from argparse import ArgumentParser
 
-# Available subcommands.
-# names[0] and names[1:] are the official name and aliases, respectively.
-FOLLOWERS_IDS = ('followers/ids', 'foi')
-FOLLOWERS_LIST = ('followers/list', 'fol')
+# GET friends/ids
+# GET friends/list
 
-# GET followers/ids - FOLLOWERS_IDS
-# GET followers/list - FOLLOWERS_LIST
+FRIENDS_IDS = ('friends/ids', 'fri')
+FRIENDS_LIST = ('friends/list', 'frl')
 
-class AbstractTwitterFollowersCommand(AbstractTwitterCommand):
+class AbstractTwitterFriendCommand(AbstractTwitterCommand):
     pass
 
-class FollowersIds(AbstractTwitterFollowersCommand):
-    """Print user IDs for every user following the specified
-    user.
+class CommandIds(AbstractTwitterFriendCommand):
+    """Print user IDs for every user the specified user is
+    following.
     """
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            FOLLOWERS_IDS[0],
-            aliases=FOLLOWERS_IDS[1:],
+            FRIENDS_IDS[0],
+            aliases=FRIENDS_IDS[1:],
             parents=[parser_user_single(),
                      parser_count_users_many(), # 20, 5000
                      parser_cursor()],
@@ -40,15 +37,15 @@ class FollowersIds(AbstractTwitterFollowersCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_followers_ids()
+        self.manager.request_friends_ids()
 
-class FollowersList(AbstractTwitterFollowersCommand):
-    """List all of the users following the specified user."""
+class CommandList(AbstractTwitterFriendCommand):
+    """List all of the users the specified user is following."""
 
     def create_parser(self, subparsers):
         parser = subparsers.add_parser(
-            FOLLOWERS_LIST[0],
-            aliases=FOLLOWERS_LIST[1:],
+            FRIENDS_LIST[0],
+            aliases=FRIENDS_LIST[1:],
             parents=[parser_user_single(),
                      parser_count_users(), # 20, 200
                      parser_cursor(),
@@ -58,8 +55,8 @@ class FollowersList(AbstractTwitterFollowersCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_followers_list()
+        self.manager.request_friends_list()
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterFollowersCommand.__subclasses__()]
+    return [cmd_t(manager) for cmd_t in AbstractTwitterFriendCommand.__subclasses__()]

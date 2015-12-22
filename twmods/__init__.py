@@ -112,6 +112,63 @@ class AbstractTwitterManager(metaclass=ABCMeta):
 
     # Helper methods
 
+    def _list_ids(self, request):
+        """Print user IDs.
+
+        Args:
+            request: A PTT request method for Twitter API.
+        """
+
+        logger, args = self.logger, vars(self.args)
+
+        kwargs = dict(
+            cursor=-1,
+            stringify_ids=True,)
+        kwargs.update(
+            {k:args[k] for k in (
+                'user_id',
+                'screen_name',
+                'count',
+                'cursor',) if (k in args) and (args[k] is not None)})
+        logger.info('_list_ids arg: {}'.format(kwargs))
+
+        while kwargs['cursor']:
+            response = request(**kwargs)
+            print('\n'.join(response['ids']))
+            next_cursor = response['next_cursor']
+            logger.info('next_cursor: {}'.format(next_cursor))
+            kwargs['cursor'] = next_cursor
+
+    def _list_common(self, request):
+        """The common procedure of friends/list and followers/list.
+
+        Args:
+            request: A PTT request method for Twitter API.
+        """
+
+        logger, args = self.logger, vars(self.args)
+
+        kwargs = dict(cursor=-1)
+        kwargs.update(
+            {k:args[k] for k in (
+                'user_id', 'screen_name',
+                'count', 'cursor', 'include_user_entities')
+             if (k in args) and (args[k] is not None)})
+
+        results = []
+        try:
+            while kwargs['cursor']:
+                response = request(**kwargs)
+                results.extend(response['users'])
+                next_cursor = response['next_cursor']
+                logger.info('next_cursor: {}'.format(next_cursor))
+                kwargs['cursor'] = next_cursor
+        except TwitterHTTPError as e:
+            logger.info('{}'.format(e))
+            #raise
+
+        output(results)
+
     def _request_users_csv(self, request, up_to=100, **kwargs):
         """Common method to the following requests:
 
@@ -265,6 +322,24 @@ def parser_count_statuses():
         choices=range(1, 201),
         metavar='{1..200}',
         help='the number of tweets to return per page')
+    return parser
+
+@cache
+def parser_count_users():
+    """Return the parent parser object of the following subcommands:
+
+    * friends/lists
+    * followers/lists
+    """
+
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '-c', '--count',
+        type=int,
+        nargs='?',
+        choices=range(1, 201),
+        metavar='{1..200}',
+        help='number of users to return per page')
     return parser
 
 @cache
