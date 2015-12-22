@@ -390,5 +390,5 @@ def parser_skip_status():
 
 def output(data, fp=sys.stdout):
     """Output statuses, users, etc. to fp as JSON formatted data."""
-    dump(data, fp, ensure_ascii=False, indent=4)
+    dump(data, fp, ensure_ascii=False, indent=4, sort_keys=True)
     fp.write("\n")
