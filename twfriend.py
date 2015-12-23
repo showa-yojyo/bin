@@ -16,12 +16,12 @@ where
 """
 
 from twmods import AbstractTwitterManager
-from twmods import (epilog, output, request_decorator)
+from twmods import epilog
 from twmods.commands.friends import make_commands
 from argparse import ArgumentParser
 
 __doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.10.0'
+__version__ = '1.10.1'
 
 class TwitterFriendManager(AbstractTwitterManager):
     """This class handles friends/xxx endpoints of Twitter API."""
@@ -44,34 +44,6 @@ class TwitterFriendManager(AbstractTwitterManager):
             action='version',
             version=__version__)
         return parser
-
-    def request_friends_ids(self):
-        """Request GET friends/ids for Twitter."""
-        self._list_ids(self.tw.friends.ids)
-
-    def request_friends_list(self):
-        """Request GET friends/list for Twitter."""
-        self._list_common(self.tw.friends.list)
-
-    @request_decorator
-    def request_friends_ids(self):
-        """Request GET friends/ids for Twitter."""
-
-        request, args = self.tw.friends.ids, vars(self.args)
-        #kwargs = {k:args[k] for k in (
-        #    'param1', 'param2',)
-        #        if (k in args) and (args[k] is not None)}
-        return kwargs, request
-
-    @request_decorator
-    def request_friends_list(self):
-        """Request GET friends/list for Twitter."""
-
-        request, args = self.tw.friends.list, vars(self.args)
-        #kwargs = {k:args[k] for k in (
-        #    'param1', 'param2',)
-        #        if (k in args) and (args[k] is not None)}
-        return kwargs, request
 
 def main(command_line=None):
     """The main function.

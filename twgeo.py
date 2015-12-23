@@ -17,12 +17,12 @@ usage = """
 """
 
 from twmods import AbstractTwitterManager
-from twmods import (epilog, output, request_decorator)
+from twmods import epilog
 from twmods.commands.geo import make_commands
 from argparse import ArgumentParser
 
 __doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 class TwitterGeoManager(AbstractTwitterManager):
     "Demonstrate Twitter's GET geo/xxx endpoints."
@@ -48,34 +48,6 @@ class TwitterGeoManager(AbstractTwitterManager):
             version=__version__)
 
         return parser
-
-    @request_decorator
-    def request_id_place_id(self):
-        """Request GET geo/id/:place_id for Twitter."""
-
-        kwargs = dict(_id=self.args.place_id)
-        return kwargs, self.tw.geo.id._id # hack?
-
-    @request_decorator
-    def request_reverse_geocode(self):
-        """Request GET geo/reverse_geocode for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'lat', 'long', 'accuracy', 'granularity', 'max_results')
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.geo.reverse_geocode
-
-    @request_decorator
-    def request_search(self):
-        """Request GET geo/search for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'lat', 'long', 'accuracy', 'granularity', 'max_results',
-            'query', 'ip', 'contained_within', 'street_address')
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.geo.search
 
 def main(command_line=None):
     """The main function.

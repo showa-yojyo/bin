@@ -3,8 +3,8 @@
 and its subclasses.
 """
 
-from .. import AbstractTwitterCommand
-from .. import (parser_include_entities, parser_skip_status)
+from . import AbstractTwitterCommand, call_decorator
+from ..parsers import (parser_include_entities, parser_skip_status)
 from argparse import (ArgumentParser, FileType)
 
 # POST account/remove_profile_banner
@@ -47,8 +47,11 @@ class CommandRemoveProfileBanner(AbstractTwitterAccountCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_account_remove_profile_banner()
+        """Request POST account/remove_profile_banner for Twitter."""
+
+        return {}, self.tw.account.remove_profile_banner
 
 class CommandSettingsG(AbstractTwitterAccountCommand):
     """Print settings (including current trend, geo and sleep time
@@ -62,8 +65,13 @@ class CommandSettingsG(AbstractTwitterAccountCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_account_settings_g()
+        """Request GET account/settings for Twitter."""
+
+        args = vars(self.args)
+        kwargs = dict(_method='GET')
+        return kwargs, self.tw.account.settings
 
 class CommandSettingsP(AbstractTwitterAccountCommand):
     """Update the authenticating user's settings."""
@@ -109,8 +117,17 @@ class CommandSettingsP(AbstractTwitterAccountCommand):
             help='the language which Twitter should render in')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_account_settings_p()
+        """Request POST account/settings for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'sleep_time_enabled', 'start_sleep_time', 'end_sleep_time',
+            'time_zone', 'trend_location_woeid',
+            'allow_contributor_request', 'lang',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.account.settings
 
 class CommandUpdateDeliveryDevice(AbstractTwitterAccountCommand):
     """Set which device Twitter delivers updates to for the
@@ -131,8 +148,15 @@ class CommandUpdateDeliveryDevice(AbstractTwitterAccountCommand):
 
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_account_update_delivery_device()
+        """Request POST account/update_delivery_device for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'device', 'include_entities',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.account.update_delivery_device
 
 class CommandUpdateProfile(AbstractTwitterAccountCommand):
     """Set some values that users are able to set under the Account
@@ -164,8 +188,16 @@ class CommandUpdateProfile(AbstractTwitterAccountCommand):
             help='a hex value that controls the color scheme of links on your profile page')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_account_update_profile()
+        """Request POST account/update_profile for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'name', 'url', 'location', 'description',
+            'profile_link_color',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.account.update_profile
 
 class CommandUpdateProfileBackgroundImage(AbstractTwitterAccountCommand):
     """Update the authenticating user's profile background image."""
@@ -194,8 +226,17 @@ class CommandUpdateProfileBackgroundImage(AbstractTwitterAccountCommand):
             help='the background image will be displayed tiled')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_account_update_profile_background_image()
+        """Request POST account/update_profile_background_image for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'image', # will be base64-encoded by PTT.
+            'media_id', 'tile',)
+                if (k in args) and (args[k] is not None)}
+
+        return kwargs, self.tw.account.update_profile_background_image
 
 class CommandUpdateProfileBanner(AbstractTwitterAccountCommand):
     """Upload a profile banner on behalf of the authenticating user."""
@@ -230,8 +271,17 @@ class CommandUpdateProfileBanner(AbstractTwitterAccountCommand):
             help='the number of pixels by which to offset the uploaded image from the top')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_account_update_profile_banner()
+        """Request POST account/update_profile_banner for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'banner', # will be base64-encoded by PTT.
+            'width', 'height', 'offset_left', 'offset_top',)
+                if (k in args) and (args[k] is not None)}
+
+        return kwargs, self.tw.account.update_profile_banner
 
 class CommandUpdateProfileImage(AbstractTwitterAccountCommand):
     """Update the authenticating user's profile image."""
@@ -249,8 +299,17 @@ class CommandUpdateProfileImage(AbstractTwitterAccountCommand):
             help='the avatar image for the profile')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_account_update_profile_image()
+        """Request POST account/update_profile_image for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'image', # will be base64-encoded by PTT.
+            'include_entities', 'skip_status',)
+                if (k in args) and (args[k] is not None)}
+
+        return kwargs, self.tw.account.update_profile_image
 
 class CommandVerifyCredentials(AbstractTwitterAccountCommand):
     """Return an HTTP 200 OK response code and a representation of
@@ -270,8 +329,15 @@ class CommandVerifyCredentials(AbstractTwitterAccountCommand):
             help='email will be returned in the user objects as a string')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_account_verify_credentials()
+        """Request GET account/verify_credentials for Twitter."""
+
+        request, args = self.tw.account.verify_credentials, vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'include_entities', 'skip_status', 'email',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, request
 
 def make_commands(manager):
     """Prototype"""

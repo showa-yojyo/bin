@@ -3,14 +3,15 @@
 and its subclasses.
 """
 
-from .. import AbstractTwitterCommand
-from .. import (parser_user_single,
-                parser_user_multiple,
-                parser_count_users,
-                parser_count_users_many,
-                parser_cursor,
-                parser_skip_status,
-                parser_include_user_entities)
+from . import AbstractTwitterCommand, call_decorator
+from ..parsers import (
+    parser_user_single,
+    parser_user_multiple,
+    parser_count_users,
+    parser_count_users_many,
+    parser_cursor,
+    parser_skip_status,
+    parser_include_user_entities)
 from argparse import ArgumentParser
 
 # Available subcommands.
@@ -40,7 +41,8 @@ class FollowersIds(AbstractTwitterFollowersCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_followers_ids()
+        """Request GET followers/ids for Twitter."""
+        self._list_ids(self.tw.followers.ids)
 
 class FollowersList(AbstractTwitterFollowersCommand):
     """List all of the users following the specified user."""
@@ -58,7 +60,8 @@ class FollowersList(AbstractTwitterFollowersCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_followers_list()
+        """Request GET followers/list for Twitter."""
+        self._list_common(self.tw.followers.list)
 
 def make_commands(manager):
     """Prototype"""

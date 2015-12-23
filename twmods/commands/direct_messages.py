@@ -3,14 +3,15 @@
 and its subclasses.
 """
 
-from .. import AbstractTwitterCommand
-from .. import cache
-from .. import (parser_user_single,
-                parser_count_statuses,
-                parser_page,
-                parser_since_max_ids,
-                parser_include_entities,
-                parser_skip_status,)
+from . import AbstractTwitterCommand, call_decorator
+from ..parsers import (
+    cache,
+    parser_user_single,
+    parser_count_statuses,
+    parser_page,
+    parser_since_max_ids,
+    parser_include_entities,
+    parser_skip_status,)
 from argparse import ArgumentParser
 
 # GET direct_messages
@@ -44,8 +45,16 @@ class Command(AbstractTwitterDirectMessageCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_direct_messages()
+        """Request GET direct_messages for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'since_id', 'max_id',
+            'count', 'include_entities', 'skip_status',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.direct_messages
 
 class CommandDestroy(AbstractTwitterDirectMessageCommand):
     """Destroy the direct message specified in the required ID
@@ -61,8 +70,15 @@ class CommandDestroy(AbstractTwitterDirectMessageCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_direct_messages_destroy()
+        """Request POST direct_messages/destroy for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            '_id', 'include_entities',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.direct_messages.destroy
 
 class CommandNew(AbstractTwitterDirectMessageCommand):
     """Send a new direct message to the specified user from the
@@ -80,8 +96,15 @@ class CommandNew(AbstractTwitterDirectMessageCommand):
             help='the text of your direct message')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_direct_messages_new()
+        """Request POST direct_messages/new for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'user_id', 'screen_name', 'text')
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.direct_messages.new
 
 class CommandSent(AbstractTwitterDirectMessageCommand):
     """Print the 20 most recent direct messages sent by the
@@ -99,8 +122,16 @@ class CommandSent(AbstractTwitterDirectMessageCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_direct_messages_sent()
+        """Request GET direct_messages/sent for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'since_id', 'max_id',
+            'count', 'page', 'include_entities',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.direct_messages.sent
 
 class CommandShow(AbstractTwitterDirectMessageCommand):
     """Print a single direct message, specified by an id parameter."""
@@ -113,8 +144,10 @@ class CommandShow(AbstractTwitterDirectMessageCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_direct_messages_show()
+        """Request GET direct_messages/show for Twitter."""
+        return dict(_id=self.args._id), self.tw.direct_messages.show
 
 def make_commands(manager):
     """Prototype"""

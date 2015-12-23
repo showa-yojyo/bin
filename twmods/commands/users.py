@@ -3,14 +3,18 @@
 and its subclasses.
 """
 
-from .. import AbstractTwitterCommand
-from .. import cache
-from .. import (parser_full,
-                parser_page,
-                parser_user_single,
-                parser_user_multiple,
-                parser_include_entities)
+from . import AbstractTwitterCommand, call_decorator, output
+from ..parsers import (
+    cache,
+    parser_full,
+    parser_page,
+    parser_user_single,
+    parser_user_multiple,
+    parser_include_entities)
 from argparse import ArgumentParser
+from twitter import TwitterHTTPError
+from itertools import count
+import time
 
 # Available subcommands.
 # names[0] and names[1:] are the official name and aliases, respectively.
@@ -45,7 +49,8 @@ class Lookup():
         return parser
 
     def __call__(self):
-        self.manager.request_users_lookup()
+        """Request GET users/lookup for Twitter."""
+        self._request_users_csv(self.tw.users.lookup)
 
 class Show(AbstractTwitterUsersCommand):
     """Print information about the user."""
@@ -59,8 +64,16 @@ class Show(AbstractTwitterUsersCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_users_show()
+        """Request GET users/show for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'user_id', 'screen_name',
+            'include_entities')
+              if k in args}
+        return kwargs, self.tw.users.show
 
 class Search(AbstractTwitterUsersCommand):
     """Search public user accounts."""
@@ -85,7 +98,49 @@ class Search(AbstractTwitterUsersCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_users_search()
+        """Request GET users/search for Twitter."""
+
+        logger, args = self.logger, vars(self.args)
+        request = self.tw.users.search
+        results = None
+        if args['full']:
+            UP_TO = 20
+            MAX_PAGE = 1000 // UP_TO
+            kwargs = {k:args[k] for k in (
+                'q',
+                'include_entities')
+                    if (k in args) and (args[k] is not None)}
+
+            results = []
+            kwargs['count'] = UP_TO
+            try:
+                for i in range(MAX_PAGE):
+                    kwargs['page'] = i + 1
+                    logger.info('args={}'.format(kwargs))
+                    response = request(**kwargs)
+                    if not response:
+                        break
+
+                    results.extend(response)
+                    if len(response) < UP_TO:
+                        break
+
+                    time.sleep(2)
+            except TwitterHTTPError as e:
+                logger.error('{}'.format(e))
+                #raise
+        else:
+            kwargs = {k:args[k] for k in (
+                'q',
+                'page',
+                'count',
+                'include_entities')
+                    if (k in args) and (args[k] is not None)}
+
+            logger.info('args={}'.format(kwargs))
+            results = request(**kwargs)
+        output(results)
+        logger.info('finished')
 
 class ProfileBanner(AbstractTwitterUsersCommand):
     """Print a map of the available size variations 
@@ -100,8 +155,15 @@ class ProfileBanner(AbstractTwitterUsersCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_users_profile_banner()
+        """Request GET users/profile_banner for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'user_id', 'screen_name',)
+                if k in args}
+        return kwargs, self.tw.users.profile_banner
 
 class Suggestions(AbstractTwitterUsersCommand):
     """Print the list of suggested user categories."""
@@ -116,8 +178,15 @@ class Suggestions(AbstractTwitterUsersCommand):
             help='the requested language (with ISO 639-1 representation)')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_users_suggestions()
+        """Request GET users/suggestions for Twitter."""
+
+        args = self.args
+        kwargs  = {}
+        if 'lang' in args:
+            kwargs['lang'] = args.lang
+        return kwargs, self.tw.users.suggestions
 
 class ReportSpam(AbstractTwitterUsersCommand):
     """Report the specified user as a spam account to Twitter."""
@@ -130,8 +199,15 @@ class ReportSpam(AbstractTwitterUsersCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_users_report_spam()
+        """Request POST users/report_spam for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'user_id', 'screen_name',)
+                if k in args}
+        return kwargs, self.tw.users.report_spam
 
 def make_commands(manager):
     """Prototype"""

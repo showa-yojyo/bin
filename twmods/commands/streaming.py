@@ -3,8 +3,8 @@
 and its subclasses.
 """
 
-from .. import AbstractTwitterCommand
-from .. import cache
+from . import AbstractTwitterCommand, call_decorator
+from ..parsers import cache
 from argparse import ArgumentParser
 
 # Public API

@@ -16,12 +16,12 @@ where
 """
 
 from twmods import AbstractTwitterManager
-from twmods import (epilog, output, request_decorator)
+from twmods import epilog
 from twmods.commands.followers import make_commands
 from argparse import ArgumentParser
 
 __doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.10.0'
+__version__ = '1.10.1'
 
 class TwitterFollowerManager(AbstractTwitterManager):
     """This class handles followers/xxx endpoints of Twitter API."""
@@ -44,14 +44,6 @@ class TwitterFollowerManager(AbstractTwitterManager):
             action='version',
             version=__version__)
         return parser
-
-    def request_followers_ids(self):
-        """Request GET followers/ids for Twitter."""
-        self._list_ids(self.tw.followers.ids)
-
-    def request_followers_list(self):
-        """Request GET followers/list for Twitter."""
-        self._list_common(self.tw.followers.list)
 
 def main(command_line=None):
     """The main function.

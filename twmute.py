@@ -17,7 +17,7 @@ where
 """
 
 from twmods import AbstractTwitterManager
-from twmods import (epilog, output, request_decorator)
+from twmods import (epilog, output)
 from twmods.commands.mutes import make_commands
 from argparse import ArgumentParser
 
@@ -45,45 +45,6 @@ class TwitterMuteManager(AbstractTwitterManager):
             action='version',
             version=__version__)
         return parser
-
-    @request_decorator
-    def request_mutes_users_create(self):
-        """Request POST mutes/users/create for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'user_id', 'screen_name',)
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.mutes.users.create
-
-    @request_decorator
-    def request_mutes_users_destroy(self):
-        """Request POST mutes/users/destroy for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'user_id', 'screen_name',)
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.mutes.users.destroy
-
-    @request_decorator
-    def request_mutes_users_ids(self):
-        """Request GET mutes/users/ids for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in ('cursor')
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.mutes.users.ids
-
-    @request_decorator
-    def request_mutes_users_list(self):
-        """Request GET mutes/users/list for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'cursor', 'include_entities', 'skip_status',)
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.mutes.users.list
 
 def main(command_line=None):
     """The main function.

@@ -3,18 +3,22 @@
 and its subclasses.
 """
 
-from .. import AbstractTwitterCommand
-from .. import cache
-from .. import (parser_user_single,
-                parser_user_multiple,
-                parser_count_statuses,
-                parser_count_users_many,
-                parser_cursor,
-                parser_since_max_ids,
-                parser_include_entities,
-                parser_include_rts,
-                parser_skip_status)
+from . import AbstractTwitterCommand, call_decorator, output
+from ..parsers import (
+    cache,
+    parser_user_single,
+    parser_user_multiple,
+    parser_count_statuses,
+    parser_count_users_many,
+    parser_cursor,
+    parser_since_max_ids,
+    parser_include_entities,
+    parser_include_rts,
+    parser_skip_status)
 from argparse import ArgumentParser
+from itertools import count
+import time
+from twitter import TwitterHTTPError
 
 # Available subcommands.
 LISTS_STATUSES = ('lists/statuses', 'statuses', 'stat', 'st')
@@ -39,7 +43,96 @@ LISTS_DESTROY = ('lists/destroy', 'destroy', 'del')
 # POST lists/members/destroy - n/a
 
 class AbstractTwitterListsCommand(AbstractTwitterCommand):
-    pass
+
+    def _manage_members(self, request):
+        """Add multiple members to a list or remove from a list.
+
+        Args:
+            request: Select lists.members.create_all or lists.members.destroy_all.
+        """
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'list_id', 'slug',
+            'owner_id', 'owner_screen_name',)
+                if (k in args) and (args[k] is not None)}
+
+        self._request_users_csv(request, up_to=15, **kwargs)
+
+    def _show_users(self, request):
+        """Show users related tp the specified list.
+
+        Args:
+            request: Select lists.members or lists.subscribers.
+        """
+
+        logger, args = self.logger, vars(self.args)
+
+        kwargs = dict(cursor=-1)
+        kwargs.update({k:args[k] for k in (
+            'list_id', 'slug',
+            'owner_id', 'owner_screen_name',
+            'count', 'include_entities', 'skip_status',
+            'cursor',) if (k in args) and (args[k] is not None)})
+        logger.info('args={}'.format(kwargs))
+
+        results = []
+        try:
+            while kwargs['cursor']:
+                response = request(**kwargs)
+                results.extend(response['users'])
+                next_cursor = response['next_cursor']
+                logger.info('next_cursor: {}'.format(next_cursor))
+                kwargs['cursor'] = next_cursor
+        except TwitterHTTPError as e:
+            logger.info('{}'.format(e))
+            #raise
+
+        output(results)
+        logger.info('finished')
+
+    def _show_lists(self, request):
+        """Show lists related to the specified user.
+
+        Args:
+            request: Select lists.ownerships, lists.memberships, etc.
+        """
+
+        logger, args = self.logger, vars(self.args)
+
+        kwargs = dict(cursor=-1)
+        kwargs.update({k:args[k] for k in (
+            'user_id', 'screen_name',
+            'count', 'cursor',
+            'filter_to_owned_lists')
+                if (k in args) and (args[k] is not None)})
+        logger.info('args={}'.format(kwargs))
+
+        results = []
+        try:
+            while kwargs['cursor']:
+                response = request(**kwargs)
+                results.extend(response['lists'])
+                next_cursor = response['next_cursor']
+                logger.info('next_cursor: {}'.format(next_cursor))
+                kwargs['cursor'] = next_cursor
+        except TwitterHTTPError as e:
+            logger.info('{}'.format(e))
+            #raise
+
+        output(results)
+        logger.info('finished')
+
+    @call_decorator
+    def _manage_subscription(self, request):
+        """Subscribe or unsubscribe."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'list_id', 'slug',
+            'owner_id', 'owner_screen_name',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, request
 
 class Statuses(AbstractTwitterListsCommand):
     """Show a timeline of tweets of the specified list."""
@@ -57,8 +150,19 @@ class Statuses(AbstractTwitterListsCommand):
 
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_lists_statuses()
+        """Request GET lists/statuses for Twitter."""
+
+        ars = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'list_id', 'slug',
+            'owner_id', 'owner_screen_name',
+            'since_id', 'max_id', 'count',
+            'include_rts', 'include_entities',)
+                if (k in args) and (args[k] is not None)}
+
+        return kwargs, self.tw.lists.statuses
 
 class MembersCreateAll(AbstractTwitterListsCommand):
     """Add multiple members to a list."""
@@ -73,7 +177,8 @@ class MembersCreateAll(AbstractTwitterListsCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_lists_members_create_all()
+        """Request POST lists/members/create_all for Twitter."""
+        self._manage_members(self.tw.lists.members.create_all)
 
 class MembersDestroyAll(AbstractTwitterListsCommand):
     """Remove multiple members from a list."""
@@ -88,7 +193,8 @@ class MembersDestroyAll(AbstractTwitterListsCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_lists_members_destroy_all()
+        """Request POST lists/members/destroy_all for Twitter."""
+        self._manage_members(self.tw.lists.members.destroy_all)
 
 class Members(AbstractTwitterListsCommand):
     """List the members of the specified list."""
@@ -106,7 +212,8 @@ class Members(AbstractTwitterListsCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_lists_members()
+        """Request GET lists/members for Twitter."""
+        self._show_users(self.tw.lists.members)
 
 class SubscribersCreate(AbstractTwitterListsCommand):
     """Subscribe the authenticated user to the specified list."""
@@ -120,7 +227,8 @@ class SubscribersCreate(AbstractTwitterListsCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_lists_subscribers_create()
+        """Request POST lists/subscribers_create for Twitter."""
+        self._manage_subscription(self.tw.lists.subscribers.create)
 
 class SubscribersDestroy(AbstractTwitterListsCommand):
     """Unsubscribe the authenticated user to the specified list."""
@@ -134,7 +242,8 @@ class SubscribersDestroy(AbstractTwitterListsCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_lists_subscribers_destroy()
+        """Request POST lists/subscribers/destroy for Twitter."""
+        self._manage_subscription(self.tw.lists.subscribers.destroy)
 
 class Subscribers(AbstractTwitterListsCommand):
     """List the subscribers of the specified list."""
@@ -152,7 +261,8 @@ class Subscribers(AbstractTwitterListsCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_lists_subscribers()
+        """Request GET lists/subscribers for Twitter."""
+        self._show_users(self.tw.lists.subscribers)
 
 class Memberships(AbstractTwitterListsCommand):
     """List lists the specified user has been added to."""
@@ -173,7 +283,8 @@ class Memberships(AbstractTwitterListsCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_lists_memberships()
+        """Request GET lists/memberships for Twitter."""
+        self._show_lists(self.tw.lists.memberships)
 
 class Ownerships(AbstractTwitterListsCommand):
     """List lists owned by the specified user."""
@@ -189,7 +300,8 @@ class Ownerships(AbstractTwitterListsCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_lists_ownerships()
+        """Request GET lists/ownerships for Twitter."""
+        self._show_lists(self.tw.lists.ownerships)
 
 class Subscriptions(AbstractTwitterListsCommand):
     """List lists the specified user is subscribed to."""
@@ -205,7 +317,8 @@ class Subscriptions(AbstractTwitterListsCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_lists_subscriptions()
+        """Request GET lists/subscriptions for Twitter."""
+        self._show_lists(self.tw.lists.subscriptions)
 
 class Create(AbstractTwitterListsCommand):
     """Create a new list for the authenticated user."""
@@ -221,8 +334,18 @@ class Create(AbstractTwitterListsCommand):
             help='the name for the list')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_lists_create()
+        """Request POST lists/create for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'name',
+            'mode',
+            'description')
+                if k in args}
+
+        return kwargs, self.tw.lists.create
 
 class Show(AbstractTwitterListsCommand):
     """Show the specified list."""
@@ -235,8 +358,17 @@ class Show(AbstractTwitterListsCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_lists_show()
+        """Request GET lists/show for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'list_id', 'slug',
+            'owner_id', 'owner_screen_name',)
+                if (k in args) and (args[k] is not None)}
+
+        return kwargs, self.tw.lists.show
 
 class Update(AbstractTwitterListsCommand):
     """Update the specified list."""
@@ -254,8 +386,20 @@ class Update(AbstractTwitterListsCommand):
             help='the name for the list')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_lists_update(self)
+        """Request POST lists/update for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'list_id', 'slug',
+            'owner_id', 'owner_screen_name',
+            'name',
+            'mode',
+            'description')
+                if (k in args) and (args[k] is not None)}
+
+        return kwargs, self.tw.lists.update
 
 class Destroy(AbstractTwitterListsCommand):
     """Delete the specified list."""
@@ -268,8 +412,17 @@ class Destroy(AbstractTwitterListsCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_lists_destroy(self)
+        """Request POST lists/destroy for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'list_id', 'slug',
+            'owner_id', 'owner_screen_name',)
+                if (k in args) and (args[k] is not None)}
+
+        return kwargs, self.tw.lists.destroy
 
 def make_commands(manager):
     """Prototype"""

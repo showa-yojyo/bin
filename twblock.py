@@ -20,12 +20,12 @@ where
 """
 
 from twmods import AbstractTwitterManager
-from twmods import (epilog, output, request_decorator)
+from twmods import (epilog, output)
 from twmods.commands.blocks import make_commands
 from argparse import ArgumentParser
 
 __doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 class TwitterBlockManager(AbstractTwitterManager):
     """This class handles blocks/xxx endpoints of Twitter API."""
@@ -48,47 +48,6 @@ class TwitterBlockManager(AbstractTwitterManager):
             action='version',
             version=__version__)
         return parser
-
-    @request_decorator
-    def request_blocks_create(self):
-        """Request POST blocks/create for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'user_id', 'screen_name',
-            'include_entities', 'skip_status',)
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.blocks.create
-
-    @request_decorator
-    def request_blocks_destroy(self):
-        """Request POST blocks/destroy for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'user_id', 'screen_name',
-            'include_entities', 'skip_status',)
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.blocks.destroy
-
-    @request_decorator
-    def request_blocks_ids(self):
-        """Request GET blocks/ids for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in ('cursor',)
-                  if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.blocks.ids
-
-    @request_decorator
-    def request_blocks_list(self):
-        """Request GET blocks/list for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'cursor', 'include_entities', 'skip_status',)
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.blocks.list
 
 def main(command_line=None):
     """The main function.

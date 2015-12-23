@@ -3,11 +3,12 @@
 and its subclasses.
 """
 
-from .. import AbstractTwitterCommand
-from .. import (parser_user_single,
-                parser_cursor,
-                parser_include_entities,
-                parser_skip_status)
+from . import (AbstractTwitterCommand, call_decorator)
+from ..parsers import (
+    parser_user_single,
+    parser_cursor,
+    parser_include_entities,
+    parser_skip_status)
 from argparse import ArgumentParser
 
 # POST mutes/users/create
@@ -36,8 +37,15 @@ class CommandUsersCreate(AbstractTwitterMuteCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_mutes_users_create()
+        """Request POST mutes/users/create for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'user_id', 'screen_name',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.mutes.users.create
 
 class CommandUsersDestroy(AbstractTwitterMuteCommand):
     """Un-mute the user specified in the ID parameter for the
@@ -52,8 +60,15 @@ class CommandUsersDestroy(AbstractTwitterMuteCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_mutes_users_destroy()
+        """Request POST mutes/users/destroy for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'user_id', 'screen_name',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.mutes.users.destroy
 
 class CommandUsersIds(AbstractTwitterMuteCommand):
     """Print an array of numeric user ids the authenticating user
@@ -68,8 +83,14 @@ class CommandUsersIds(AbstractTwitterMuteCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_mutes_users_ids()
+        """Request GET mutes/users/ids for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in ('cursor')
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.mutes.users.ids
 
 class CommandUsersList(AbstractTwitterMuteCommand):
     """Print an array of user objects the authenticating user has
@@ -86,8 +107,15 @@ class CommandUsersList(AbstractTwitterMuteCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_mutes_users_list()
+        """Request GET mutes/users/list for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'cursor', 'include_entities', 'skip_status',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.mutes.users.list
 
 def make_commands(manager):
     """Prototype"""

@@ -3,10 +3,11 @@
 and its subclasses.
 """
 
-from .. import AbstractTwitterCommand
-from .. import (parser_cursor,
-                parser_user_single,
-                parser_user_multiple,)
+from . import AbstractTwitterCommand, call_decorator
+from ..parsers import (
+    parser_cursor,
+    parser_user_single,
+    parser_user_multiple,)
 from argparse import ArgumentParser
 
 # POST friendships/create - FRIENDSHIP_CREATE
@@ -47,8 +48,15 @@ class CommandCreate(AbstractTwitterFriendshipCommand):
             help='enable notifications for the target user')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_friendships_create()
+        """Request POST friendships/create for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'user_id', 'screen_name', 'follow')
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.friendships.create
 
 class CommandDestroy(AbstractTwitterFriendshipCommand):
     """Allows the authenticating user to unfollow the user specified
@@ -63,8 +71,15 @@ class CommandDestroy(AbstractTwitterFriendshipCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_friendships_destroy()
+        """Request POST friendships/destroy for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'user_id', 'screen_name')
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.friendships.destroy
 
 class CommandIncoming(AbstractTwitterFriendshipCommand):
     """Print IDs for every user who has a pending request to follow
@@ -80,7 +95,8 @@ class CommandIncoming(AbstractTwitterFriendshipCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_friendships_incoming()
+        """Request GET friendships/incoming for Twitter."""
+        self.manager._list_ids(self.tw.friendships.incoming)
 
 class CommandLookup(AbstractTwitterFriendshipCommand):
     """Print the relationships of you to specified users."""
@@ -94,7 +110,8 @@ class CommandLookup(AbstractTwitterFriendshipCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_friendships_lookup()
+        """Request GET friendships/lookup for Twitter."""
+        self._request_users_csv(self.tw.friendships.lookup)
 
 class CommandNoRetweetsIds(AbstractTwitterFriendshipCommand):
     """Print IDs that you do not want to receive retweets from."""
@@ -106,8 +123,11 @@ class CommandNoRetweetsIds(AbstractTwitterFriendshipCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_friendships_no_retweets_ids()
+        """Request GET friendships/no_retweets/ids for Twitter."""
+
+        return {}, self.tw.friendships.no_retweets.ids
 
 class CommandOutgoing(AbstractTwitterFriendshipCommand):
     """Print IDs for protected user for whom you have a pending
@@ -123,7 +143,8 @@ class CommandOutgoing(AbstractTwitterFriendshipCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_friendships_outgoing()
+        """Request GET friendships/outgoing for Twitter."""
+        self.manager._list_ids(self.tw.friendships.outgoing)
 
 class CommandShow(AbstractTwitterFriendshipCommand):
     """Describe detailed information about the relationship between
@@ -162,8 +183,15 @@ class CommandShow(AbstractTwitterFriendshipCommand):
 
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_friendships_show()
+        """Request GET friendships/show for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'source_user_id', 'source_screen_name',
+            'target_user_id', 'target_screen_name',)}
+        return kwargs, self.tw.friendships.show
 
 class CommandUpdate(AbstractTwitterFriendshipCommand):
     """Allows one to enable or disable retweets and device
@@ -202,8 +230,18 @@ class CommandUpdate(AbstractTwitterFriendshipCommand):
 
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_friendships_update()
+        """Request GET friendships/update for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'user_id',
+            'screen_name',
+            'device',
+            'retweets',) if (k in args) and (args[k] is not None)}
+
+        return kwargs, self.tw.friendships.update
 
 def make_commands(manager):
     """Prototype"""

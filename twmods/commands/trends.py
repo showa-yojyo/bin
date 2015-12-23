@@ -3,7 +3,7 @@
 and its subclasses.
 """
 
-from .. import AbstractTwitterCommand
+from . import AbstractTwitterCommand, call_decorator
 from argparse import ArgumentParser
 
 # GET trends/available
@@ -29,8 +29,11 @@ class CommandAvailable(AbstractTwitterTrendCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_trends_available()
+        """Request GET trends/available for Twitter."""
+
+        return {}, self.tw.trends.available
 
 class CommandClosest(AbstractTwitterTrendCommand):
     """Print the locations that Twitter has trending topic
@@ -52,8 +55,15 @@ class CommandClosest(AbstractTwitterTrendCommand):
             help='the latitude that specifies trend locations')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_trends_closest()
+        """Request GET trends/closest for Twitter."""
+
+        request, args = self.tw.trends.closest, vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'lat', 'long',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, request
 
 class CommandPlace(AbstractTwitterTrendCommand):
     """Print the top 50 trending topics for a specific WOEID, if
@@ -75,8 +85,15 @@ class CommandPlace(AbstractTwitterTrendCommand):
             help='remove all hashtags from the trends list')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_trends_place()
+        """Request GET trends/place for Twitter."""
+
+        request, args = self.tw.trends.place, vars(self.args)
+        kwargs = {k:args[k] for k in (
+            '_id', 'exclude',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, request
 
 def make_commands(manager):
     """Prototype"""

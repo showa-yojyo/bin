@@ -3,13 +3,14 @@
 and its subclasses.
 """
 
-from .. import AbstractTwitterCommand
-from .. import (parser_user_single,
-                parser_count_users,
-                parser_count_users_many,
-                parser_cursor,
-                parser_skip_status,
-                parser_include_user_entities)
+from . import AbstractTwitterCommand, call_decorator
+from ..parsers import (
+    parser_user_single,
+    parser_count_users,
+    parser_count_users_many,
+    parser_cursor,
+    parser_skip_status,
+    parser_include_user_entities)
 from argparse import ArgumentParser
 
 # GET friends/ids
@@ -37,7 +38,8 @@ class CommandIds(AbstractTwitterFriendCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_friends_ids()
+        """Request GET friends/ids for Twitter."""
+        self._list_ids(self.tw.friends.ids)
 
 class CommandList(AbstractTwitterFriendCommand):
     """List all of the users the specified user is following."""
@@ -55,7 +57,8 @@ class CommandList(AbstractTwitterFriendCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_friends_list()
+        """Request GET friends/list for Twitter."""
+        self._list_common(self.tw.friends.list)
 
 def make_commands(manager):
     """Prototype"""

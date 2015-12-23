@@ -3,15 +3,16 @@
 and its subclasses.
 """
 
-from .. import AbstractTwitterCommand
-from .. import cache
-from .. import (parser_user_single,
-                parser_count_statuses,
-                parser_cursor,
-                parser_since_max_ids,
-                parser_include_entities,
-                parser_include_rts,
-                parser_include_user_entities)
+from . import AbstractTwitterCommand, call_decorator
+from ..parsers import (
+    cache,
+    parser_user_single,
+    parser_count_statuses,
+    parser_cursor,
+    parser_since_max_ids,
+    parser_include_entities,
+    parser_include_rts,
+    parser_include_user_entities)
 from argparse import ArgumentParser
 
 # commands
@@ -49,8 +50,16 @@ class MentionsTimeline(AbstractTwitterStatusesCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_statuses_mentions_timeline()
+        """Request GET statuses/mentions_timeline for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'count', 'since_id', 'max_id',
+            'trim_user', 'contributor_details', 'include_entities',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.statuses.mentions_timeline
 
 class UserTimeline(AbstractTwitterStatusesCommand):
     """Output a collection of the most recent tweets posted by the
@@ -71,8 +80,19 @@ class UserTimeline(AbstractTwitterStatusesCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_statuses_user_timeline()
+        """Request GET statuses/user_timeline for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'user_id', 'screen_name',
+            'count', 'since_id', 'max_id',
+            'trim_user', 'exclude_replies', 'contributor_details',
+            'include_rts',)
+                if (k in args) and (args[k] is not None)}
+
+        return kwargs, self.tw.statuses.user_timeline
 
 class HomeTimeline(AbstractTwitterStatusesCommand):
     """Output a collection of the most recent tweets and retweets
@@ -92,8 +112,18 @@ class HomeTimeline(AbstractTwitterStatusesCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_statuses_home_timeline()
+        """Request GET statuses/home_timeline for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'count', 'since_id', 'max_id',
+            'trim_user', 'exclude_replies', 'contributor_details',
+            'include_rts',)
+                if (k in args) and (args[k] is not None)}
+
+        return kwargs, self.tw.statuses.home_timeline
 
 class RetweetsOfMe(AbstractTwitterStatusesCommand):
     """Output the most recent tweets authored by the authenticating
@@ -112,8 +142,17 @@ class RetweetsOfMe(AbstractTwitterStatusesCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_statuses_retweets_of_me()
+        """Request GET statuses/retweets_of_me for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'count', 'since_id', 'max_id',
+            'trim_user', 'include_entities', 'include_user_entities',)
+                if (k in args) and (args[k] is not None)}
+
+        return kwargs, self.tw.statuses.retweets_of_me
 
 class RetweetsId(AbstractTwitterStatusesCommand):
     """Output a collection of the 100 most recent retweets of the
@@ -130,8 +169,15 @@ class RetweetsId(AbstractTwitterStatusesCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_statuses_retweets_id()
+        """Request GET statuses/retweets/:id for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            '_id', 'count', 'trim_user',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.statuses.retweets._id
 
 class ShowId(AbstractTwitterStatusesCommand):
     """Output a single tweet, specified by the id parameter."""
@@ -151,8 +197,15 @@ class ShowId(AbstractTwitterStatusesCommand):
             help='cause an additional current_user_retweet node')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_statuses_show_id()
+        """Request GET statuses/show/:id for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            '_id', 'trim_user', 'include_my_retweet', 'include_entities',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.statuses.show._id
 
 class DestroyId(AbstractTwitterStatusesCommand):
     """Destroy the status specified by the required ID parameter."""
@@ -166,8 +219,15 @@ class DestroyId(AbstractTwitterStatusesCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_statuses_destroy_id()
+        """Request POST statuses/destroy/:id for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            '_id', 'trim_user',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.statuses.destroy._id
 
 class Update(AbstractTwitterStatusesCommand):
     """Update the authenticating user's current status, also known
@@ -222,7 +282,16 @@ class Update(AbstractTwitterStatusesCommand):
         return parser
 
     def __call__(self):
-        self.manager.request_statuses_update()
+        """Request POST statuses/update for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'status', 'in_reply_to_status_id',
+            'possibly_sensitive', 'lat', 'long',
+            'place_id', 'display_coordinates',
+            'trim_user', 'media_ids',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.statuses.update
 
 class RetweetId(AbstractTwitterStatusesCommand):
     """Retweet a tweet."""
@@ -236,8 +305,15 @@ class RetweetId(AbstractTwitterStatusesCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_statuses_retweet_id()
+        """Request POST statuses/retweet/:id for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            '_id', 'trim_user',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.statuses.retweet._id
 
 class Oembed(AbstractTwitterStatusesCommand):
     """Output a single tweet, specified by either a tweet web URL or
@@ -305,8 +381,18 @@ class Oembed(AbstractTwitterStatusesCommand):
 
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_statuses_oembed()
+        """Request GET statuses/oembed for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            '_id', 'url',
+            'maxwidth', 'hide_media', 'hide_thread', 'omit_script',
+            'align', 'related', 'lang', 'widget_type', 'hide_tweet',)
+                if (k in args) and (args[k] is not None)}
+
+        return kwargs, self.tw.statuses.oembed
 
 class RetweetersIds(AbstractTwitterStatusesCommand):
     """Output a collection of up to 100 user IDs."""
@@ -320,8 +406,16 @@ class RetweetersIds(AbstractTwitterStatusesCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_statuses_retweeters_ids()
+        """Request GET statuses/retweeters/ids for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            '_id', 'cursor', 'stringify_ids',)
+                if (k in args) and (args[k] is not None)}
+
+        return kwargs, self.tw.statuses.retweeters_ids
 
 class Lookup(AbstractTwitterStatusesCommand):
     """Output fully-hydrated tweet objects for up to 100 tweets per
@@ -346,8 +440,15 @@ class Lookup(AbstractTwitterStatusesCommand):
 
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_statuses_lookup()
+        """Request GET statuses/lookup for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            '_id', 'trim_user', 'include_entities', 'map',)
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.statuses.lookup
 
 def make_commands(manager):
     """Prototype"""

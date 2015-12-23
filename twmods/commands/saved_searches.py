@@ -3,8 +3,8 @@
 and its subclasses.
 """
 
-from .. import AbstractTwitterCommand
-from .. import cache
+from . import AbstractTwitterCommand, call_decorator
+from ..parsers import cache
 from argparse import ArgumentParser
 
 # POST saved_searches/create
@@ -33,8 +33,11 @@ class CommandCreate(AbstractTwitterSavedSearchCommand):
             help='the query of the search the user would like to save')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_saved_searches_create()
+        """Request POST saved_searches/create for Twitter."""
+
+        return dict(query=self.args.query), self.tw.saved_searches.create
 
 class CommandDestroyId(AbstractTwitterSavedSearchCommand):
     """Destroy a saved search for the authenticating user."""
@@ -47,8 +50,11 @@ class CommandDestroyId(AbstractTwitterSavedSearchCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_saved_searches_destroy_id()
+        """Request POST saved_searches/destroy/:id for Twitter."""
+
+        return dict(_id=self.args.id), self.tw.saved_searches.destroy._id
 
 class CommandList(AbstractTwitterSavedSearchCommand):
     """Print the authenticated user's saved search queries."""
@@ -60,8 +66,11 @@ class CommandList(AbstractTwitterSavedSearchCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_saved_searches_list()
+        """Request GET saved_searches/list for Twitter."""
+
+        return {}, self.tw.saved_searches.list
 
 class CommandShowId(AbstractTwitterSavedSearchCommand):
     """Print the information for the saved search represented by the
@@ -76,8 +85,11 @@ class CommandShowId(AbstractTwitterSavedSearchCommand):
             help=self.__doc__)
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_saved_searches_show_id()
+        """Request GET saved_searches/show/:id for Twitter."""
+
+        return dict(_id=self.args.id), self.tw.saved_searches.show._id
 
 def make_commands(manager):
     """Prototype"""

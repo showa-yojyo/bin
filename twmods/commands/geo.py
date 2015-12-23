@@ -3,8 +3,8 @@
 and its subclasses.
 """
 
-from .. import AbstractTwitterCommand
-from .. import cache
+from . import AbstractTwitterCommand, call_decorator
+from ..parsers import cache
 from argparse import ArgumentParser
 
 # GET geo/id/:place_id
@@ -32,8 +32,12 @@ class IdPlaceId(AbstractTwitterGeoCommand):
             help='a place in the world where can be retrieved from geo/reverse_geocode')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_id_place_id()
+        """Request GET geo/id/:place_id for Twitter."""
+
+        kwargs = dict(_id=self.args.place_id)
+        return kwargs, self.tw.geo.id._id # hack?
 
 class ReverseGeocode(AbstractTwitterGeoCommand):
     """Search for up to 20 places that can be used as a place_id."""
@@ -55,8 +59,15 @@ class ReverseGeocode(AbstractTwitterGeoCommand):
 
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_reverse_geocode()
+        """Request GET geo/reverse_geocode for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'lat', 'long', 'accuracy', 'granularity', 'max_results')
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.geo.reverse_geocode
 
 class Search(AbstractTwitterGeoCommand):
     """Search for places that can be attached to a statuses/update."""
@@ -96,8 +107,16 @@ class Search(AbstractTwitterGeoCommand):
             help='search for places which have this given street address')
         return parser
 
+    @call_decorator
     def __call__(self):
-        self.manager.request_search()
+        """Request GET geo/search for Twitter."""
+
+        args = vars(self.args)
+        kwargs = {k:args[k] for k in (
+            'lat', 'long', 'accuracy', 'granularity', 'max_results',
+            'query', 'ip', 'contained_within', 'street_address')
+                if (k in args) and (args[k] is not None)}
+        return kwargs, self.tw.geo.search
 
 def make_commands(manager):
     """Prototype"""

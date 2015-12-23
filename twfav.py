@@ -16,12 +16,12 @@ where
 """
 
 from twmods import AbstractTwitterManager
-from twmods import (epilog, output, request_decorator)
+from twmods import epilog
 from twmods.commands.favorites import make_commands
 from argparse import ArgumentParser
 
 __doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 class TwitterFavoriteManager(AbstractTwitterManager):
     """This class handles favorites/xxx endpoints of Twitter API."""
@@ -44,37 +44,6 @@ class TwitterFavoriteManager(AbstractTwitterManager):
             action='version',
             version=__version__)
         return parser
-
-    @request_decorator
-    def request_favorites_create(self):
-        """Request POST favorites/create for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            '_id', 'include_entities',)
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.favorites.create
-
-    @request_decorator
-    def request_favorites_destroy(self):
-        """Request POST favorites/destroy for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            '_id', 'include_entities',)
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.favorites.destroy
-
-    @request_decorator
-    def request_favorites_list(self):
-        """Request GET favorites/list for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'user_id', 'screen_name',
-            'count', 'since_id', 'max_id', 'include_entities',)
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.favorites.list
 
 def main(command_line=None):
     """The main function.

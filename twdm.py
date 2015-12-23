@@ -21,7 +21,7 @@ where
 """
 
 from twmods import AbstractTwitterManager
-from twmods import (epilog, output, request_decorator)
+from twmods import epilog
 from twmods.commands.direct_messages import make_commands
 from argparse import ArgumentParser
 
@@ -49,54 +49,6 @@ class TwitterDirectMessageManager(AbstractTwitterManager):
             action='version',
             version=__version__)
         return parser
-
-    @request_decorator
-    def request_direct_messages(self):
-        """Request GET direct_messages for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'since_id', 'max_id',
-            'count', 'include_entities', 'skip_status',)
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.direct_messages
-
-    @request_decorator
-    def request_direct_messages_destroy(self):
-        """Request POST direct_messages/destroy for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            '_id', 'include_entities',)
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.direct_messages.destroy
-
-    @request_decorator
-    def request_direct_messages_new(self):
-        """Request POST direct_messages/new for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'user_id', 'screen_name', 'text')
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.direct_messages.new
-
-    @request_decorator
-    def request_direct_messages_sent(self):
-        """Request GET direct_messages/sent for Twitter."""
-
-        args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'since_id', 'max_id',
-            'count', 'page', 'include_entities',)
-                if (k in args) and (args[k] is not None)}
-        return kwargs, self.tw.direct_messages.sent
-
-    @request_decorator
-    def request_direct_messages_show(self):
-        """Request GET direct_messages/show for Twitter."""
-
-        return dict(_id=self.args._id), self.tw.direct_messages.show
 
 def main(command_line=None):
     """The main function.
