@@ -1,26 +1,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Generate an HTML document for diary of a month.
+"""gendiary.py: Generate a blank diary for a month.
+
+Usage:
+  $ gendiary.py [--help] [--version]
+  $ gendiary.py [-y | --year <YYYY>] [-m | --month <MM>]
+    [-o | --output <FILE>]
 
 Examples:
   You can generate diary template of the current month with no arguments::
 
-    $ python gendiary.py
+    $ gendiary.py
 
-  Or with --year and --month options, you can generate diary templates of
+  With --year and --month options, you can generate diary templates of
   any months in any years, e.g.::
 
-    $ python genduary.py --year=2014 --month=9
+    $ genduary.py --year=2014 --month=9
+
+  With --output option, the result will be written to specified file.
+
+    $ gendiary.py --year=2015 --month=12 --output=~/diary/12.html
 
 """
 
 import sys
 import datetime
 from calendar import Calendar
-from argparse import ArgumentParser
+from argparse import ArgumentParser, FileType
 from jinja2 import Environment
 
-__version__ = '1.1.1'
+__version__ = '1.2.0'
 
 DIARY_TEMPLATE = """\
 {#-
@@ -87,6 +96,21 @@ Args:
 </html>
 """
 
+class MyFileType(FileType):
+    """Unfortunately, argparse.FileType does not accept newline
+    parameter.
+    """
+
+    def __call__(self, path):
+        if path == ':':
+            return super.__call__(self, path)
+
+        try:
+            return open(path, self._mode, self._bufsize,
+                self._encoding, self._errors, newline='\n')
+        finally:
+            pass
+
 def configure():
     """Parse the command line parameters.
 
@@ -113,30 +137,30 @@ def configure():
         default=today.month,
         help="specify the month number of diary (default to today's month)")
 
+    parser.add_argument(
+        '-o', '--output',
+        type=MyFileType('w', encoding='utf-8'),
+        default=sys.stdout,
+        metavar='FILE',
+        help='write result to FILE instead of standard output')
+
     return parser
 
-def main(args):
-    """The main function.
+def main():
+    """The main function."""
 
-    Args:
-        args: An instance of argparse.ArgumentParser parsed in the configure
-            function.
+    args = configure().parse_args()
 
-    Returns:
-        None.
-    """
-
-    env = Environment(autoescape=False)
-    templ = env.from_string(DIARY_TEMPLATE)
-    cal = Calendar()
     year = args.year
     month = args.month
+    output = args.output
 
-    print(templ.render(
-        year=year,
-        month=month,
-        dates=cal.itermonthdays2(year, month)))
+    output.write(
+        Environment(autoescape=False).from_string(DIARY_TEMPLATE).render(
+            year=year,
+            month=month,
+            dates=Calendar().itermonthdays2(year, month)))
+    output.write('\n')
 
 if __name__ == "__main__":
-    parser = configure()
-    main(parser.parse_args())
+    main()
