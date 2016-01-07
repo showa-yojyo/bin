@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""fsmdemo.py: Demonstrate docutils.statemachine.
+"""mjscore.py: Demonstrate docutils.statemachine.
 
 Usage:
-  fsmdemo.py [--help] [--version]
-  fsmdemo.py [--verbose] [--file FILE]
+  mjscore.py [--help] [--version]
+  mjscore.py [--verbose] [--file FILE]
 """
 
 from argparse import (ArgumentParser, FileType)
