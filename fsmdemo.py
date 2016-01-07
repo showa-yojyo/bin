@@ -40,7 +40,7 @@ class MJScoreState(State):
     @property
     def config(self):
         """Return the configuration."""
-        return self.state_machine.args
+        return self.state_machine.config
 
 beginning_of_game_re = re.compile(r'''
 =*\s
@@ -62,9 +62,13 @@ class GameBeginningState(MJScoreState):
         """Parse the beginning of a game."""
 
         started_at = match.group('timestamp')
-        if False:
-            # Skip this game.
-            return context, next_state, []
+        if self.config.today:
+            # Determine whether to parse this game or not.
+            today = context['date']
+
+            # Compare two 'YYYY/MM/DD's.
+            if started_at.split()[0] != today.split()[0]:
+                return context, next_state, []
 
         next_state = 'RotationState'
         game = dict(
@@ -216,7 +220,7 @@ def main():
                        RotationState,
                        GameEndingState,],
         initial_state='GameBeginningState')
-    state_machine.options = args
+    state_machine.config = args
 
     input = args.file
     input_lines = [i.strip() for i in input.readlines()]
