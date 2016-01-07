@@ -20,13 +20,61 @@ mjscore_path_default = r'D:\Program Files\mattari09\mjscore.txt'
 
 datetime_format = r'%Y/%m/%d %H:%M'
 
+# TODO: rotation_end
+# TODO: (priority: low) rotation_starting_hand(s)
+# TODO: (priority: low) rotation_dora
+# TODO: (priority: low) rotation_discards
+
+class MJScoreState(State):
+    """Base class of state classes."""
+
+    def bof(self, context):
+        """Called at the beginning of data."""
+        assert isinstance(context, dict)
+
+        context['description'] = 'A demonstration of docutils.statemachine.'
+        context['date'] = datetime.today().strftime(datetime_format)
+        context['games'] = []
+        return context, []
+
+    @property
+    def config(self):
+        """Return the configuration."""
+        return self.state_machine.args
+
 beginning_of_game_re = re.compile(r'''
-=====\s
+=*\s
 東風戦：ランキング卓\s64卓\s開始\s
 (?P<timestamp>
 \d{4}/\d{2}/\d{2}\s\d{2}:\d{2}
 )\s
-=====''', re.VERBOSE)
+=*''', re.VERBOSE)
+
+class GameBeginningState(MJScoreState):
+    """Parse the first line of a game."""
+
+    patterns = dict(
+        beginning_of_game=beginning_of_game_re,)
+
+    initial_transitions = ['beginning_of_game',]
+
+    def beginning_of_game(self, match, context, next_state):
+        """Parse the beginning of a game."""
+
+        started_at = match.group('timestamp')
+        if False:
+            # Skip this game.
+            return context, next_state, []
+
+        next_state = 'RotationState'
+        game = dict(
+            result=[None] * 4,
+            rotations=[],)
+        context['games'].append(game)
+
+        game['started_at'] = started_at
+
+        return context, next_state, []
 
 # 場 = round
 # 局 = rotation
@@ -45,61 +93,18 @@ rotation_header_re = re.compile(r'''
 )
 ''', re.VERBOSE)
 
-# TODO: rotation_end
-# TODO: (priority: low) rotation_starting_hand(s)
-# TODO: (priority: low) rotation_dora
-# TODO: (priority: low) rotation_discards
+end_of_rotations_re = re.compile(r'[-]+\s*試合結果\s*[-]+')
 
-ending_of_game_re = re.compile(r'''
------\s64卓\s終了\s
-(?P<timestamp>
-\d{4}/\d{2}/\d{2}\s\d{2}:\d{2}
-)
-\s
------
-''', re.VERBOSE)
-
-result_of_game_re = re.compile(r'''
-(?P<rank>[1-4])位
-\s+
-(?P<player>(あなた|下家|対面|上家))
-\s+
-(?P<points>[+-]?\d+)
-''', re.VERBOSE)
-
-class ScoreParserState(State):
-    """Parse data in file mjscore.txt."""
+class RotationState(MJScoreState):
+    """Parse almost all of lines of rotations."""
 
     patterns = dict(
-        beginning_of_game=beginning_of_game_re,
-        ending_of_game=ending_of_game_re,
         rotation_header=rotation_header_re,
-        result_of_game=result_of_game_re,)
+        end_of_rotations=end_of_rotations_re,)
 
     initial_transitions = [
-        'beginning_of_game', 'ending_of_game',
         'rotation_header',
-        'result_of_game',]
-
-    def beginning_of_game(self, match, context, next_state):
-        """Parse the beginning of a game."""
-
-        game = dict(
-            result=[None] * 4,
-            rotations=[],)
-        context['games'].append(game)
-
-        game['started_at'] = match.group('timestamp')
-
-        return context, next_state, []
-
-    def ending_of_game(self, match, context, next_state):
-        """Parse the ending of a game."""
-
-        game = context['games'][-1]
-        game['finished_at'] = match.group('timestamp')
-
-        return context, next_state, []
+        'end_of_rotations']
 
     def rotation_header(self, match, context, next_state):
         """Parse the header of a rotation."""
@@ -119,6 +124,39 @@ class ScoreParserState(State):
 
         return context, next_state, []
 
+    def end_of_rotations(self, match, context, next_state):
+        """---- game result ----"""
+
+        return context, 'GameEndingState', []
+
+ending_of_game_re = re.compile(r'''
+[-]*\s64卓\s終了\s
+(?P<timestamp>
+\d{4}/\d{2}/\d{2}\s\d{2}:\d{2}
+)
+\s
+[-]*
+''', re.VERBOSE)
+
+result_of_game_re = re.compile(r'''
+(?P<rank>[1-4])位
+\s+
+(?P<player>(あなた|下家|対面|上家))
+\s+
+(?P<points>[+-]?\d+)
+''', re.VERBOSE)
+
+class GameEndingState(MJScoreState):
+    """Parse the last lines of a game"""
+
+    patterns = dict(
+        ending_of_game=ending_of_game_re,
+        result_of_game=result_of_game_re,)
+
+    initial_transitions = [
+        'ending_of_game',
+        'result_of_game',]
+
     def result_of_game(self, match, context, next_state):
         """Parse a rank line of the ranking list in a game."""
 
@@ -132,18 +170,14 @@ class ScoreParserState(State):
 
         return context, next_state, []
 
-    def bof(self, context):
-        """Called at the beginning of data."""
-        assert isinstance(context, dict)
+    def ending_of_game(self, match, context, next_state):
+        """Parse the ending of a game."""
 
-        context['description'] = 'A demonstration of docutils.statemachine.'
-        context['date'] = datetime.today().strftime(datetime_format)
-        context['games'] = []
-        return context, []
+        game = context['games'][-1]
+        game['finished_at'] = match.group('timestamp')
 
-    #def eof(self, context): pass
-
-# TODO: Define more state classes.
+        next_state = 'GameBeginningState'
+        return context, next_state, []
 
 def configure():
     """Return a command line parser."""
@@ -165,6 +199,10 @@ def configure():
         help='enable verbose mode')
 
     # TODO: (priority: high) reference period as a parameter
+    parser.add_argument(
+        '--today',
+        action='store_true',
+        help='set reference period to today')
 
     return parser
 
@@ -173,23 +211,26 @@ def main():
 
     args = configure().parse_args()
 
-    fsm = StateMachine(
-        state_classes=[ScoreParserState,],
-        initial_state='ScoreParserState')
+    state_machine = StateMachine(
+        state_classes=[GameBeginningState,
+                       RotationState,
+                       GameEndingState,],
+        initial_state='GameBeginningState')
+    state_machine.options = args
 
     input = args.file
     input_lines = [i.strip() for i in input.readlines()]
 
     # TODO: (priority: low) Define score model.
     context = {}
-    results = fsm.run(input_lines, context=context)
+    results = state_machine.run(input_lines, context=context)
 
     if args.verbose:
         print(results)
         dump(context, sys.stdout, ensure_ascii=False, indent=4, sort_keys=True)
         sys.stdout.write("\n")
 
-    fsm.unlink()
+    state_machine.unlink()
 
     stat(context)
     output(context)
@@ -225,6 +266,9 @@ def output(game_data):
     print('Date:', game_data['date'])
 
     all_games = game_data['games']
+    if not all_games:
+        print('No data.')
+        return
 
     print('Reference period: <{}> - <{}>'.format(
         all_games[0]['started_at'],
@@ -233,7 +277,7 @@ def output(game_data):
     print('Number of games:', len(all_games))
     print('Your placing distribution [1st, 2nd, 3rd, 4th]:',
           game_data['your_placing_distr'])
-    print('Mean placing: {:5f}'.format(game_data['your_mean_placing']))
+    print('Mean placing: {:.2f}'.format(game_data['your_mean_placing']))
 
 if __name__ == '__main__':
     main()
