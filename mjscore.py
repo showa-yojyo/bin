@@ -4,7 +4,7 @@
 
 Usage:
   mjscore.py [--help] [--version]
-  mjscore.py [--verbose] [--file FILE]
+  mjscore.py [--today] [--verbose] [--file FILE]
 """
 
 from argparse import (ArgumentParser, FileType)
@@ -88,13 +88,13 @@ class GameBeginningState(MJScoreState):
 rotation_header_re = re.compile(r'''
 (?P<title>[東南][1-4]局\s\d本場)
 \(リーチ\d\)
-\s
+\s?
 (?P<balance>
  (
   (あなた|下家|対面|上家)\s?
   ([+-]?\d+)\s?
  ){,4}
-)
+)?
 ''', re.VERBOSE)
 
 end_of_rotations_re = re.compile(r'[-]+\s*試合結果\s*[-]+')
@@ -119,19 +119,73 @@ class RotationState(MJScoreState):
             title=match.group('title'))
 
         player_and_balance = match.group('balance').strip().split()
-        rotation['balance'] = [
-            dict(player=player_and_balance[i],
-                 balance=player_and_balance[i + 1],)
-            for i in range(0, len(player_and_balance), 2)]
+        if player_and_balance:
+            rotation['balance'] = [
+                dict(player=player_and_balance[i],
+                     balance=int(player_and_balance[i + 1]),)
+                for i in range(0, len(player_and_balance), 2)]
+        else:
+            rotation['balance'] = []
 
         rotations.append(rotation)
 
-        return context, next_state, []
+        return context, 'RotationEndingState', []
 
     def end_of_rotations(self, match, context, next_state):
         """---- game result ----"""
 
         return context, 'GameEndingState', []
+
+# provisional
+winning_re = re.compile(r'''
+\A
+(?P<winning_value>.+)
+(?P<winning_decl>(ロン|ツモ))
+(?P<winning_yaku_list>.+)
+\Z
+''', re.VERBOSE)
+
+# TODO: canonical representation of 四槓開
+draw_re = re.compile(r'(流局|四風連打|九種公九牌倒牌|四家リーチ|(四槓.+)|三家和)')
+
+class RotationEndingState(MJScoreState):
+    """Parse the line that tells the winner's hand or
+    exhaustive/abortive draw.
+    """
+
+    patterns = dict(
+        winning = winning_re,
+        draw = draw_re,)
+
+    initial_transitions = [
+        'winning',
+        'draw',]
+
+    def winning(self, match, context, next_state):
+        """Parse the line that includes ロン or ツモ."""
+
+        # Get the current rotation from context.
+        game = context['games'][-1]
+        rotation = game['rotations'][-1]
+
+        rotation['ending'] = match.group('winning_decl')
+
+        # provisional
+        rotation['winning_value'] = match.group('winning_value')
+        rotation['winning_yaku_list'] = match.group('winning_yaku_list')#split()
+
+        return context, 'RotationState', []
+
+    def draw(self, match, context, next_state):
+        """Parse the line that includes 流局, etc."""
+
+        # Get the current rotation from context.
+        game = context['games'][-1]
+        rotation = game['rotations'][-1]
+
+        rotation['ending'] = match.group()
+
+        return context, 'RotationState', []
 
 ending_of_game_re = re.compile(r'''
 [-]*\s64卓\s終了\s
@@ -218,6 +272,7 @@ def main():
     state_machine = StateMachine(
         state_classes=[GameBeginningState,
                        RotationState,
+                       RotationEndingState,
                        GameEndingState,],
         initial_state='GameBeginningState')
     state_machine.config = args
@@ -245,6 +300,11 @@ def stat(game_data):
     placing_distr = [0, 0, 0, 0]
 
     all_games = game_data['games']
+
+    num_rotations = sum(len(game['rotations']) for game in all_games)
+    game_data['count_rotations'] = num_rotations
+
+    # Calculate distribution of your placing, or 着順表.
     for game in all_games:
         ranking = game['result']
         for i in range(4):
@@ -254,7 +314,7 @@ def stat(game_data):
 
     game_data['your_placing_distr'] = placing_distr
 
-    # Calculate mean placing.
+    # Calculate mean placing, or 平均着順.
     num_games = len(all_games)
     if num_games:
         game_data['your_mean_placing'] = sum(
@@ -262,7 +322,31 @@ def stat(game_data):
     else:
         game_data['your_mean_placing'] = None
 
-    # TODO: Implement more features.
+    # Calculate your winning rate, or 和了率.
+    num_your_winning = 0
+    for game in all_games:
+        for rotation in game['rotations']:
+            type = rotation['ending']
+            if type in ('ツモ', 'ロン'):
+                assert rotation['balance']
+                first = rotation['balance'][0]
+                if (first['player'] == 'あなた' and
+                    first['balance'] > 0):
+                    num_your_winning += 1
+
+    game_data['count_your_winning'] = num_your_winning
+    if num_rotations:
+        game_data['your_winning_rate'] = num_your_winning / num_rotations
+    else:
+        game_data['your_winning_rate'] = 0
+
+    # TODO: Implement more statistical values, thus:
+    # * your losing rate, or 放銃率
+    # * your riichi rate, or 立直率
+    # * your melding rate, or 副露率
+    # * mean of your winning points, or 平均和了点
+    # * mean of your losing points, or 平均放銃点
+    # * (challenge) 平均獲得チップ枚数
 
 def output(game_data):
     """under construction"""
@@ -279,9 +363,15 @@ def output(game_data):
         all_games[-1]['finished_at']))
 
     print('Number of games:', len(all_games))
-    print('Your placing distribution [1st, 2nd, 3rd, 4th]:',
-          game_data['your_placing_distr'])
-    print('Mean placing: {:.2f}'.format(game_data['your_mean_placing']))
+    print('Number of rotations:', game_data['count_rotations'])
+
+    print('Your winning')
+    print('  Number of winning:', game_data['count_your_winning'])
+    print('  Winning rate: {:.2f}%'.format(game_data['your_winning_rate'] * 100))
+
+    print('Your placing')
+    print('  Histogram [1st, 2nd, 3rd, 4th]:', game_data['your_placing_distr'])
+    print('  Mean placing: {:.2f}'.format(game_data['your_mean_placing']))
 
 if __name__ == '__main__':
     main()
