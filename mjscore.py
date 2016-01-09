@@ -294,10 +294,13 @@ def main():
     stat(context)
     output(context)
 
+def enumerate_rotations(game_data):
+    for game in game_data['games']:
+        for rot in game['rotations']:
+            yield rot
+
 def stat(game_data):
     """under construction"""
-
-    placing_distr = [0, 0, 0, 0]
 
     all_games = game_data['games']
 
@@ -305,6 +308,7 @@ def stat(game_data):
     game_data['count_rotations'] = num_rotations
 
     # Calculate distribution of your placing, or 着順表.
+    placing_distr = [0, 0, 0, 0]
     for game in all_games:
         ranking = game['result']
         for i in range(4):
@@ -314,38 +318,57 @@ def stat(game_data):
 
     game_data['your_placing_distr'] = placing_distr
 
-    # Calculate mean placing, or 平均着順.
+    # Calculate statistical values about your placing.
     num_games = len(all_games)
+    game_data['your_mean_placing'] = None
+    game_data['your_first_placing_rate'] = None
+    game_data['your_last_placing_rate'] = None
     if num_games:
         game_data['your_mean_placing'] = sum(
             (v*i) for i, v in enumerate(placing_distr, 1)) / num_games
-    else:
-        game_data['your_mean_placing'] = None
+
+        game_data['your_first_placing_rate'] = placing_distr[0] / num_games
+        game_data['your_last_placing_rate'] = placing_distr[-1] / num_games
 
     # Calculate your winning rate, or 和了率.
     num_your_winning = 0
-    for game in all_games:
-        for rotation in game['rotations']:
-            type = rotation['ending']
-            if type in ('ツモ', 'ロン'):
-                assert rotation['balance']
-                first = rotation['balance'][0]
-                if (first['player'] == 'あなた' and
-                    first['balance'] > 0):
-                    num_your_winning += 1
+    for rot in enumerate_rotations(game_data):
+        if rot['ending'] in ('ツモ', 'ロン'):
+            assert rot['balance']
+            first = rot['balance'][0]
+            if (first['player'] == 'あなた' and
+                first['balance'] > 0):
+                num_your_winning += 1
 
     game_data['count_your_winning'] = num_your_winning
+    game_data['your_winning_rate'] = 0
     if num_rotations:
         game_data['your_winning_rate'] = num_your_winning / num_rotations
-    else:
-        game_data['your_winning_rate'] = 0
+
+    # Calculate your losing-on-discarding (LOD) rate and mean LOD,
+    # or 放銃率 and 平均放銃率.
+    num_your_lod = 0
+    total_losing_points = 0
+    for rot in enumerate_rotations(game_data):
+        if rot['ending'] == 'ロン':
+            assert rot['balance']
+            last = rot['balance'][-1]
+            if last['player'] == 'あなた':
+                num_your_lod += 1
+                total_losing_points += last['balance'] # negative value
+
+    game_data['count_your_lod'] = num_your_lod
+    game_data['your_lod_rate'] = None
+    game_data['your_lod_mean'] = None
+    if num_rotations:
+        game_data['your_lod_rate'] = num_your_lod / num_rotations
+        if num_your_lod:
+            game_data['your_lod_mean'] = total_losing_points / num_your_lod
 
     # TODO: Implement more statistical values, thus:
-    # * your losing rate, or 放銃率
     # * your riichi rate, or 立直率
     # * your melding rate, or 副露率
     # * mean of your winning points, or 平均和了点
-    # * mean of your losing points, or 平均放銃点
     # * (challenge) 平均獲得チップ枚数
 
 def output(game_data):
@@ -365,13 +388,20 @@ def output(game_data):
     print('Number of games:', len(all_games))
     print('Number of rotations:', game_data['count_rotations'])
 
-    print('Your winning')
+    print('Your placings')
+    print('  Histogram [1st, 2nd, 3rd, 4th]:', game_data['your_placing_distr'])
+    print('  First placing rate: {:.2f}%'.format(game_data['your_first_placing_rate'] * 100))
+    print('  Last placing rate:  {:.2f}%'.format(game_data['your_last_placing_rate'] * 100))
+    print('  Mean placing:       {:.2f}th'.format(game_data['your_mean_placing']))
+
+    print('Your winnings')
     print('  Number of winning:', game_data['count_your_winning'])
     print('  Winning rate: {:.2f}%'.format(game_data['your_winning_rate'] * 100))
 
-    print('Your placing')
-    print('  Histogram [1st, 2nd, 3rd, 4th]:', game_data['your_placing_distr'])
-    print('  Mean placing: {:.2f}'.format(game_data['your_mean_placing']))
+    print('Your losings on discard')
+    print('  Number of LOD:', game_data['count_your_lod'])
+    print('  LOD rate: {:.2f}%'.format(game_data['your_lod_rate'] * 100))
+    print('  LOD mean: {:.2f}pts.'.format(game_data['your_lod_mean']))
 
 if __name__ == '__main__':
     main()
