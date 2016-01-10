@@ -23,7 +23,6 @@ datetime_format = r'%Y/%m/%d %H:%M'
 
 # TODO: (priority: low) hand_starting_hand(s)
 # TODO: (priority: low) hand_dora
-# TODO: (priority: low) hand_discards
 
 class MJScoreState(State):
     """Base class of state classes."""
@@ -35,7 +34,7 @@ class MJScoreState(State):
         context['description'] = 'A demonstration of docutils.statemachine.'
         context['date'] = datetime.today().strftime(datetime_format)
         context['games'] = []
-        context['player_stats'] = {}
+        context['player_stats'] = dict(names=players_default)
         return context, []
 
     @property
@@ -98,6 +97,17 @@ hand_header_re = re.compile(r'''
 )?
 ''', re.VERBOSE)
 
+# Regex for lines e.g. ``* 1G3s 1d1p 2G2s 2d9p ...``
+# Do not make regex so complicated here.
+actions_re = re.compile(r'''
+\A
+\*\s*
+(?P<actions>.+)
+\Z
+''', re.VERBOSE)
+
+empty_re = re.compile(r'\Z')
+
 end_of_game_re = re.compile(r'[-]+\s*試合結果\s*[-]+')
 
 class HandState(MJScoreState):
@@ -105,10 +115,13 @@ class HandState(MJScoreState):
 
     patterns = dict(
         hand_header=hand_header_re,
+        player_actions=actions_re,
+        end_of_actions=empty_re,
         end_of_game=end_of_game_re,)
 
     initial_transitions = [
         'hand_header',
+        'player_actions',
         'end_of_game']
 
     def hand_header(self, match, context, next_state):
@@ -117,7 +130,8 @@ class HandState(MJScoreState):
         game = context['games'][-1]
         hands = game['hands']
         hand = dict(
-            title=match.group('title'))
+            title=match.group('title'),
+            riichi_table=[False] * 4,)
 
         player_and_balance = match.group('balance').strip().split()
         if player_and_balance:
@@ -131,6 +145,30 @@ class HandState(MJScoreState):
         hands.append(hand)
 
         return context, 'HandEndingState', []
+
+    def player_actions(self, match, context, next_state):
+        """Handle a line which describes a part of all players' actions."""
+
+        # current hand
+        hand = context['games'][-1]['hands'][-1]
+        riichi_table = hand['riichi_table']
+
+        actions = match.group('actions').split()
+        for action in actions:
+            assert len(action) > 1
+            assert action[0] in '1234'
+            assert action[1] in 'ACDGKNRd'
+
+            # Test if the action is riichi.
+            if action[1] == 'R':
+                riichi_table[int(action[0]) - 1] = True
+
+        return context, next_state, []
+
+    def end_of_actions(self, match, context, next_state):
+        """The empty line immediately after action lines."""
+
+        return context, next_state, []
 
     def end_of_game(self, match, context, next_state):
         """---- game result ----"""
@@ -313,14 +351,15 @@ def enumerate_hands(game_data):
             yield rot
 
 def stat(game_data, target_player):
-    """under construction"""
+    """Calculate possibly numerous statistical values."""
 
     all_games = game_data['games']
+    player_index = game_data['player_stats']['names'].index(target_player)
 
     num_hands = sum(len(game['hands']) for game in all_games)
     game_data['count_hands'] = num_hands
 
-    # Calculate distribution of your placing, or 着順表.
+    # Calculate distribution of target player's placing, or 着順表.
     placing_distr = [0, 0, 0, 0]
     for game in all_games:
         ranking = game['result']
@@ -334,7 +373,7 @@ def stat(game_data, target_player):
 
     player_data['placing_distr'] = placing_distr
 
-    # Calculate statistical values about your placing.
+    # Calculate statistical values about target player's placing.
     num_games = len(all_games)
     player_data['mean_placing'] = 0
     player_data['first_placing_rate'] = 0
@@ -346,52 +385,62 @@ def stat(game_data, target_player):
         player_data['first_placing_rate'] = placing_distr[0] / num_games
         player_data['last_placing_rate'] = placing_distr[-1] / num_games
 
-    # Calculate your winning rate, or 和了率.
-    num_your_winning = 0
+    # Calculate target player's winning rate, or 和了率.
+    num_winning = 0
     total_points = 0
-    for rot in enumerate_hands(game_data):
-        if rot['ending'] in ('ツモ', 'ロン'):
-            assert rot['balance']
-            first = rot['balance'][0]
+    for hand in enumerate_hands(game_data):
+        if hand['ending'] in ('ツモ', 'ロン'):
+            assert hand['balance']
+            first = hand['balance'][0]
             points = first['balance']
             if (first['player'] == target_player and
                 points > 0):
                 total_points += points
-                num_your_winning += 1
+                num_winning += 1
 
-    player_data['count_winning'] = num_your_winning
+    player_data['count_winning'] = num_winning
     player_data['winning_rate'] = 0
-    if num_hands:
-        player_data['winning_rate'] = num_your_winning / num_hands
-        player_data['winning_mean'] = total_points / num_your_winning
+    player_data['winning_mean'] = 0
+    if num_hands and num_winning:
+        player_data['winning_rate'] = num_winning / num_hands
+        player_data['winning_mean'] = total_points / num_winning
 
-    # Calculate your losing-on-discarding (LOD) rate and mean LOD,
+    # Calculate target player's losing-on-discarding (LOD) rate and mean LOD,
     # or 放銃率 and 平均放銃率.
-    num_your_lod = 0
+    num_lod = 0
     total_losing_points = 0
-    for rot in enumerate_hands(game_data):
-        if rot['ending'] == 'ロン':
-            assert rot['balance']
-            last = rot['balance'][-1]
+    for hand in enumerate_hands(game_data):
+        if hand['ending'] == 'ロン':
+            assert hand['balance']
+            last = hand['balance'][-1]
             if last['player'] == target_player:
-                num_your_lod += 1
-                total_losing_points += last['balance'] # negative value
+                num_lod += 1
+                total_losing_points += last['balance'] # sum of negative values
 
-    player_data['count_lod'] = num_your_lod
+    player_data['count_lod'] = num_lod
     player_data['lod_rate'] = 0
     player_data['lod_mean'] = 0
-    if num_hands:
-        player_data['lod_rate'] = num_your_lod / num_hands
-        if num_your_lod:
-            player_data['lod_mean'] = total_losing_points / num_your_lod
+    if num_hands and num_lod:
+        player_data['lod_rate'] = num_lod / num_hands
+        player_data['lod_mean'] = total_losing_points / num_lod
 
     # TODO: Implement more statistical values, thus:
-    # * your riichi rate, or 立直率
     # * your melding rate, or 副露率
     # * (challenge) 平均獲得チップ枚数
 
+    # Calculate riichi rate.
+    player_data['riichi_rate'] = 0
+    if num_hands:
+        num_riichi = 0
+        for hand in enumerate_hands(game_data):
+            riichi_table = hand['riichi_table']
+            if riichi_table[player_index]:
+                num_riichi += 1
+
+        player_data['riichi_rate'] = num_riichi / num_hands
+
 def output(game_data, target_player):
-    """under construction"""
+    """Show the statistics of the target player."""
 
     print('Date:', game_data['date'])
 
@@ -411,21 +460,23 @@ def output(game_data, target_player):
 
     print('Player {} data: '.format(target_player))
 
-    print('Your placings')
+    print('Placings')
     print('  Histogram [1st, 2nd, 3rd, 4th]:', player_data['placing_distr'])
     print('  First placing rate: {:.2f}%'.format(player_data['first_placing_rate'] * 100))
     print('  Last placing rate: {:.2f}%'.format(player_data['last_placing_rate'] * 100))
     print('  Mean: {:.2f}th'.format(player_data['mean_placing']))
 
-    print('Your winnings')
+    print('Winnings')
     print('  Number of winning:', player_data['count_winning'])
     print('  Rate: {:.2f}%'.format(player_data['winning_rate'] * 100))
     print('  Mean: {:.2f}pts.'.format(player_data['winning_mean']))
 
-    print('Your losings on discard')
+    print('Losings on discard')
     print('  Number of LOD:', player_data['count_lod'])
     print('  Rate: {:.2f}%'.format(player_data['lod_rate'] * 100))
     print('  Mean: {:.2f}pts.'.format(player_data['lod_mean']))
+
+    print('Riichi rate: {:.2f}%'.format(player_data['riichi_rate'] * 100))
 
 if __name__ == '__main__':
     main()
