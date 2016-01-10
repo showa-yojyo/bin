@@ -348,18 +348,22 @@ def stat(game_data, target_player):
 
     # Calculate your winning rate, or 和了率.
     num_your_winning = 0
+    total_points = 0
     for rot in enumerate_hands(game_data):
         if rot['ending'] in ('ツモ', 'ロン'):
             assert rot['balance']
             first = rot['balance'][0]
+            points = first['balance']
             if (first['player'] == target_player and
-                first['balance'] > 0):
+                points > 0):
+                total_points += points
                 num_your_winning += 1
 
     player_data['count_winning'] = num_your_winning
     player_data['winning_rate'] = 0
     if num_hands:
         player_data['winning_rate'] = num_your_winning / num_hands
+        player_data['winning_mean'] = total_points / num_your_winning
 
     # Calculate your losing-on-discarding (LOD) rate and mean LOD,
     # or 放銃率 and 平均放銃率.
@@ -384,7 +388,6 @@ def stat(game_data, target_player):
     # TODO: Implement more statistical values, thus:
     # * your riichi rate, or 立直率
     # * your melding rate, or 副露率
-    # * mean of your winning points, or 平均和了点
     # * (challenge) 平均獲得チップ枚数
 
 def output(game_data, target_player):
@@ -411,17 +414,18 @@ def output(game_data, target_player):
     print('Your placings')
     print('  Histogram [1st, 2nd, 3rd, 4th]:', player_data['placing_distr'])
     print('  First placing rate: {:.2f}%'.format(player_data['first_placing_rate'] * 100))
-    print('  Last placing rate:  {:.2f}%'.format(player_data['last_placing_rate'] * 100))
-    print('  Mean placing:       {:.2f}th'.format(player_data['mean_placing']))
+    print('  Last placing rate: {:.2f}%'.format(player_data['last_placing_rate'] * 100))
+    print('  Mean: {:.2f}th'.format(player_data['mean_placing']))
 
     print('Your winnings')
     print('  Number of winning:', player_data['count_winning'])
-    print('  Winning rate: {:.2f}%'.format(player_data['winning_rate'] * 100))
+    print('  Rate: {:.2f}%'.format(player_data['winning_rate'] * 100))
+    print('  Mean: {:.2f}pts.'.format(player_data['winning_mean']))
 
     print('Your losings on discard')
     print('  Number of LOD:', player_data['count_lod'])
-    print('  LOD rate: {:.2f}%'.format(player_data['lod_rate'] * 100))
-    print('  LOD mean: {:.2f}pts.'.format(player_data['lod_mean']))
+    print('  Rate: {:.2f}%'.format(player_data['lod_rate'] * 100))
+    print('  Mean: {:.2f}pts.'.format(player_data['lod_mean']))
 
 if __name__ == '__main__':
     main()
