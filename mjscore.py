@@ -21,9 +21,9 @@ mjscore_path_default = r'D:\Program Files\mattari09\mjscore.txt'
 players_default = ['あなた', '下家', '対面', '上家']
 datetime_format = r'%Y/%m/%d %H:%M'
 
-# TODO: (priority: low) rotation_starting_hand(s)
-# TODO: (priority: low) rotation_dora
-# TODO: (priority: low) rotation_discards
+# TODO: (priority: low) hand_starting_hand(s)
+# TODO: (priority: low) hand_dora
+# TODO: (priority: low) hand_discards
 
 class MJScoreState(State):
     """Base class of state classes."""
@@ -71,22 +71,22 @@ class GameBeginningState(MJScoreState):
             if started_at.split()[0] != today.split()[0]:
                 return context, next_state, []
 
-        next_state = 'RotationState'
+        next_state = 'HandState'
         game = dict(
             result=[None] * 4,
-            rotations=[],)
+            hands=[],)
         context['games'].append(game)
 
         game['started_at'] = started_at
 
         return context, next_state, []
 
-# 場 = round
-# 局 = rotation
+# 場 = a round
+# 局 = a hand
 # 本場 = counter(s)
 # E.g. 東一局三本場 is translated to
-#   East round, 1st rotation [with 0 counters]
-rotation_header_re = re.compile(r'''
+#   East round, 1st hand (or rotation) [with 0 counters]
+hand_header_re = re.compile(r'''
 (?P<title>[東南][1-4]局\s\d本場)
 \(リーチ\d\)
 \s?
@@ -98,41 +98,41 @@ rotation_header_re = re.compile(r'''
 )?
 ''', re.VERBOSE)
 
-end_of_rotations_re = re.compile(r'[-]+\s*試合結果\s*[-]+')
+end_of_game_re = re.compile(r'[-]+\s*試合結果\s*[-]+')
 
-class RotationState(MJScoreState):
-    """Parse almost all of lines of rotations."""
+class HandState(MJScoreState):
+    """Parse almost all of lines of hands."""
 
     patterns = dict(
-        rotation_header=rotation_header_re,
-        end_of_rotations=end_of_rotations_re,)
+        hand_header=hand_header_re,
+        end_of_game=end_of_game_re,)
 
     initial_transitions = [
-        'rotation_header',
-        'end_of_rotations']
+        'hand_header',
+        'end_of_game']
 
-    def rotation_header(self, match, context, next_state):
-        """Parse the header of a rotation."""
+    def hand_header(self, match, context, next_state):
+        """Parse the header of a hand."""
 
         game = context['games'][-1]
-        rotations = game['rotations']
-        rotation = dict(
+        hands = game['hands']
+        hand = dict(
             title=match.group('title'))
 
         player_and_balance = match.group('balance').strip().split()
         if player_and_balance:
-            rotation['balance'] = [
+            hand['balance'] = [
                 dict(player=player_and_balance[i],
                      balance=int(player_and_balance[i + 1]),)
                 for i in range(0, len(player_and_balance), 2)]
         else:
-            rotation['balance'] = []
+            hand['balance'] = []
 
-        rotations.append(rotation)
+        hands.append(hand)
 
-        return context, 'RotationEndingState', []
+        return context, 'HandEndingState', []
 
-    def end_of_rotations(self, match, context, next_state):
+    def end_of_game(self, match, context, next_state):
         """---- game result ----"""
 
         return context, 'GameEndingState', []
@@ -149,7 +149,7 @@ winning_re = re.compile(r'''
 # TODO: canonical representation of 四槓開
 draw_re = re.compile(r'(流局|四風連打|九種公九牌倒牌|四家リーチ|(四槓.+)|三家和)')
 
-class RotationEndingState(MJScoreState):
+class HandEndingState(MJScoreState):
     """Parse the line that tells the winner's hand or
     exhaustive/abortive draw.
     """
@@ -165,28 +165,28 @@ class RotationEndingState(MJScoreState):
     def winning(self, match, context, next_state):
         """Parse the line that includes ロン or ツモ."""
 
-        # Get the current rotation from context.
+        # Get the current hand from context.
         game = context['games'][-1]
-        rotation = game['rotations'][-1]
+        hand = game['hands'][-1]
 
-        rotation['ending'] = match.group('winning_decl')
+        hand['ending'] = match.group('winning_decl')
 
         # provisional
-        rotation['winning_value'] = match.group('winning_value')
-        rotation['winning_yaku_list'] = match.group('winning_yaku_list')#split()
+        hand['winning_value'] = match.group('winning_value')
+        hand['winning_yaku_list'] = match.group('winning_yaku_list')#split()
 
-        return context, 'RotationState', []
+        return context, 'HandState', []
 
     def draw(self, match, context, next_state):
         """Parse the line that includes 流局, etc."""
 
-        # Get the current rotation from context.
+        # Get the current hand from context.
         game = context['games'][-1]
-        rotation = game['rotations'][-1]
+        hand = game['hands'][-1]
 
-        rotation['ending'] = match.group()
+        hand['ending'] = match.group()
 
-        return context, 'RotationState', []
+        return context, 'HandState', []
 
 ending_of_game_re = re.compile(r'''
 [-]*\s64卓\s終了\s
@@ -278,8 +278,8 @@ def main():
 
     state_machine = StateMachine(
         state_classes=[GameBeginningState,
-                       RotationState,
-                       RotationEndingState,
+                       HandState,
+                       HandEndingState,
                        GameEndingState,],
         initial_state='GameBeginningState')
     state_machine.config = args
@@ -307,9 +307,9 @@ def main():
         stat(context, target_player)
         output(context, target_player)
 
-def enumerate_rotations(game_data):
+def enumerate_hands(game_data):
     for game in game_data['games']:
-        for rot in game['rotations']:
+        for rot in game['hands']:
             yield rot
 
 def stat(game_data, target_player):
@@ -317,8 +317,8 @@ def stat(game_data, target_player):
 
     all_games = game_data['games']
 
-    num_rotations = sum(len(game['rotations']) for game in all_games)
-    game_data['count_rotations'] = num_rotations
+    num_hands = sum(len(game['hands']) for game in all_games)
+    game_data['count_hands'] = num_hands
 
     # Calculate distribution of your placing, or 着順表.
     placing_distr = [0, 0, 0, 0]
@@ -348,7 +348,7 @@ def stat(game_data, target_player):
 
     # Calculate your winning rate, or 和了率.
     num_your_winning = 0
-    for rot in enumerate_rotations(game_data):
+    for rot in enumerate_hands(game_data):
         if rot['ending'] in ('ツモ', 'ロン'):
             assert rot['balance']
             first = rot['balance'][0]
@@ -358,14 +358,14 @@ def stat(game_data, target_player):
 
     player_data['count_winning'] = num_your_winning
     player_data['winning_rate'] = 0
-    if num_rotations:
-        player_data['winning_rate'] = num_your_winning / num_rotations
+    if num_hands:
+        player_data['winning_rate'] = num_your_winning / num_hands
 
     # Calculate your losing-on-discarding (LOD) rate and mean LOD,
     # or 放銃率 and 平均放銃率.
     num_your_lod = 0
     total_losing_points = 0
-    for rot in enumerate_rotations(game_data):
+    for rot in enumerate_hands(game_data):
         if rot['ending'] == 'ロン':
             assert rot['balance']
             last = rot['balance'][-1]
@@ -376,8 +376,8 @@ def stat(game_data, target_player):
     player_data['count_lod'] = num_your_lod
     player_data['lod_rate'] = 0
     player_data['lod_mean'] = 0
-    if num_rotations:
-        player_data['lod_rate'] = num_your_lod / num_rotations
+    if num_hands:
+        player_data['lod_rate'] = num_your_lod / num_hands
         if num_your_lod:
             player_data['lod_mean'] = total_losing_points / num_your_lod
 
@@ -402,7 +402,7 @@ def output(game_data, target_player):
         all_games[-1]['finished_at']))
 
     print('Number of games:', len(all_games))
-    print('Number of rotations:', game_data['count_rotations'])
+    print('Number of hands:', game_data['count_hands'])
 
     player_data = game_data['player_stats'][target_player]
 
