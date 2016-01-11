@@ -13,7 +13,7 @@ from json import dump
 from docutils.statemachine import StateMachine
 from mjstat import players_default
 from mjstat.states import (initial_state, state_classes)
-from mjstat.stat import stat
+from mjstat.stat import evaluate
 import sys
 
 __version__ = '0.0.0'
@@ -80,10 +80,10 @@ def main():
     target_player = args.target_player
     if target_player == 'all':
         for target_player in players_default:
-            stat(context, target_player)
+            evaluate(context, target_player)
             output(context, target_player)
     else:
-        stat(context, target_player)
+        evaluate(context, target_player)
         output(context, target_player)
 
 def output(game_data, target_player):
