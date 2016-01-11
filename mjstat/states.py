@@ -119,6 +119,7 @@ class HandState(MJScoreState):
         hands = game['hands']
         hand = dict(
             title=match.group('title'),
+            melding_counter_table=[0] * 4,
             riichi_table=[False] * 4,)
 
         player_and_balance = match.group('balance').strip().split()
@@ -142,6 +143,8 @@ class HandState(MJScoreState):
         riichi_table = hand['riichi_table']
 
         actions = match.group('actions').split()
+        melding_counter_table = hand['melding_counter_table']
+
         for action in actions:
             assert len(action) > 1
             assert action[0] in '1234'
@@ -150,6 +153,9 @@ class HandState(MJScoreState):
             # Test if the action is riichi.
             if action[1] == 'R':
                 riichi_table[int(action[0]) - 1] = True
+            elif action[1] in 'CKN':
+                index = int(action[0]) - 1
+                melding_counter_table[index] += 1
 
         return context, next_state, []
 

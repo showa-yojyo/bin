@@ -24,10 +24,9 @@ def evaluate(game_data, target_player):
     evaluate_winning(game_data, player_data)
     evaluate_losing(game_data, player_data)
     evaluate_riichi(game_data, player_data)
+    evaluate_melding(game_data, player_data)
 
-    # TODO: Implement more statistical values, thus:
-    # * your melding rate, or 副露率
-    # * (challenge) 平均獲得チップ枚数
+    # TODO: (challenge) 平均獲得チップ枚数
 
 def evaluate_placing(game_data, player_data):
     """Evaluate distribution of target player's placing, or 着順表.
@@ -132,3 +131,29 @@ def evaluate_riichi(game_data, player_data):
             num_riichi += 1
 
     player_data['riichi_rate'] = num_riichi / num_hands
+
+def evaluate_melding(game_data, player_data):
+    """Evaluate target player's melding rate.
+
+    N.B. Unlike できすぎくん criteria, this function evaluates how
+    OFTEN the player makes use of melding in a hand.
+    """
+
+    player_data['melding_count'] = 0
+    player_data['melding_rate'] = 0
+    num_hands = game_data['count_hands']
+    if not num_hands:
+        return
+
+    num_melding = 0
+    index = player_data['index']
+    for hand in enumerate_hands(game_data):
+        c = hand['melding_counter_table'][index]
+
+        # If できすぎくん's style is preferred,
+        # just increment num_melding one only if c > 1.
+        num_melding += c
+
+    if num_melding:
+        player_data['melding_count'] = num_melding
+        player_data['melding_rate'] = num_melding / num_hands

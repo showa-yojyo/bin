@@ -125,5 +125,9 @@ def output(game_data, target_player):
 
     print('Riichi rate: {:.2f}%'.format(player_data['riichi_rate'] * 100))
 
+    print('Melding data')
+    print('  Total:', player_data['melding_count'])
+    print('  Rate: {:.2f}%'.format(player_data['melding_rate'] * 100))
+
 if __name__ == '__main__':
     main()
