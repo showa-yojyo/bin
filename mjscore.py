@@ -91,39 +91,40 @@ def output(game_data, target_player):
 
     print('Date:', game_data['date'])
 
-    all_games = game_data['games']
-    if not all_games:
+    player_data = game_data['player_stats'][target_player]
+    target_games = player_data['games']
+    if not target_games:
         print('No data.')
         return
 
     print('Reference period: <{}> - <{}>'.format(
-        all_games[0]['started_at'],
-        all_games[-1]['finished_at']))
+        target_games[0]['started_at'],
+        target_games[-1]['finished_at']))
 
-    print('Number of games:', len(all_games))
-    print('Number of hands:', game_data['count_hands'])
-
-    player_data = game_data['player_stats'][target_player]
-
-    print('Player {} data: '.format(target_player))
+    print('Player data')
+    print('  Name:', target_player)
+    print('  Number of games:', len(target_games))
+    print('  Number of hands:', player_data['count_hands'])
 
     print('Placings')
-    print('  Histogram [1st, 2nd, 3rd, 4th]:', player_data['placing_distr'])
+    print('  [1st, 2nd, 3rd, 4th]:', player_data['placing_distr'])
     print('  First placing rate: {:.2f}%'.format(player_data['first_placing_rate'] * 100))
     print('  Last placing rate: {:.2f}%'.format(player_data['last_placing_rate'] * 100))
     print('  Mean: {:.2f}th'.format(player_data['mean_placing']))
 
     print('Winnings')
-    print('  Number of winning:', player_data['count_winning'])
+    print('  Number of winning:', player_data['winning_count'])
     print('  Rate: {:.2f}%'.format(player_data['winning_rate'] * 100))
     print('  Mean: {:.2f}pts.'.format(player_data['winning_mean']))
 
     print('Losings on discard')
-    print('  Number of LOD:', player_data['count_lod'])
+    print('  Number of LOD:', player_data['lod_count'])
     print('  Rate: {:.2f}%'.format(player_data['lod_rate'] * 100))
     print('  Mean: {:.2f}pts.'.format(player_data['lod_mean']))
 
-    print('Riichi rate: {:.2f}%'.format(player_data['riichi_rate'] * 100))
+    print('Riichi data')
+    print('  Total:', player_data['riichi_count'])
+    print('  Rate: {:.2f}%'.format(player_data['riichi_rate'] * 100))
 
     print('Melding data')
     print('  Total:', player_data['melding_count'])

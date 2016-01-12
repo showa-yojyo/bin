@@ -22,7 +22,7 @@ class MJScoreState(State):
         context['description'] = 'A demonstration of docutils.statemachine.'
         context['date'] = datetime.today().strftime(datetime_format)
         context['games'] = []
-        context['player_stats'] = dict(names=players_default)
+        context['player_stats'] = {}
         return context, []
 
     @property
@@ -58,15 +58,41 @@ class GameBeginningState(MJScoreState):
             if started_at.split()[0] != today.split()[0]:
                 return context, next_state, []
 
-        next_state = 'HandState'
+        next_state = 'GameHeaderState'
         game = dict(
             result=[None] * 4,
-            hands=[],)
+            hands=[],
+            players=[None] * 4)
         context['games'].append(game)
 
         game['started_at'] = started_at
 
         return context, next_state, []
+
+# Regex for parsing players information, their names and ratings.
+game_header_re = re.compile(r'''
+持点\d+\s*      # 25000
+\[1\](.+)\sR(?:\d+)\s*   # Player #1
+\[2\](.+)\sR(?:\d+)\s*   # Player #2
+\[3\](.+)\sR(?:\d+)\s*   # Player #3
+\[4\](.+)\sR(?:\d+)\s*   # Player #4
+''', re.VERBOSE)
+
+class GameHeaderState(MJScoreState):
+    """Parse the second line of a game."""
+
+    patterns = dict(
+        game_header=game_header_re,)
+
+    initial_transitions = ['game_header',]
+
+    def game_header(self, match, context, next_state):
+        """Parse player names."""
+
+        game = context['games'][-1]
+        game['players'] = [i for i in match.groups()]
+
+        return context, 'HandState', []
 
 # 場 = a round
 # 局 = a hand
