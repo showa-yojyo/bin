@@ -3,7 +3,45 @@
 """
 
 def evaluate(game_data, target_player):
-    """Evaluate possibly numerous statistical values."""
+    """Evaluate possibly numerous statistical values.
+
+    The structure of `game_data` is like as follows::
+
+        game_data ::= description, date, games, player_stats
+            description ::= str
+            date ::= datetime
+            games ::= list-of-game (*)
+                game ::= result, hands, players, started_at, finished_at,
+                    result ::= list-of-dict (4)
+                         player->points
+                    hands ::= list-of-hand (1..*)
+                        hand ::= riichi_table, melding_counter_table,
+                          ending, winning_value, winning_yaku_list
+                            riichi_table ::= list-of-bool (4)
+                            melding_counter_table ::= list-of-int (4)
+                            ending ::= (ロン|ツモ|流局|四風連打|...)
+                            winning_value ::= str
+                            winning_yaku_list ::= str
+                    players ::= list-of-str (4)
+                    started_at ::= datetime
+                    finished_at ::= datetime
+            player_stats ::= (name)->player_data
+
+    The structure of `player_data` is like as follows::
+
+        player_data ::= name, count_hands, games, placing_data,
+          winning_data, lod_data, riich_data, melding_data
+        name ::= str
+        count_hands ::= (int)
+        games ::= list-of-game (*)
+        placing_data ::= placing_distr, mean_placing,
+          first_placing_rate, last_placing_rate
+            placing_distr ::= int (4)
+        winning_data ::= winning_count, winning_rate, winning_mean
+        lod_data ::= lod_count, lod_rate, lod_mean
+        riich_data ::= riichi_count, riichi_rate
+        melding_data ::= melding_count, melding_rate
+    """
 
     target_games = [g for g in game_data['games'] if target_player in g['players']]
 
