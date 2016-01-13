@@ -165,23 +165,29 @@ class HandState(MJScoreState):
         """Handle a line which describes a part of all players' actions."""
 
         # current hand
-        hand = context['games'][-1]['hands'][-1]
+        game = context['games'][-1]
+        hand = game['hands'][-1]
         riichi_table = hand['riichi_table']
 
         actions = match.group('actions').split()
         melding_counter_table = hand['melding_counter_table']
 
-        for action in actions:
-            assert len(action) > 1
-            assert action[0] in '1234'
-            assert action[1] in 'ACDGKNRd'
+        for i in actions:
+            assert len(i) > 1
+            index, act = i[0], i[1]
+            assert index in '1234'
+            assert act in 'ACDGKNRd'
+            index = int(index) - 1
 
             # Test if the action is riichi.
-            if action[1] == 'R':
-                riichi_table[int(action[0]) - 1] = True
-            elif action[1] in 'CKN':
-                index = int(action[0]) - 1
+            if act == 'R':
+                riichi_table[index] = True
+            elif act in 'CKN':
+                # XXX
                 melding_counter_table[index] += 1
+            elif act == 'A':
+                players = game['players']
+                hand['winner'] = players[index]
 
         return context, next_state, []
 

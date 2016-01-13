@@ -15,11 +15,13 @@ def evaluate(game_data, target_player):
                     result ::= list-of-dict (4)
                          player->points
                     hands ::= list-of-hand (1..*)
-                        hand ::= riichi_table, melding_counter_table,
-                          ending, winning_value, winning_yaku_list
+                        hand ::= balance, riichi_table, melding_counter_table,
+                          ending, winner?, winning_value, winning_yaku_list
+                            balance ::= player->points: (4) (descending)
                             riichi_table ::= list-of-bool (4)
                             melding_counter_table ::= list-of-int (4)
                             ending ::= (ロン|ツモ|流局|四風連打|...)
+                            winner ::= str
                             winning_value ::= str
                             winning_yaku_list ::= str
                     players ::= list-of-str (4)
@@ -107,7 +109,8 @@ def evaluate_winning(player_data):
     name = player_data['name']
     for g in player_data['games']:
         for hand in g['hands']:
-            if hand['ending'] in ('ツモ', 'ロン'):
+            winner_name = hand.get('winner', None)
+            if winner_name:
                 assert hand['balance']
                 first = hand['balance'][0]
                 points = first['balance']
