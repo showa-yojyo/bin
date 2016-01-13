@@ -15,8 +15,10 @@ def evaluate(game_data, target_player):
                     result ::= list-of-dict (4)
                          player->points
                     hands ::= list-of-hand (1..*)
-                        hand ::= balance, riichi_table, melding_counter_table,
+                        hand ::= action_table, balance, riichi_table,
+                          melding_counter_table,
                           ending, winner?, winning_value, winning_yaku_list
+                            action_table ::= list-of-str
                             balance ::= player->points: (4) (descending)
                             riichi_table ::= list-of-bool (4)
                             melding_counter_table ::= list-of-int (4)
@@ -39,7 +41,8 @@ def evaluate(game_data, target_player):
         placing_data ::= placing_distr, mean_placing,
           first_placing_rate, last_placing_rate
             placing_distr ::= int (4)
-        winning_data ::= winning_count, winning_rate, winning_mean
+        winning_data ::= winning_count, winning_rate, winning_mean,
+          winning_mean_turns
         lod_data ::= lod_count, lod_rate, lod_mean
         riich_data ::= riichi_count, riichi_rate
         melding_data ::= melding_count, melding_rate
@@ -72,7 +75,7 @@ def evaluate_placing(player_data):
     player_data['last_placing_rate'] = 0
 
     name = player_data['name']
-    placing_distr = [0, 0, 0, 0]
+    placing_distr = [0] * 4
 
     target_games = player_data['games']
     for game in target_games:
@@ -92,11 +95,23 @@ def evaluate_placing(player_data):
         player_data['last_placing_rate'] = placing_distr[-1] / num_games
 
 def evaluate_winning(player_data):
-    """Evaluate target player's winning rate, or 和了率."""
+    """Evaluate target player's winning data.
+
+    :winning_count: the total numbers of the player's winning.
+
+    :winning_rate: the probability that the player wins in a hand.
+
+    :winning_mean: the mean how much points did the winner obtain
+    par a hand.
+
+    :winning_mean_turn: the mean how many times did the winner tsumo,
+    or pick tiles from the wall par a hand.
+    """
 
     player_data['winning_count'] = 0
     player_data['winning_rate'] = 0
     player_data['winning_mean'] = 0
+    player_data['winning_mean_turn'] = 0
 
     num_hands = player_data['count_hands']
     if not num_hands:
@@ -106,12 +121,17 @@ def evaluate_winning(player_data):
 
     num_winning = 0
     total_points = 0
+    total_turns = 0
     name = player_data['name']
     for g in player_data['games']:
+        # pattern must be 1G, 2G, 3G or 4G.
+        pattern = '{:d}G'.format(g['players'].index(name) + 1)
+
         for hand in g['hands']:
             winner_name = hand.get('winner', None)
             if winner_name:
                 assert hand['balance']
+
                 first = hand['balance'][0]
                 points = first['balance']
                 if (first['player'] == name and
@@ -119,10 +139,15 @@ def evaluate_winning(player_data):
                     total_points += points
                     num_winning += 1
 
+                    action_table = hand['action_table']
+                    total_turns += sum(1 for i in action_table
+                        if i.startswith(pattern))
+
     if num_winning:
         player_data['winning_count'] = num_winning
         player_data['winning_rate'] = num_winning / num_hands
         player_data['winning_mean'] = total_points / num_winning
+        player_data['winning_mean_turns'] = total_turns / num_winning
 
 def evaluate_losing(player_data):
     """Evaluate target player's losing-on-discarding (LOD) rate and

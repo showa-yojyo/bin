@@ -145,6 +145,7 @@ class HandState(MJScoreState):
         hands = game['hands']
         hand = dict(
             title=match.group('title'),
+            action_table=[],
             melding_counter_table=[0] * 4,
             riichi_table=[False] * 4,)
 
@@ -170,6 +171,7 @@ class HandState(MJScoreState):
         riichi_table = hand['riichi_table']
 
         actions = match.group('actions').split()
+        hand['action_table'].extend(actions)
         melding_counter_table = hand['melding_counter_table']
 
         for i in actions:
