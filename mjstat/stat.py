@@ -22,7 +22,7 @@ def evaluate(game_data, target_player):
                           kongs, riichi_table,
                           ending, winner?, winning_value, winning_yaku_list
                             action_table ::= list-of-str
-                            balance ::= player->points: (4) (descending)
+                            balance ::= player->points
                             chows ::= list-of-str (4)
                             pongs ::= list-of-str (4)
                             kongs ::= list-of-str (4)
@@ -125,7 +125,8 @@ def evaluate_winning(player_data):
     player_data['winning_count'] = 0
     player_data['winning_rate'] = 0
     player_data['winning_mean'] = 0
-    player_data['winning_mean_turn'] = 0
+    player_data['winning_mean_han'] = 0
+    player_data['winning_mean_turns'] = 0
 
     num_hands = player_data['count_hands']
     if not num_hands:
@@ -146,7 +147,7 @@ def evaluate_winning(player_data):
             winner_name = hand.get('winner', None)
             if name == winner_name:
                 assert hand['balance']
-                points = hand['balance'][0]['balance']
+                points = hand['balance'][name]
                 total_points += points
                 num_winning += 1
 
@@ -165,7 +166,6 @@ def evaluate_winning(player_data):
                         # Manually compute how many han are.
                         yaku = hand['winning_yaku_list']
                         han = count_han(yaku.split(), False)
-                        #print(yaku, han)
                     elif value.find('役満'):
                         han = 13
                         if value.startswith('ダブル'):
@@ -201,14 +201,16 @@ def evaluate_losing(player_data):
     total_losing_points = 0
     name = player_data['name']
     for g in player_data['games']:
+        index = g['players'].index(name)
         for hand in g['hands']:
             if hand['ending'] == 'ロン':
-                assert hand['balance']
-                last = hand['balance'][-1]
-                if last['player'] == name:
-                    print(last['balance'])
+                # For instance, if the action table ends with
+                # '... 1d3p 4A', player #4 wins from player #1.
+                if index == int(hand['action_table'][-2][0]) - 1:
+                    assert hand['balance']
                     num_lod += 1
-                    total_losing_points += last['balance'] # sum of negative values
+                    # sum of negative values
+                    total_losing_points += hand['balance'][name]
 
     if num_lod:
         player_data['lod_count'] = num_lod

@@ -152,15 +152,12 @@ class HandState(MJScoreState):
             pungs=[],
             kongs=[],)
 
+        hand['balance'] = {}
         player_and_balance = match.group('balance').strip().split()
         if player_and_balance:
-            hand['balance'] = [
-                dict(player=player_and_balance[i],
-                     balance=int(player_and_balance[i + 1]),)
-                for i in range(0, len(player_and_balance), 2)]
-        else:
-            hand['balance'] = []
-
+            hand['balance'].update([(
+                player_and_balance[i], int(player_and_balance[i + 1]),)
+                    for i in range(0, len(player_and_balance), 2)])
         hands.append(hand)
 
         return context, 'HandEndingState', []
