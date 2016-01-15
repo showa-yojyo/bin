@@ -116,6 +116,7 @@ def output(game_data, target_player):
     print('  Number of winning:', player_data['winning_count'])
     print('  Rate: {:.2f}%'.format(player_data['winning_rate'] * 100))
     print('  Mean: {:.2f}pts.'.format(player_data['winning_mean']))
+    print('  Mean winning han: {:.2f}'.format(player_data['winning_mean_han']))
     print('  Mean winning turns: {:.2f}'.format(player_data['winning_mean_turns']))
 
     print('Losings on discard')

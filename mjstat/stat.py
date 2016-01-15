@@ -2,6 +2,9 @@
 """stat.py: The module for mahjong statistics.
 """
 
+from . import count_han
+import re
+
 def evaluate(game_data, target_player):
     """Evaluate possibly numerous statistical values.
 
@@ -15,13 +18,15 @@ def evaluate(game_data, target_player):
                     result ::= list-of-dict (4)
                          player->points
                     hands ::= list-of-hand (1..*)
-                        hand ::= action_table, balance, riichi_table,
-                          melding_counter_table,
+                        hand ::= action_table, balance, chows, pungs,
+                          kongs, riichi_table,
                           ending, winner?, winning_value, winning_yaku_list
                             action_table ::= list-of-str
                             balance ::= player->points: (4) (descending)
+                            chows ::= list-of-str (4)
+                            pongs ::= list-of-str (4)
+                            kongs ::= list-of-str (4)
                             riichi_table ::= list-of-bool (4)
-                            melding_counter_table ::= list-of-int (4)
                             ending ::= (ロン|ツモ|流局|四風連打|...)
                             winner ::= str
                             winning_value ::= str
@@ -94,6 +99,15 @@ def evaluate_placing(player_data):
         player_data['first_placing_rate'] = placing_distr[0] / num_games
         player_data['last_placing_rate'] = placing_distr[-1] / num_games
 
+# XXX
+winning_value_re = re.compile(r'''
+(?P<hu>\d+)符
+\s*
+(?P<han>.+)飜
+''', re.VERBOSE)
+
+han_char_table = {k:v for v, k in enumerate('一二三四', 1)}
+
 def evaluate_winning(player_data):
     """Evaluate target player's winning data.
 
@@ -122,6 +136,7 @@ def evaluate_winning(player_data):
     num_winning = 0
     total_points = 0
     total_turns = 0
+    total_han = 0
     name = player_data['name']
     for g in player_data['games']:
         # pattern must be 1G, 2G, 3G or 4G.
@@ -129,24 +144,44 @@ def evaluate_winning(player_data):
 
         for hand in g['hands']:
             winner_name = hand.get('winner', None)
-            if winner_name:
+            if name == winner_name:
                 assert hand['balance']
+                points = hand['balance'][0]['balance']
+                total_points += points
+                num_winning += 1
 
-                first = hand['balance'][0]
-                points = first['balance']
-                if (first['player'] == name and
-                    points > 0):
-                    total_points += points
-                    num_winning += 1
+                action_table = hand['action_table']
+                total_turns += sum(1 for i in action_table
+                    if i.startswith(pattern))
 
-                    action_table = hand['action_table']
-                    total_turns += sum(1 for i in action_table
-                        if i.startswith(pattern))
+                value = hand['winning_value']
+                m = winning_value_re.match(value)
+                if m:
+                    han = han_char_table[m.group('han')]
+                else:
+                    # Pattern 満貫 covers 満貫 itself as well as
+                    # 跳満, 倍満 and 三倍満.
+                    if value.find('満貫'):
+                        # Manually compute how many han are.
+                        yaku = hand['winning_yaku_list']
+                        han = count_han(yaku.split(), False)
+                        #print(yaku, han)
+                    elif value.find('役満'):
+                        han = 13
+                        if value.startswith('ダブル'):
+                            han *= 2
+                        elif value.startswith('トリプル'):
+                            han *= 3
+                    else:
+                        raise ValueError('unknown winning: {}'.format(value))
+
+                total_han += han
 
     if num_winning:
         player_data['winning_count'] = num_winning
         player_data['winning_rate'] = num_winning / num_hands
         player_data['winning_mean'] = total_points / num_winning
+        player_data['winning_mean_han'] = total_han / num_winning
         player_data['winning_mean_turns'] = total_turns / num_winning
 
 def evaluate_losing(player_data):
@@ -171,6 +206,7 @@ def evaluate_losing(player_data):
                 assert hand['balance']
                 last = hand['balance'][-1]
                 if last['player'] == name:
+                    print(last['balance'])
                     num_lod += 1
                     total_losing_points += last['balance'] # sum of negative values
 
@@ -219,11 +255,10 @@ def evaluate_melding(player_data):
     for g in player_data['games']:
         index = g['players'].index(name)
         for hand in g['hands']:
-            c = hand['melding_counter_table'][index]
-
             # If できすぎくん's style is preferred,
-            # just increment num_melding one only if c > 1.
-            num_melding += c
+            # just increment num_melding one only if rhs > 1.
+            num_melding += sum(len(hand[i][index])
+                               for i in ('chows', 'pungs', 'kongs'))
 
     if num_melding:
         player_data['melding_count'] = num_melding

@@ -120,7 +120,7 @@ actions_re = re.compile(r'''
 \Z
 ''', re.VERBOSE)
 
-empty_re = re.compile(r'\Z')
+empty_re = re.compile(r'\A\Z')
 
 end_of_game_re = re.compile(r'[-]+\s*試合結果\s*[-]+')
 
@@ -136,6 +136,7 @@ class HandState(MJScoreState):
     initial_transitions = [
         'hand_header',
         'player_actions',
+        'end_of_actions',
         'end_of_game']
 
     def hand_header(self, match, context, next_state):
@@ -146,8 +147,10 @@ class HandState(MJScoreState):
         hand = dict(
             title=match.group('title'),
             action_table=[],
-            melding_counter_table=[0] * 4,
-            riichi_table=[False] * 4,)
+            riichi_table=[False] * 4,
+            chows=[],
+            pungs=[],
+            kongs=[],)
 
         player_and_balance = match.group('balance').strip().split()
         if player_and_balance:
@@ -172,29 +175,64 @@ class HandState(MJScoreState):
 
         actions = match.group('actions').split()
         hand['action_table'].extend(actions)
-        melding_counter_table = hand['melding_counter_table']
-
-        for i in actions:
-            assert len(i) > 1
-            index, act = i[0], i[1]
-            assert index in '1234'
-            assert act in 'ACDGKNRd'
-            index = int(index) - 1
-
-            # Test if the action is riichi.
-            if act == 'R':
-                riichi_table[index] = True
-            elif act in 'CKN':
-                # XXX
-                melding_counter_table[index] += 1
-            elif act == 'A':
-                players = game['players']
-                hand['winner'] = players[index]
 
         return context, next_state, []
 
     def end_of_actions(self, match, context, next_state):
         """The empty line immediately after action lines."""
+
+        # current hand
+        game = context['games'][-1]
+        hand = game['hands'][-1]
+        riichi_table = hand['riichi_table']
+
+        actions = hand['action_table']
+        chows = [[] for i in range(4)]
+        pungs = [[] for i in range(4)]
+        kongs = [[] for i in range(4)]
+
+        for i, action in enumerate(actions):
+            assert len(action) > 1
+            index, action_type = action[0], action[1]
+            assert index in '1234'
+            assert action_type in 'ACDGKNRd'
+            index = int(index) - 1
+
+            prev_action = actions[i - 1] if i > 0 else None
+
+            # Test if the action is riichi.
+            if action_type == 'R':
+                riichi_table[index] = True
+                continue
+            elif action_type == 'C':
+                assert prev_action
+                chows[index].append(prev_action[2:] + action[2:])
+                continue
+            elif action_type == 'N':
+                assert prev_action
+                pungs[index].append(prev_action[2:])
+                continue
+            elif action_type == 'K':
+                # Test if this is extending a melded pung to a kong, or 加槓.
+                tile = action[2:]
+                if tile in pungs[index]:
+                    continue
+                # Test if this is a concealed kong, or 暗槓.
+                if prev_action and prev_action[1] == 'G':
+                    continue
+                # Otherwise, this is a melded kong, or 大明槓.
+                assert (not prev_action) or (prev_action[1] in 'dD')
+                kongs[index].append(tile)
+                continue
+            elif action_type == 'A':
+                # Someone wins.
+                players = game['players']
+                hand['winner'] = players[index]
+                #break
+
+        hand['chows'] = chows
+        hand['pungs'] = pungs
+        hand['kongs'] = kongs
 
         return context, next_state, []
 
