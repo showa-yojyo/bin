@@ -68,10 +68,18 @@ def evaluate(game_data, target_player):
     evaluate_riichi(player_data)
     evaluate_melding(player_data)
 
-    # TODO: (challenge) 平均獲得チップ枚数
+    # TODO: (challenge) 平均獲得チップ枚数 mean bonus chips
 
 def evaluate_placing(player_data):
     """Evaluate distribution of target player's placing, or 着順表.
+
+    :placing_disr: the numbers of 1st, 2nd, 3rd and 4th places the
+    player took.
+    :mean_placing: the mean place the player took.
+    :first_placing_rate: the probability the player takes the
+    first place in a game.
+    :last_placing_rate: the probability the player takes the
+    4th, or last place in a game.
     """
 
     player_data['placing_distr'] = []
@@ -99,7 +107,6 @@ def evaluate_placing(player_data):
         player_data['first_placing_rate'] = placing_distr[0] / num_games
         player_data['last_placing_rate'] = placing_distr[-1] / num_games
 
-# XXX
 winning_value_re = re.compile(r'''
 (?P<hu>\d+)符
 \s*
@@ -113,12 +120,11 @@ def evaluate_winning(player_data):
 
     :winning_count: the total numbers of the player's winning.
 
-    :winning_rate: the probability that the player wins in a hand.
+    :winning_rate: the probability the player wins in a hand.
 
-    :winning_mean: the mean how much points did the winner obtain
-    par a hand.
+    :winning_mean: the mean point the winner won par a hand.
 
-    :winning_mean_turn: the mean how many times did the winner tsumo,
+    :winning_mean_turn: the mean turn the winner tsumo,
     or pick tiles from the wall par a hand.
     """
 
@@ -185,8 +191,12 @@ def evaluate_winning(player_data):
         player_data['winning_mean_turns'] = total_turns / num_winning
 
 def evaluate_losing(player_data):
-    """Evaluate target player's losing-on-discarding (LOD) rate and
-    mean LOD, or 放銃率 and 平均放銃率.
+    """Evaluate target player's losses when he deals in an opponent
+    player.
+
+    :lod_count: the number the player dealt in.
+    :lod_rate: the probability the player deals in par a hand.
+    :lod_mean: the mean point the player paid by dealing in.
     """
 
     player_data['lod_count'] = 0
@@ -218,7 +228,12 @@ def evaluate_losing(player_data):
         player_data['lod_mean'] = total_losing_points / num_lod
 
 def evaluate_riichi(player_data):
-    """Evaluate riichi rate."""
+    """Evaluate target player's riichi rate.
+
+    :riichi_count: the number the player declared riichi.
+    :riichi_rate: the probability the player declares riichi par
+    a hand.
+    """
 
     player_data['riichi_count'] = 0
     player_data['riichi_rate'] = 0
@@ -244,6 +259,11 @@ def evaluate_melding(player_data):
 
     N.B. Unlike できすぎくん criteria, this function evaluates how
     OFTEN the player makes use of melding in a hand.
+
+    :melding_count: the number the player called pong, chow, or
+    (open) kong.
+    :melding_rate: the expectation the player will call pong, chow,
+    or (open) kong in a hand.
     """
 
     player_data['melding_count'] = 0
