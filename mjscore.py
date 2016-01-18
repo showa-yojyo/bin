@@ -10,7 +10,6 @@ Usage:
 """
 
 from argparse import (ArgumentParser, FileType)
-from json import dump
 from docutils.statemachine import StateMachine
 from mjstat import players_default
 from mjstat.states import (initial_state, state_classes)
@@ -58,6 +57,11 @@ def configure():
         default='あなた',
         help='specify the target player of statistics')
 
+    parser.add_argument(
+        '-D', '--debug',
+        action='store_true',
+        help='for developer\'s use only')
+
     return parser
 
 def main():
@@ -67,17 +71,22 @@ def main():
 
     state_machine = StateMachine(
         state_classes=state_classes,
-        initial_state=initial_state)
+        initial_state=initial_state,
+        debug=args.debug and args.verbose)
     state_machine.config = args
 
-    input = args.file
-    input_lines = [i.strip() for i in input.readlines()]
+    if args.debug:
+        from mjstat.testdata import test_input
+        input_lines = [i.strip() for i in test_input.split('\n')]
+    else:
+        input_lines = [i.strip() for i in args.file.readlines()]
 
     # TODO: (priority: low) Define score model.
     context = {}
     state_machine.run(input_lines, context=context)
 
     if args.verbose:
+        from json import dump
         dump(context, sys.stdout, ensure_ascii=False, indent=4, sort_keys=True)
         sys.stdout.write("\n")
 
