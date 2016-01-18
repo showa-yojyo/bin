@@ -18,11 +18,17 @@ def evaluate(game_data, target_player):
                     result ::= list-of-dict (4)
                          player->points
                     hands ::= list-of-hand (1..*)
-                        hand ::= action_table, balance, chows, pungs,
-                          kongs, riichi_table,
+                        hand ::= action_table, balance, dora_table,
+                          seat_table, start_hand_table,
+                          chows, pungs, kongs, riichi_table,
                           ending, winner?, winning_value, winning_yaku_list
                             action_table ::= list-of-str
                             balance ::= player->points
+                            dora_table ::= list-of-str (2)
+                            seat_table ::= list-of-seat (4)
+                                seat ::= (東|南|西|北)
+                            start_hand_table ::= list-of-start_hand (4)
+                                start_hand ::= tile (13)
                             chows ::= list-of-str (4)
                             pongs ::= list-of-str (4)
                             kongs ::= list-of-str (4)

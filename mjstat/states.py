@@ -7,9 +7,6 @@ import re
 from docutils.statemachine import State
 from . import players_default
 
-# TODO: (priority: low) hand_starting_hand(s)
-# TODO: (priority: low) hand_dora
-
 datetime_format = r'%Y/%m/%d %H:%M'
 
 class MJScoreState(State):
@@ -111,6 +108,32 @@ hand_header_re = re.compile(r'''
 )?
 ''', re.VERBOSE)
 
+# Regex for a start hand, or a players' dealt tiles at the
+# beginning of a hand.
+start_hand_re = re.compile(r'''
+\[
+  (?P<id>[1-4])                 # player id
+  (?P<seat>[東南西北])          # seat
+\]
+(?P<start_hand>
+    (
+        ([1-9]m)|           # character suit, or 萬子
+        (5M)|
+        ([1-9]p)|           # circle suit, or 筒子
+        (5P)|
+        ([1-9]s)|           # bamboo suit, or 索子
+        (5S)|
+        ([東南西北白発中])  # honor tiles, or 字牌
+    ){13}
+)                   # 13 tiles of a start hand, or 配牌
+''', re.VERBOSE)
+
+# Regex for the line that indicates all of dora tiles.
+dora_list_re = re.compile(r'''
+\[表ドラ\](?P<dora>[^\s]+)               # XXX: dot matches any of tiles
+(\s*\[裏ドラ\](?P<uradora>.+))?      # XXX: dot matches any of tiles
+''', re.VERBOSE)
+
 # Regex for lines e.g. ``* 1G3s 1d1p 2G2s 2d9p ...``
 # Do not make regex so complicated here.
 actions_re = re.compile(r'''
@@ -129,12 +152,16 @@ class HandState(MJScoreState):
 
     patterns = dict(
         hand_header=hand_header_re,
+        start_hand=start_hand_re,
+        dora_list=dora_list_re,
         player_actions=actions_re,
         end_of_actions=empty_re,
         end_of_game=end_of_game_re,)
 
     initial_transitions = [
         'hand_header',
+        'start_hand',
+        'dora_list',
         'player_actions',
         'end_of_actions',
         'end_of_game']
@@ -148,6 +175,9 @@ class HandState(MJScoreState):
             title=match.group('title'),
             action_table=[],
             riichi_table=[False] * 4,
+            seat_table=[None] * 4,
+            start_hand_table=[None] * 4,
+            dora_table=[],
             chows=[],
             pungs=[],
             kongs=[],)
@@ -161,6 +191,40 @@ class HandState(MJScoreState):
         hands.append(hand)
 
         return context, 'HandEndingState', []
+
+    def start_hand(self, match, context, next_state):
+        """Handle lines of start hands."""
+
+        # current hand
+        game = context['games'][-1]
+        hand = game['hands'][-1]
+
+        player, seat, start_hand = match.group('id', 'seat', 'start_hand')
+        index = int(player) - 1
+        hand['seat_table'][index] = seat
+        hand['start_hand_table'][index] = start_hand
+
+        for i in range(3):
+            m = start_hand_re.match(
+                self.state_machine.next_line())
+            player, seat, start_hand = m.group('id', 'seat', 'start_hand')
+            index = int(player) - 1
+            hand['seat_table'][index] = seat
+            hand['start_hand_table'][index] = start_hand
+
+        return context, next_state, []
+
+    def dora_list(self, match, context, next_state):
+        """Handle the line of dora tiles."""
+
+        # current hand
+        game = context['games'][-1]
+        hand = game['hands'][-1]
+        dora_table = hand['dora_table']
+
+        dora_table.extend(match.group('dora', 'uradora'))
+
+        return context, next_state, []
 
     def player_actions(self, match, context, next_state):
         """Handle a line which describes a part of all players' actions."""
