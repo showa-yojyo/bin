@@ -143,8 +143,6 @@ actions_re = re.compile(r'''
 \Z
 ''', re.VERBOSE)
 
-empty_re = re.compile(r'\A\Z')
-
 end_of_game_re = re.compile(r'[-]+\s*試合結果\s*[-]+')
 
 class HandState(MJScoreState):
@@ -155,7 +153,6 @@ class HandState(MJScoreState):
         start_hand=start_hand_re,
         dora_list=dora_list_re,
         player_actions=actions_re,
-        end_of_actions=empty_re,
         end_of_game=end_of_game_re,)
 
     initial_transitions = [
@@ -163,7 +160,6 @@ class HandState(MJScoreState):
         'start_hand',
         'dora_list',
         'player_actions',
-        'end_of_actions',
         'end_of_game']
 
     def hand_header(self, match, context, next_state):
@@ -232,14 +228,23 @@ class HandState(MJScoreState):
         # current hand
         game = context['games'][-1]
         hand = game['hands'][-1]
-        riichi_table = hand['riichi_table']
+        action_table = hand['action_table']
 
         actions = match.group('actions').split()
-        hand['action_table'].extend(actions)
+        action_table.extend(actions)
+
+        while True:
+            line = self.state_machine.next_line()
+            match = actions_re.match(line)
+            if not match:
+                self.end_of_actions(context)
+                break
+            actions = match.group('actions').split()
+            action_table.extend(actions)
 
         return context, next_state, []
 
-    def end_of_actions(self, match, context, next_state):
+    def end_of_actions(self, context):
         """The empty line immediately after action lines."""
 
         # current hand
@@ -294,8 +299,6 @@ class HandState(MJScoreState):
         hand['chows'] = chows
         hand['pungs'] = pungs
         hand['kongs'] = kongs
-
-        return context, next_state, []
 
     def end_of_game(self, match, context, next_state):
         """---- game result ----"""
@@ -387,10 +390,14 @@ class GameEndingState(MJScoreState):
         game = context['games'][-1]
         ranking = game['result']
 
-        rank = int(match.group('rank'))
-        player = match.group('player')
-        points = int(match.group('points'))
-        ranking[rank - 1] = dict(player=player, points=points)
+        for i in range(4):
+            rank = int(match.group('rank'))
+            player = match.group('player')
+            points = int(match.group('points'))
+            ranking[rank - 1] = dict(player=player, points=points)
+            if i < 3:
+                line = self.state_machine.next_line()
+                match = result_of_game_re.match(line)
 
         return context, next_state, []
 
