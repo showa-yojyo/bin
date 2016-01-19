@@ -45,7 +45,7 @@ template_ja = \
 放銃データ
   放銃率 {lod_rate:.2%} ({lod_count}/{count_hands})
   平均失点 {lod_mean:.2f} 点
-リーチデータ
+立直データ
   平均使用率 {riichi_rate:.2%} ({riichi_count}/{count_hands})
 鳴きデータ
   平均鳴き回数 {melding_rate:.2%} ({melding_count}/{count_hands})'''

@@ -10,52 +10,66 @@ def evaluate(game_data, target_player):
 
     The structure of `game_data` is like as follows::
 
-        game_data ::= description, date, games
-            description ::= str
-            date ::= datetime
-            games ::= list-of-game (*)
-                game ::= result, hands, players, started_at, finished_at,
-                    result ::= list-of-dict (4)
-                         player->points
-                    hands ::= list-of-hand (1..*)
-                        hand ::= action_table, balance, dora_table,
-                          seat_table, start_hand_table,
-                          chows, pungs, kongs, riichi_table,
-                          ending, winner?, winning_value, winning_yaku_list
-                            action_table ::= list-of-str
-                            balance ::= player->points
-                            dora_table ::= list-of-str (2)
-                            seat_table ::= list-of-seat (4)
-                                seat ::= (東|南|西|北)
-                            start_hand_table ::= list-of-start_hand (4)
-                                start_hand ::= tile (13)
-                            chows ::= list-of-str (4)
-                            pongs ::= list-of-str (4)
-                            kongs ::= list-of-str (4)
-                            riichi_table ::= list-of-bool (4)
-                            ending ::= (ロン|ツモ|流局|四風連打|...)
-                            winner ::= str
-                            winning_value ::= str
-                            winning_yaku_list ::= str
-                    players ::= list-of-str (4)
-                    started_at ::= datetime
-                    finished_at ::= datetime
+        game_data ::= description, date, game*;
+          description ::= text;
+          date ::= datetime;
+          game ::= result, hand+, player+, started_at, finished_at;
+            result ::= (player->points){4};
+              points ::= integer;
+            hand ::= action_table, balance, dora_table, seat_table,
+                     start_hand_table, chow*, pung*, kong*,
+                     riichi_table, ending, winner?, winning_value,
+                     winning_yaku_list;
+              action_table ::= action+;
+                action ::= [1-4], [ACdDKNR], tile;
+              balance ::= player->points;
+              dora_table ::= text+, text+;
+              seat_table ::= seat{4};
+                seat ::= (東|南|西|北);
+              start_hand_table ::= start_hand{4};
+                start_hand ::= tile{13};
+                  tile ::= TODO;
+              chow ::= (tile{3})*;
+              pong ::= tile*;
+              kong ::= tile*;
+              riichi_table ::= bool{4};
+              ending ::= (ロン|ツモ|流局|四風連打|...);
+              winner ::= player;
+              winning_value ::= text;
+              winning_yaku_list ::= yaku+;
+            player ::= text;
+            started_at ::= datetime;
+            finished_at ::= datetime;
 
     The structure of `player_data` is like as follows::
 
-        player_data ::= name, count_hands, games, placing_data,
-          winning_data, lod_data, riich_data, melding_data
-        name ::= str
-        count_hands ::= (int)
-        games ::= list-of-game (*)
+        player_data ::= name, count_hands, game*, placing_data,
+                        winning_data, lod_data, riich_data,
+                        melding_data;
+        name ::= text;
+        count_hands ::= integer;
         placing_data ::= placing_distr, mean_placing,
-          first_placing_rate, last_placing_rate
-            placing_distr ::= int (4)
+                         first_placing_rate, last_placing_rate;
+          placing_distr ::= integer{4};
+          mean_placing ::= value;
+          first_placing_rate ::= value;
+          last_placing_rate ::= value;
         winning_data ::= winning_count, winning_rate, winning_mean,
-          winning_mean_turns
-        lod_data ::= lod_count, lod_rate, lod_mean
-        riich_data ::= riichi_count, riichi_rate
-        melding_data ::= melding_count, melding_rate
+                         winning_mean_turns;
+          winning_count ::= integer;
+          winning_rate ::= value;
+          winning_mean ::= value;
+          winning_mean_turns ::= value;
+        lod_data ::= lod_count, lod_rate, lod_mean;
+          lod_count ::= integer;
+          lod_rate ::= value;
+          lod_mean ::= value;
+        riich_data ::= riichi_count, riichi_rate;
+          riichi_count ::= integer;
+          riichi_rate ::= value;
+        melding_data ::= melding_count, melding_rate;
+          melding_count ::= integer;
+          melding_rate ::= value;
     """
 
     target_games = [g for g in game_data['games'] if target_player in g['players']]
