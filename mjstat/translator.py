@@ -3,8 +3,7 @@
 """
 
 template_en = \
-'''Date {date}
-Reference period: {started_at} - {finished_at}
+'''Reference period: {started_at} - {finished_at}
 Player data
   Name: {name}
   Number of games: {count_games} games
@@ -28,8 +27,7 @@ Melding data
   Melding prob.: {melding_rate:.2%} ({melding_count}/{count_hands})'''
 
 template_ja = \
-'''集計日 {date}
-集計期間 {started_at} - {finished_at}
+'''集計期間 {started_at} - {finished_at}
 プレイヤーデータ
   名前 {name}
   ゲーム数 {count_games} 試合
@@ -56,10 +54,9 @@ template_map = {
     'en':template_en,
     'ja':template_ja,}
 
-def output(game_data, target_player, language='en'):
+def output(game_data, player_data, language='en'):
     """Show the statistics of the target player."""
 
-    player_data = game_data['player_stats'][target_player]
     target_games = player_data['games']
     if not target_games:
         print('NO DATA')
@@ -68,7 +65,6 @@ def output(game_data, target_player, language='en'):
     output_template = template_map.get(language, template_en)
 
     print(output_template.format(
-        date=game_data['date'],
         count_games=len(target_games),
         started_at=target_games[0]['started_at'],
         finished_at=target_games[-1]['finished_at'],

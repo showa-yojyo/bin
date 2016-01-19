@@ -95,12 +95,11 @@ def main():
     lang = args.language
     target_player = args.target_player
     if target_player == 'all':
+        # TODO: Detect all players from game data.
         for target_player in players_default:
-            evaluate(context, target_player)
-            output(context, target_player, lang)
+            output(context, evaluate(context, target_player), lang)
     else:
-        evaluate(context, target_player)
-        output(context, target_player, lang)
+        output(context, evaluate(context, target_player), lang)
 
 if __name__ == '__main__':
     main()

@@ -34,7 +34,6 @@ class MJScoreState(State):
         context['description'] = 'A demonstration of docutils.statemachine.'
         context['date'] = datetime.today().strftime(datetime_format)
         context['games'] = []
-        context['player_stats'] = {}
         return context, []
 
     @property

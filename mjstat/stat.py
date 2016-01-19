@@ -10,7 +10,7 @@ def evaluate(game_data, target_player):
 
     The structure of `game_data` is like as follows::
 
-        game_data ::= description, date, games, player_stats
+        game_data ::= description, date, games
             description ::= str
             date ::= datetime
             games ::= list-of-game (*)
@@ -40,7 +40,6 @@ def evaluate(game_data, target_player):
                     players ::= list-of-str (4)
                     started_at ::= datetime
                     finished_at ::= datetime
-            player_stats ::= (name)->player_data
 
     The structure of `player_data` is like as follows::
 
@@ -66,8 +65,6 @@ def evaluate(game_data, target_player):
         games=target_games,
         name=target_player,)
 
-    game_data['player_stats'].update({target_player:player_data})
-
     evaluate_placing(player_data)
     evaluate_winning(player_data)
     evaluate_losing(player_data)
@@ -75,6 +72,8 @@ def evaluate(game_data, target_player):
     evaluate_melding(player_data)
 
     # TODO: (challenge) 平均獲得チップ枚数 mean bonus chips
+
+    return player_data
 
 def evaluate_placing(player_data):
     """Evaluate distribution of target player's placing, or 着順表.
