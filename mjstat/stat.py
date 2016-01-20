@@ -2,7 +2,7 @@
 """stat.py: The module for mahjong statistics.
 """
 
-from . import count_han
+from .model import yaku_map
 import re
 
 def evaluate(game_data, target_player):
@@ -30,7 +30,7 @@ def evaluate(game_data, target_player):
                 start_hand ::= tile{13};
                   tile ::= TODO;
               chow ::= (tile{3})*;
-              pong ::= tile*;
+              pung ::= tile*;
               kong ::= tile*;
               riichi_table ::= bool{4};
               ending ::= (ロン|ツモ|流局|四風連打|...);
@@ -126,6 +126,31 @@ def evaluate_placing(player_data):
         player_data['first_placing_rate'] = placing_distr[0] / num_games
         player_data['last_placing_rate'] = placing_distr[-1] / num_games
 
+dora_re = re.compile(r'[裏赤]?ドラ(\d)+')
+
+def count_han(yakulist, concealed=False):
+    """Count the total number of han (doubles)."""
+
+    total_han = 0
+    for name_mjscore in yakulist:
+        # First search for the table.
+        yaku = yaku_map.get(name_mjscore, None)
+        if yaku:
+            han = yaku.han
+            if yaku.has_concealed_bonus and concealed:
+                han += 1
+            total_han += han
+            continue
+
+        # Next try to count dora.
+        m = dora_re.match(name_mjscore)
+        if m:
+            han = int(m.group(1))
+            total_han += han
+            continue
+
+    return total_han
+
 winning_value_re = re.compile(r'''
 (?P<hu>\d+)符
 \s*
@@ -166,41 +191,49 @@ def evaluate_winning(player_data):
     name = player_data['name']
     for g in player_data['games']:
         # pattern must be 1G, 2G, 3G or 4G.
-        pattern = '{:d}G'.format(g['players'].index(name) + 1)
+        index = g['players'].index(name)
+        pattern = '{:d}G'.format(index + 1)
 
         for hand in g['hands']:
             winner_name = hand.get('winner', None)
-            if name == winner_name:
-                assert hand['balance']
-                points = hand['balance'][name]
-                total_points += points
-                num_winning += 1
+            if name != winner_name:
+                continue
 
-                action_table = hand['action_table']
-                total_turns += sum(1 for i in action_table
-                    if i.startswith(pattern))
+            assert hand['balance']
+            points = hand['balance'][name]
+            total_points += points
+            num_winning += 1
 
-                value = hand['winning_value']
-                m = winning_value_re.match(value)
-                if m:
-                    han = han_char_table[m.group('han')]
+            action_table = hand['action_table']
+            total_turns += sum(1 for i in action_table
+                if i.startswith(pattern))
+
+            value = hand['winning_value']
+            m = winning_value_re.match(value)
+            if m:
+                han = han_char_table[m.group('han')]
+            else:
+                # Pattern 満貫 covers 満貫 itself as well as
+                # 跳満, 倍満 and 三倍満.
+                if value.find('満貫'):
+                    # Manually count how many han are.
+                    yaku = hand['winning_yaku_list']
+                    is_concealed = (
+                        not hand['chows'][index]
+                        and not hand['pungs'][index] # including 加槓
+                        and not hand['kongs'][index]) # only 大明槓
+                    han = count_han(yaku.split(), is_concealed)
+                elif value.find('役満'):
+                    han = 13
+                    if value.startswith('ダブル'):
+                        han *= 2
+                    elif value.startswith('トリプル'):
+                        han *= 3
                 else:
-                    # Pattern 満貫 covers 満貫 itself as well as
-                    # 跳満, 倍満 and 三倍満.
-                    if value.find('満貫'):
-                        # Manually compute how many han are.
-                        yaku = hand['winning_yaku_list']
-                        han = count_han(yaku.split(), False)
-                    elif value.find('役満'):
-                        han = 13
-                        if value.startswith('ダブル'):
-                            han *= 2
-                        elif value.startswith('トリプル'):
-                            han *= 3
-                    else:
-                        raise ValueError('unknown winning: {}'.format(value))
+                    raise ValueError('unknown winning: {}'.format(value))
 
-                total_han += han
+            total_han += han
+            break
 
     if num_winning:
         player_data['winning_count'] = num_winning
@@ -279,9 +312,9 @@ def evaluate_melding(player_data):
     N.B. Unlike できすぎくん criteria, this function evaluates how
     OFTEN the player makes use of melding in a hand.
 
-    :melding_count: the number the player called pong, chow, or
+    :melding_count: the number the player called pung, chow, or
     (open) kong.
-    :melding_rate: the expectation the player will call pong, chow,
+    :melding_rate: the expectation the player will call pung, chow,
     or (open) kong in a hand.
     """
 

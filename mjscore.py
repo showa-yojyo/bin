@@ -11,7 +11,7 @@ Usage:
 
 from argparse import (ArgumentParser, FileType)
 from docutils.statemachine import StateMachine
-from mjstat import players_default
+from mjstat.model import players_default
 from mjstat.states import (initial_state, state_classes)
 from mjstat.stat import evaluate
 from mjstat.translator import output
