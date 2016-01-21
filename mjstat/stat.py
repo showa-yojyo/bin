@@ -214,6 +214,7 @@ def evaluate_winning(player_data):
             if m:
                 han = han_char_table[m.group('han')]
             else:
+                print('AAA')
                 # Pattern 満貫 covers 満貫 itself as well as
                 # 跳満, 倍満 and 三倍満.
                 if value.find('満貫'):
@@ -234,7 +235,6 @@ def evaluate_winning(player_data):
                     raise ValueError('unknown winning: {}'.format(value))
 
             total_han += han
-            break
 
     if num_winning:
         player_data['winning_count'] = num_winning
