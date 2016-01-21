@@ -2,7 +2,7 @@
 """stat.py: The module for mahjong statistics.
 """
 
-from .model import yaku_map
+from .model import (yaku_map, yaku_table)
 import re
 
 def evaluate(game_data, target_player):
@@ -84,6 +84,7 @@ def evaluate(game_data, target_player):
     evaluate_losing(player_data)
     evaluate_riichi(player_data)
     evaluate_melding(player_data)
+    #evaluate_yaku_distribution(player_data)
 
     # TODO: (challenge) 平均獲得チップ枚数 mean bonus chips
 
@@ -337,3 +338,25 @@ def evaluate_melding(player_data):
     if num_melding:
         player_data['melding_count'] = num_melding
         player_data['melding_rate'] = num_melding / num_hands
+
+def evaluate_yaku_distribution(player_data):
+    """Under construction."""
+
+    yaku_counter = dict.fromkeys(yaku_table, 0)
+
+    name = player_data['name']
+    for g in player_data['games']:
+        index = g['players'].index(name)
+        for hand in g['hands']:
+            if (not 'winner' in hand) or (hand['winner'] != name):
+                continue
+
+            names = hand['winning_yaku_list'].strip().split()
+            for name_mjscore in names:
+                #print('name_mjscore:', name_mjscore)
+                # First search for the table.
+                yaku = yaku_map.get(name_mjscore, None)
+                if yaku:
+                    yaku_counter[yaku] += 1
+
+    player_data['yaku_dist'] = yaku_counter

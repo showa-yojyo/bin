@@ -69,3 +69,9 @@ def output(game_data, player_data, language='en'):
         started_at=target_games[0]['started_at'],
         finished_at=target_games[-1]['finished_at'],
         **player_data))
+
+    if 'yaku_dist' in player_data:
+        print('役分布')
+        yaku_dist = player_data['yaku_dist']
+        for k in sorted(yaku_dist):
+            print('  {:<8} {:>5}'.format(k.name, yaku_dist[k]))
