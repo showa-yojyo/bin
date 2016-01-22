@@ -54,7 +54,7 @@ template_map = {
     'en':template_en,
     'ja':template_ja,}
 
-def output(game_data, player_data, language='en'):
+def output(player_data, language='en'):
     """Show the statistics of the target player."""
 
     target_games = player_data['games']

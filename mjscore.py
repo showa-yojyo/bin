@@ -12,10 +12,9 @@ Usage:
 
 from argparse import (ArgumentParser, FileType)
 from configparser import (ConfigParser, Error)
-from docutils.statemachine import StateMachine
 from os.path import expanduser
 from mjstat.model import players_default
-from mjstat.states import (initial_state, state_classes)
+from mjstat.states import parse_mjscore
 from mjstat.stat import evaluate
 from mjstat.translator import output
 import sys
@@ -96,37 +95,27 @@ def main():
 
     args = configure()
 
-    state_machine = StateMachine(
-        state_classes=state_classes,
-        initial_state=initial_state,
-        debug=args.debug and args.verbose)
-    state_machine.config = args
-
     if args.debug:
         from mjstat.testdata import test_input
         input_lines = [i.strip() for i in test_input.split('\n')]
     else:
         input_lines = [i.strip() for i in args.input.readlines()]
 
-    # TODO: (priority: low) Define score model.
-    context = {}
-    state_machine.run(input_lines, context=context)
+    context = parse_mjscore(input_lines, args)
 
     if args.verbose:
         from json import dump
         dump(context, sys.stdout, ensure_ascii=False, indent=4, sort_keys=True)
         sys.stdout.write("\n")
 
-    state_machine.unlink()
-
     lang = args.language
     target_player = args.target_player
     if target_player == 'all':
         # TODO: Detect all players from game data.
         for target_player in players_default:
-            output(context, evaluate(context, target_player), lang)
+            output(evaluate(context, target_player), lang)
     else:
-        output(context, evaluate(context, target_player), lang)
+        output(evaluate(context, target_player), lang)
 
 if __name__ == '__main__':
     main()

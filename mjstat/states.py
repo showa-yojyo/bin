@@ -20,7 +20,7 @@ Summary of the transitions::
 
 from datetime import datetime
 import re
-from docutils.statemachine import State
+from docutils.statemachine import (State, StateMachine)
 
 datetime_format = r'%Y/%m/%d %H:%M'
 
@@ -435,7 +435,22 @@ class GameClosing(MJScoreState):
 
         return context, 'GameOpening', []
 
-# The following values are to be passed to the constructor of
-# class StateMachine as its keyword arguments.
-initial_state = 'GameOpening'
-state_classes = MJScoreState.__subclasses__()
+def parse_mjscore(input_lines, args):
+    """Parse mjscore.txt and return its contents.
+
+    :input_lines: Contents in mjscore.txt.
+    :args: Optional arguments.
+    """
+
+    state_machine = StateMachine(
+        state_classes=MJScoreState.__subclasses__(),
+        initial_state='GameOpening',
+        debug=args.debug and args.verbose)
+    state_machine.config = args
+
+    # TODO: (priority: low) Define score model.
+    context = {}
+    state_machine.run(input_lines, context=context)
+    state_machine.unlink()
+
+    return context

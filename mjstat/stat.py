@@ -214,7 +214,6 @@ def evaluate_winning(player_data):
             if m:
                 han = han_char_table[m.group('han')]
             else:
-                print('AAA')
                 # Pattern 満貫 covers 満貫 itself as well as
                 # 跳満, 倍満 and 三倍満.
                 if value.find('満貫'):
@@ -353,7 +352,6 @@ def evaluate_yaku_distribution(player_data):
 
             names = hand['winning_yaku_list'].strip().split()
             for name_mjscore in names:
-                #print('name_mjscore:', name_mjscore)
                 # First search for the table.
                 yaku = yaku_map.get(name_mjscore, None)
                 if yaku:
