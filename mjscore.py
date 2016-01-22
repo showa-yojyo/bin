@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""mjscore.py: Demonstrate docutils.statemachine.
+"""mjscore.py: Parse mjstat.txt and produce some statistics.
 
 Usage:
   mjscore.py [--help] [--version]
-  mjscore.py [--today] [--verbose] [--file FILE]
+  mjscore.py [--today] [--verbose] [--input <FILE>]
     [-l | --language <langspec>]
     [-T | --target <playerspec>]
+    [-c | --config <FILE>]
 """
 
 from argparse import (ArgumentParser, FileType)
+from configparser import (ConfigParser, Error)
 from docutils.statemachine import StateMachine
+from os.path import expanduser
 from mjstat.model import players_default
 from mjstat.states import (initial_state, state_classes)
 from mjstat.stat import evaluate
@@ -19,20 +22,42 @@ import sys
 
 __version__ = '0.0.0'
 
-mjscore_path_default = r'D:\Program Files\mattari09\mjscore.txt'
-
 def configure():
-    """Return a command line parser."""
+    """Configuration of this application."""
+
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument(
+        '-c', '--config',
+        type=FileType(mode='r', encoding='utf-8'),
+        metavar='FILE',
+        help='path to config file')
+
+    args, remaining_argv = parser.parse_known_args()
+
+    defaults = {}
+    config = ConfigParser()
+    if args.config:
+        config.read_file(args.config)
+    else:
+        default_config_path = expanduser('~/.mjscore')
+        config.read(default_config_path)
+
+    try:
+        defaults = dict(config.items("General"))
+    except Error as e:
+        print('Warning: {}'.format(e), file=sys.stderr)
 
     parser = ArgumentParser(
-        description='Demonstrate docutils.statemachine.')
+        parents=[parser],
+        description='A simple parser for mjscore.txt.')
+
     parser.add_argument('--version', action='version', version=__version__)
 
     # This parameter should not be optional.
     parser.add_argument(
-        '--file',
-        default=mjscore_path_default,
+        '--input',
         type=FileType(mode='r', encoding='sjis'),
+        metavar='FILE',
         help='path to mjscore.txt')
 
     parser.add_argument(
@@ -62,12 +87,14 @@ def configure():
         action='store_true',
         help='for developer\'s use only')
 
-    return parser
+    parser.set_defaults(**defaults)
+
+    return parser.parse_args(remaining_argv)
 
 def main():
     """The main function."""
 
-    args = configure().parse_args()
+    args = configure()
 
     state_machine = StateMachine(
         state_classes=state_classes,
@@ -79,7 +106,7 @@ def main():
         from mjstat.testdata import test_input
         input_lines = [i.strip() for i in test_input.split('\n')]
     else:
-        input_lines = [i.strip() for i in args.file.readlines()]
+        input_lines = [i.strip() for i in args.input.readlines()]
 
     # TODO: (priority: low) Define score model.
     context = {}
