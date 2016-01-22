@@ -82,6 +82,16 @@ def configure():
         help='specify the target player of statistics')
 
     parser.add_argument(
+        '--fundamental',
+        action='store_true',
+        help='produce fundamental statistics')
+
+    parser.add_argument(
+        '--yaku',
+        action='store_true',
+        help='produce frequency of yaku')
+
+    parser.add_argument(
         '-D', '--debug',
         action='store_true',
         help='for developer\'s use only')
@@ -110,12 +120,16 @@ def main():
 
     lang = args.language
     target_player = args.target_player
+
+    stat_options = dict(fundamental=args.fundamental,
+                        yaku=args.yaku)
+
     if target_player == 'all':
         # TODO: Detect all players from game data.
         for target_player in players_default:
-            output(evaluate(context, target_player), lang)
+            output(evaluate(context, target_player, **stat_options), lang)
     else:
-        output(evaluate(context, target_player), lang)
+        output(evaluate(context, target_player, **stat_options), lang)
 
 if __name__ == '__main__':
     main()

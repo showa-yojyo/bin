@@ -5,7 +5,7 @@
 from .model import (yaku_map, yaku_table)
 import re
 
-def evaluate(game_data, target_player):
+def evaluate(game_data, target_player, fundamental, yaku):
     """Evaluate possibly numerous statistical values.
 
     The structure of `game_data` is like as follows::
@@ -79,19 +79,22 @@ def evaluate(game_data, target_player):
         games=target_games,
         name=target_player,)
 
-    evaluate_placing(player_data)
-    evaluate_winning(player_data)
-    evaluate_losing(player_data)
-    evaluate_riichi(player_data)
-    evaluate_melding(player_data)
-    #evaluate_yaku_distribution(player_data)
+    if fundamental:
+        evaluate_placing(player_data)
+        evaluate_winning(player_data)
+        evaluate_losing(player_data)
+        evaluate_riichi(player_data)
+        evaluate_melding(player_data)
+
+    if yaku:
+        evaluate_yaku_frequency(player_data)
 
     # TODO: (challenge) 平均獲得チップ枚数 mean bonus chips
 
     return player_data
 
 def evaluate_placing(player_data):
-    """Evaluate distribution of target player's placing, or 着順表.
+    """Evaluate frequency of target player's placing, or 着順表.
 
     :placing_disr: the numbers of 1st, 2nd, 3rd and 4th places the
     player took.
@@ -338,7 +341,7 @@ def evaluate_melding(player_data):
         player_data['melding_count'] = num_melding
         player_data['melding_rate'] = num_melding / num_hands
 
-def evaluate_yaku_distribution(player_data):
+def evaluate_yaku_frequency(player_data):
     """Under construction."""
 
     yaku_counter = dict.fromkeys(yaku_table, 0)

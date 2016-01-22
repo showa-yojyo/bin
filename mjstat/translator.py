@@ -2,13 +2,15 @@
 """translator.py: Translate text to output in specified language.
 """
 
-template_en = \
+tmpl_summary_en = \
 '''Reference period: {started_at} - {finished_at}
 Player data
   Name: {name}
   Number of games: {count_games} games
-  Number of hands: {count_hands} hands
-Placing data
+  Number of hands: {count_hands} hands'''
+
+tmpl_fundamental_en = \
+'''Placing data
   [1st, 2nd, 3rd, 4th]: {placing_distr}
   1st-place prob.: {first_placing_rate:.2%}
   4th-place prob.: {last_placing_rate:.2%}
@@ -26,13 +28,17 @@ Riichi data
 Melding data
   Melding prob.: {melding_rate:.2%} ({melding_count}/{count_hands})'''
 
-template_ja = \
+tmpl_yaku_freq_en = 'Frequency of yaku'
+
+tmpl_summary_ja = \
 '''集計期間 {started_at} - {finished_at}
 プレイヤーデータ
   名前 {name}
   ゲーム数 {count_games} 試合
-  局数 {count_hands} 局
-着順データ
+  局数 {count_hands} 局'''
+
+tmpl_fundamental_ja = \
+'''着順データ
   [1st, 2nd, 3rd, 4th]: {placing_distr}
   トップ率 {first_placing_rate:.2%}
   ラス率 {last_placing_rate:.2%}
@@ -50,9 +56,17 @@ template_ja = \
 鳴きデータ
   平均鳴き回数 {melding_rate:.2%} ({melding_count}/{count_hands})'''
 
-template_map = {
-    'en':template_en,
-    'ja':template_ja,}
+tmpl_yaku_freq_ja = '役分布'
+
+tmpl_map = dict(
+    en=dict(
+        summary=tmpl_summary_en,
+        fundamental=tmpl_fundamental_en,
+        yaku_freq=tmpl_yaku_freq_en),
+    ja=dict(
+        summary=tmpl_summary_ja,
+        fundamental=tmpl_fundamental_ja,
+        yaku_freq=tmpl_yaku_freq_ja),)
 
 def output(player_data, language='en'):
     """Show the statistics of the target player."""
@@ -62,16 +76,19 @@ def output(player_data, language='en'):
         print('NO DATA')
         return
 
-    output_template = template_map.get(language, template_en)
+    tmpl = tmpl_map.get(language, 'en')
 
-    print(output_template.format(
+    print(tmpl['summary'].format(
         count_games=len(target_games),
         started_at=target_games[0]['started_at'],
         finished_at=target_games[-1]['finished_at'],
         **player_data))
 
+    if 'winning_count' in player_data:
+        print(tmpl['fundamental'].format(**player_data))
+
     if 'yaku_dist' in player_data:
-        print('役分布')
+        print(tmpl['yaku_freq'])
         yaku_dist = player_data['yaku_dist']
         for k in sorted(yaku_dist):
             print('  {:<8} {:>5}'.format(k.name, yaku_dist[k]))
