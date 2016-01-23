@@ -233,8 +233,7 @@ class HandClosing(MJScoreState):
         \Z
     ''', re.VERBOSE)
 
-    # TODO: canonical representation of 四槓開
-    draw_re = re.compile(r'(流局|四風連打|九種公九牌倒牌|四家リーチ|(四槓.+)|三家和)')
+    draw_re = re.compile(r'(流局|九種公九牌倒牌|三家和|四風連打|四槓開|四家リーチ)')
 
     patterns = dict(
         handle_winning=winning_re,

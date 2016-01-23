@@ -111,11 +111,11 @@ def main():
     else:
         input_lines = [i.strip() for i in args.input.readlines()]
 
-    context = parse_mjscore(input_lines, args)
+    game_data = parse_mjscore(input_lines, args)
 
     if args.verbose:
         from json import dump
-        dump(context, sys.stdout, ensure_ascii=False, indent=4, sort_keys=True)
+        dump(game_data, sys.stdout, ensure_ascii=False, indent=4, sort_keys=True)
         sys.stdout.write("\n")
 
     lang = args.language
@@ -125,11 +125,15 @@ def main():
                         yaku=args.yaku)
 
     if target_player == 'all':
-        # TODO: Detect all players from game data.
-        for target_player in players_default:
-            output(evaluate(context, target_player, **stat_options), lang)
+        # Detect all players from game data.
+        player_names = set()
+        for game in game_data['games']:
+            player_names = player_names.union(game['players'])
+
+        for target_player in player_names:
+            output(evaluate(game_data, target_player, **stat_options), lang)
     else:
-        output(evaluate(context, target_player, **stat_options), lang)
+        output(evaluate(game_data, target_player, **stat_options), lang)
 
 if __name__ == '__main__':
     main()
