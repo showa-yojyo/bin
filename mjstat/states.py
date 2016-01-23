@@ -21,6 +21,7 @@ Summary of the transitions::
 from datetime import datetime
 import re
 from docutils.statemachine import (State, StateMachine)
+from .model import yaku_map
 
 datetime_format = r'%Y/%m/%d %H:%M'
 
@@ -224,13 +225,17 @@ class HandClosing(MJScoreState):
     exhaustive/abortive draw.
     """
 
-    # provisional
     winning_re = re.compile(r'''
-        \A
         (?P<winning_value>.+)
         (?P<winning_decl>(ロン|ツモ))
-        (?P<winning_yaku_list>.+)
-        \Z
+        \s
+        (
+          ((?P<winning_yaku_with_dora>.+)
+            \s
+            ドラ(?P<winning_dora>\d+)
+          )|
+          (?P<winning_yaku_without_dora>.+)
+        )
     ''', re.VERBOSE)
 
     draw_re = re.compile(r'(流局|九種公九牌倒牌|三家和|四風連打|四槓開|四家リーチ)')
@@ -251,10 +256,16 @@ class HandClosing(MJScoreState):
         hand = game['hands'][-1]
 
         hand['ending'] = match.group('winning_decl')
-
-        # provisional
         hand['winning_value'] = match.group('winning_value')
-        hand['winning_yaku_list'] = match.group('winning_yaku_list')#split()
+
+        dora = match.group('winning_dora')
+        if dora:
+            yaku_list = match.group('winning_yaku_with_dora')
+            hand['winning_dora'] = int(dora)
+        else:
+            yaku_list = match.group('winning_yaku_without_dora')
+            hand['winning_dora'] = 0
+        hand['winning_yaku_list'] = [yaku_map[i] for i in yaku_list.split()]
 
         return context, 'HandStartHand', []
 

@@ -136,22 +136,11 @@ def count_han(yakulist, concealed=False):
     """Count the total number of han (doubles)."""
 
     total_han = 0
-    for name_mjscore in yakulist:
-        # First search for the table.
-        yaku = yaku_map.get(name_mjscore, None)
-        if yaku:
-            han = yaku.han
-            if yaku.has_concealed_bonus and concealed:
-                han += 1
-            total_han += han
-            continue
-
-        # Next try to count dora.
-        m = dora_re.match(name_mjscore)
-        if m:
-            han = int(m.group(1))
-            total_han += han
-            continue
+    for yaku in yakulist:
+        han = yaku.han
+        if yaku.has_concealed_bonus and concealed:
+            han += 1
+        total_han += han
 
     return total_han
 
@@ -219,14 +208,15 @@ def evaluate_winning(player_data):
             else:
                 # Pattern 満貫 covers 満貫 itself as well as
                 # 跳満, 倍満 and 三倍満.
-                if value.find('満貫'):
+                if value.find('満貫') != -1:
                     # Manually count how many han are.
-                    yaku = hand['winning_yaku_list']
                     is_concealed = (
                         not hand['chows'][index]
                         and not hand['pungs'][index] # including 加槓
                         and not hand['kongs'][index]) # only 大明槓
-                    han = count_han(yaku.split(), is_concealed)
+                    han = count_han(hand['winning_yaku_list'], is_concealed)
+
+                    han += hand['winning_dora']
                 else:
                     index = value.find('役満')
                     if index > 0:
@@ -353,11 +343,7 @@ def evaluate_yaku_frequency(player_data):
             if (not 'winner' in hand) or (hand['winner'] != name):
                 continue
 
-            names = hand['winning_yaku_list'].strip().split()
-            for name_mjscore in names:
-                # First search for the table.
-                yaku = yaku_map.get(name_mjscore, None)
-                if yaku:
-                    yaku_counter[yaku] += 1
+            for yaku in hand['winning_yaku_list']:
+                yaku_counter[yaku] += 1
 
     player_data['yaku_dist'] = yaku_counter
