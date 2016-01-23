@@ -2,7 +2,7 @@
 """stat.py: The module for mahjong statistics.
 """
 
-from .model import (yaku_map, yaku_table)
+from .model import (yaku_map, yaku_table, yakuman_scalar)
 import re
 
 def evaluate(game_data, target_player, fundamental, yaku):
@@ -227,14 +227,14 @@ def evaluate_winning(player_data):
                         and not hand['pungs'][index] # including 加槓
                         and not hand['kongs'][index]) # only 大明槓
                     han = count_han(yaku.split(), is_concealed)
-                elif value.find('役満'):
-                    han = 13
-                    if value.startswith('ダブル'):
-                        han *= 2
-                    elif value.startswith('トリプル'):
-                        han *= 3
                 else:
-                    raise ValueError('unknown winning: {}'.format(value))
+                    index = value.find('役満')
+                    if index > 0:
+                        han = 13 * yakuman_scalar[value[:index]]
+                    elif index == 0:
+                        han = 13
+                    else:
+                        raise ValueError('unknown winning: {}'.format(value))
 
             total_han += han
 

@@ -50,8 +50,34 @@ yaku_table = (
     Yaku(27, '混一色', '混一色', False, True, 2), # Half Flush
     Yaku(28, '純全帯么九', '純全帯', False, True, 2), # Terminals in All Sets; Terminal in each meld.
     Yaku(29, '二盃口', '二盃口', True, False, 3), # Twice Pure Double Chows; Two sets of identical sequences.
-    Yaku(30, '清一色', '清一色', False, True, 5),) # Full Flush
-# TODO: yakuman
+    Yaku(30, '清一色', '清一色', False, True, 5), # Full Flush
+
+    Yaku(101, '国士無双', '国士無双', True, False, 13), # Thirteen Orphans
+    Yaku(102, '国士無双十三面待ち', '国士無双１３面待', True, False, 26), # Thirteen Orphans
+    Yaku(103, '九蓮宝燈', '九連宝燈', True, False, 13), # Nine Gates
+    Yaku(104, '純正九蓮宝燈', '九連宝燈９面待', True, False, 26), # Pure Nine Gates
+    Yaku(105, '天和', '天和', True, False, 13), # Blessing of Heaven, Heavenly Hand
+    Yaku(106, '地和', '地和', True, False, 13), # Blessing of Earth, Earthly Hand
+    Yaku(107, '四暗刻', '四暗刻', True, False, 13), # Four Concealed Pungs/Triplets
+    Yaku(108, '四暗刻単騎待ち', '四暗刻単騎待', True, False, 26), # Four Concealed Pungs/Triplets
+    Yaku(109, '四槓子', '四槓子', False, False, 13), # Four kongs
+    Yaku(110, '緑一色', '緑一色', False, False, 13), # All Green
+    Yaku(111, '清老頭', '清老頭', False, False, 13), # All Terminals
+    Yaku(112, '字一色', '字一色', False, False, 13), # All Honors
+    Yaku(113, '大三元', '大三元', False, False, 13), # Big Three Dragons
+    Yaku(114, '小四喜', '小四喜和', False, False, 13), # Little Four Winds
+    Yaku(115, '大四喜', '大四喜和', False, False, 26), # Big Four Winds
+    )
 
 # mapping from mjscore_name to yaku instance
 yaku_map = {yaku.name_mjscore:yaku for yaku in yaku_table}
+
+# possible yakuman grades in mjscore.txt
+yakuman_scalar = {
+    #'':1,         # 8000, 16000
+    'ダブル':2,    # 16000, 32000
+    'トリプル':3,  # 24000, 48000
+    '四倍':4,      # 32000, 64000
+    '五倍':5,      # 40000, 80000
+    '六倍':6,      # 48000, 96000
+    '超':7,}       # 56000, 112000
