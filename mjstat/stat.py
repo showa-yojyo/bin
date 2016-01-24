@@ -18,8 +18,8 @@ def evaluate(game_data, target_player, fundamental, yaku):
               points ::= integer;
             hand ::= action_table, balance, dora_table, seat_table,
                      start_hand_table, chow*, pung*, kong*,
-                     riichi_table, ending, winner?, winning_value,
-                     winning_yaku_list;
+                     riichi_table, ending, winner?, winning_dora,
+                     winning_value, winning_yaku_list;
               action_table ::= action+;
                 action ::= [1-4], [ACdDKNR], tile;
               balance ::= player->points;
@@ -35,6 +35,7 @@ def evaluate(game_data, target_player, fundamental, yaku):
               riichi_table ::= bool{4};
               ending ::= (ロン|ツモ|流局|四風連打|...);
               winner ::= player;
+              winning_dora ::= integer;
               winning_value ::= text;
               winning_yaku_list ::= yaku+;
             player ::= text;
