@@ -2,6 +2,8 @@
 """translator.py: Translate text to output in specified language.
 """
 
+from .model import value_tiles
+
 tmpl_summary_en = \
 '''Reference period: {started_at} - {finished_at}
 Player data
@@ -29,6 +31,7 @@ Melding data
   Melding prob.: {melding_rate:.2%} ({melding_count}/{count_hands})'''
 
 tmpl_yaku_freq_en = 'Frequency of yaku'
+tmpl_value_tiles_en = '  Value tiles'
 
 tmpl_summary_ja = \
 '''集計期間 {started_at} - {finished_at}
@@ -58,15 +61,19 @@ tmpl_fundamental_ja = \
 
 tmpl_yaku_freq_ja = '役分布'
 
+tmpl_value_tiles_ja = '  役牌'
+
 tmpl_map = dict(
     en=dict(
         summary=tmpl_summary_en,
         fundamental=tmpl_fundamental_en,
-        yaku_freq=tmpl_yaku_freq_en),
+        yaku_freq=tmpl_yaku_freq_en,
+        value_tiles=tmpl_value_tiles_en,),
     ja=dict(
         summary=tmpl_summary_ja,
         fundamental=tmpl_fundamental_ja,
-        yaku_freq=tmpl_yaku_freq_ja),)
+        yaku_freq=tmpl_yaku_freq_ja,
+        value_tiles=tmpl_value_tiles_ja,),)
 
 def output(player_data, language='en'):
     """Show the statistics of the target player."""
@@ -87,8 +94,18 @@ def output(player_data, language='en'):
     if 'winning_count' in player_data:
         print(tmpl['fundamental'].format(**player_data))
 
-    if 'yaku_dist' in player_data:
+    if 'yaku_freq' in player_data:
         print(tmpl['yaku_freq'])
-        yaku_dist = player_data['yaku_dist']
-        for k in sorted(yaku_dist):
-            print('  {:<8} {:>5}'.format(k.name, yaku_dist[k]))
+        yaku_freq = player_data['yaku_freq']
+
+        # Merge value tiles into an item.
+        han = sum(yaku_freq.get(i, 0) for i in value_tiles)
+        if han:
+            print(tmpl['value_tiles'], han)
+
+        yaku_freq = {k:v for k, v in yaku_freq.items()
+                     if (k not in value_tiles) and (v > 0)}
+
+        for k in sorted(yaku_freq):
+            freq = yaku_freq[k]
+            print('  {} {}'.format(k.name, freq))

@@ -347,4 +347,4 @@ def evaluate_yaku_frequency(player_data):
             for yaku in hand['winning_yaku_list']:
                 yaku_counter[yaku] += 1
 
-    player_data['yaku_dist'] = yaku_counter
+    player_data['yaku_freq'] = yaku_counter

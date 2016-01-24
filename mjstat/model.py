@@ -70,6 +70,9 @@ yaku_table = (
 # mapping from mjscore_name to yaku instance
 yaku_map = {yaku.name_mjscore:yaku for yaku in yaku_table}
 
+# value tiles, or 飜牌
+value_tiles = set(yaku for yaku in yaku_table if yaku.id in range(7, 12))
+
 # possible yakuman grades in mjscore.txt
 yakuman_scalar = {
     #'':1,         # 8000, 16000
