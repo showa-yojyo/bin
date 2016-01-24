@@ -9,8 +9,6 @@ TBW
 
 from collections import namedtuple
 
-players_default = ['あなた', '下家', '対面', '上家']
-
 Yaku = namedtuple('Yaku', (
     'id',              # ID for sorting.
     'name',            # My favorite spelling.

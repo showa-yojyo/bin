@@ -13,7 +13,6 @@ Usage:
 from argparse import (ArgumentParser, FileType)
 from configparser import (ConfigParser, Error)
 from os.path import expanduser
-from mjstat.model import players_default
 from mjstat.states import parse_mjscore
 from mjstat.stat import evaluate
 from mjstat.translator import output
@@ -77,7 +76,6 @@ def configure():
 
     parser.add_argument(
         '-T', '--target-player',
-        choices=['all',] + players_default,
         default='あなた',
         help='specify the target player of statistics')
 
