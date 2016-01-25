@@ -124,10 +124,7 @@ def main():
 
     if target_player == 'all':
         # Detect all players from game data.
-        player_names = set()
-        for game in game_data['games']:
-            player_names = player_names.union(game['players'])
-
+        player_names = set(*(g['players'] for g in game_data['games']))
         for target_player in player_names:
             output(evaluate(game_data, target_player, **stat_options), lang_code)
     else:
