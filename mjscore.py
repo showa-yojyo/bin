@@ -116,7 +116,7 @@ def main():
         dump(game_data, sys.stdout, ensure_ascii=False, indent=4, sort_keys=True)
         sys.stdout.write("\n")
 
-    lang = args.language
+    lang_code = args.language
     target_player = args.target_player
 
     stat_options = dict(fundamental=args.fundamental,
@@ -129,9 +129,9 @@ def main():
             player_names = player_names.union(game['players'])
 
         for target_player in player_names:
-            output(evaluate(game_data, target_player, **stat_options), lang)
+            output(evaluate(game_data, target_player, **stat_options), lang_code)
     else:
-        output(evaluate(game_data, target_player, **stat_options), lang)
+        output(evaluate(game_data, target_player, **stat_options), lang_code)
 
 if __name__ == '__main__':
     main()
