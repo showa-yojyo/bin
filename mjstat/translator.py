@@ -3,39 +3,54 @@
 """
 
 from .languages import get_language
-from .model import value_tiles
+from .model import value_tiles, yaku_table
+from jinja2 import Environment
 
-def output(player_data, lang_code='en'):
+def format_float(val):
+    return '{:.2f}'.format(val)
+
+def format_percentage(val):
+    return '{:.2%}'.format(val)
+
+# XXX
+default_players = {
+    'あなた':1,
+    '下家':2,
+    '対面':3,
+    '上家':4,
+    }
+
+def get_key_for_special_names(player_data):
+    """XXX"""
+    return default_players.get(player_data['name'], hash(player_data['name']))
+
+def output(player_data, lang_code, fundamental, yaku):
     """Show the statistics of the target player."""
 
-    target_games = player_data['games']
+    target_games = player_data[0]['games']
     if not target_games:
         print('NO DATA')
         return
 
-    lang = get_language(lang_code)
+    # XXX
+    player_data = sorted(player_data, key=get_key_for_special_names)
 
-    print(lang.tmpl_summary.format(
+    lang = get_language(lang_code)
+    env = Environment(autoescape=False)
+    env.filters['format_float'] = format_float
+    env.filters['format_percentage'] = format_percentage
+
+    print(env.from_string(lang.tmpl_summary).render(
         count_games=len(target_games),
         started_at=target_games[0]['started_at'],
         finished_at=target_games[-1]['finished_at'],
-        **player_data))
+        data=player_data))
 
-    if 'winning_count' in player_data:
-        print(lang.tmpl_fundamental.format(**player_data))
+    if fundamental:
+        print(env.from_string(lang.tmpl_fundamental).render(
+            data=player_data))
 
-    if 'yaku_freq' in player_data:
-        print(lang.tmpl_yaku_freq)
-        yaku_freq = player_data['yaku_freq']
-
-        # Merge value tiles into an item.
-        han = sum(yaku_freq.get(i, 0) for i in value_tiles)
-        if han:
-            print(lang.tmpl_value_tiles, han)
-
-        yaku_freq = {k:v for k, v in yaku_freq.items()
-                     if (k not in value_tiles) and (v > 0)}
-
-        for k in sorted(yaku_freq):
-            freq = yaku_freq[k]
-            print('  {} {}'.format(k.name, freq))
+    if yaku:
+        print(env.from_string(lang.tmpl_yaku_freq).render(
+            data=player_data,
+            yaku_table=yaku_table))

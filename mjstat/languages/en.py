@@ -3,30 +3,36 @@
 """
 
 tmpl_summary = \
-'''Reference period: {started_at} - {finished_at}
-Player data
-  Name: {name}
-  Number of games: {count_games} games
-  Number of hands: {count_hands} hands'''
+'''Reference period:  {{started_at}} - {{finished_at}}
+Players            {% for p in data %}{{p.name}} {% endfor %}
+Number of games    {{count_games}}
+Number of hands    {{data[0].count_hands}}'''
 
 tmpl_fundamental = \
 '''Placing data
-  [1st, 2nd, 3rd, 4th]: {placing_distr}
-  1st-place prob.: {first_placing_rate:.2%}
-  4th-place prob.: {last_placing_rate:.2%}
-  Mean place: {mean_placing:.2f}th
+  Place freq.      {% for p in data %}{{p.placing_distr|join('-')}}  {% endfor %}
+  1st-place prob.  {% for p in data %}{{p.first_placing_rate|format_percentage}}  {% endfor %}
+  4th-place prob.  {% for p in data %}{{p.last_placing_rate|format_percentage}}  {% endfor %}
+  Mean place       {% for p in data %}{{p.mean_placing|format_float}}  {% endfor %}
 Wins
-  Winning percentage: {winning_rate:.2%} ({winning_count}/{count_hands})
-  Mean points: {winning_mean:.2f} pts.
-  Mean han: {winning_mean_han:.2f} han
-  Mean turns: {winning_mean_turns:.2f} turns
+  Winning rate     {% for p in data %}{{p.winning_rate|format_percentage}}  {% endfor %}
+  Mean points      {% for p in data %}{{p.winning_mean|format_float}}  {% endfor %}
+  Mean han         {% for p in data %}{{p.winning_mean_han|format_float}}  {% endfor %}
+  Mean turns       {% for p in data %}{{p.winning_mean_turns|format_float}}  {% endfor %}
 Losses on deal-in
-  Deal-in percentage: {lod_rate:.2%} ({lod_count}/{count_hands})
-  Mean points: {lod_mean:.2f} pts.
+  Deal-in rate     {% for p in data %}{{p.lod_rate|format_percentage}}  {% endfor %}
+  Mean points      {% for p in data %}{{p.lod_mean|format_float}}  {% endfor %}
 Riichi data
-  Riichi prob.: {riichi_rate:.2%} ({riichi_count}/{count_hands})
+  Riichi prob.     {% for p in data %}{{p.riichi_rate|format_percentage}}  {% endfor %}
 Melding data
-  Melding prob.: {melding_rate:.2%} ({melding_count}/{count_hands})'''
+  Melding prob.    {% for p in data %}{{p.melding_rate|format_percentage}}  {% endfor %}
+'''
 
-tmpl_yaku_freq = 'Frequency of yaku'
+tmpl_yaku_freq = \
+'''Frequency of yaku
+{% for y in yaku_table -%}
+{{y.name|indent(2, True)}}    {% for p in data %}{{ p.yaku_freq[y] }}  {% endfor %}
+{% endfor %}
+'''
+
 tmpl_value_tiles = '  Value tiles'
