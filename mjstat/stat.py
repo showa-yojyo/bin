@@ -2,7 +2,7 @@
 """stat.py: The module for mahjong statistics.
 """
 
-from .model import (yaku_map, yaku_table, yakuman_scalar)
+from .model import (yaku_map, YakuTable, yakuman_scalar)
 import re
 
 def evaluate(game_data, target_player, fundamental, yaku):
@@ -138,8 +138,8 @@ def count_han(yakulist, concealed=False):
 
     total_han = 0
     for yaku in yakulist:
-        han = yaku.han
-        if yaku.has_concealed_bonus and concealed:
+        han = yaku.value.han
+        if yaku.value.has_concealed_bonus and concealed:
             han += 1
         total_han += han
 
@@ -335,7 +335,7 @@ def evaluate_melding(player_data):
 def evaluate_yaku_frequency(player_data):
     """Under construction."""
 
-    yaku_counter = dict.fromkeys(yaku_table, 0)
+    yaku_counter = dict.fromkeys(YakuTable, 0)
 
     name = player_data['name']
     for g in player_data['games']:

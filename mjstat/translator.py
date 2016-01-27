@@ -3,7 +3,7 @@
 """
 
 from .languages import get_language
-from .model import value_tiles, yaku_table
+from .model import YakuTable
 from jinja2 import Environment
 
 def format_float(val):
@@ -51,6 +51,8 @@ def output(player_data, lang_code, fundamental, yaku):
             data=player_data))
 
     if yaku:
+        yaku_name_map = {y:lang.yaku_names[i] for i, y in enumerate(YakuTable)}
         print(env.from_string(lang.tmpl_yaku_freq).render(
             data=player_data,
-            yaku_table=yaku_table))
+            YakuTable=YakuTable,
+            yaku_name_map=yaku_name_map))

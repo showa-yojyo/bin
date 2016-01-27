@@ -2,6 +2,55 @@
 """en.py: English language mappings for language-dependent features.
 """
 
+from ..model import YakuTable
+
+yaku_names = (
+    'Ready Hand',
+    'One Shot',
+    'Fully Concealed Hand',
+    'All Simples',
+    'All Sequences',
+    'Pure Double Sequences',
+    'Seat Wind',
+    'Prevalent Wind',
+    'Dragon Pung White',
+    'Dragon Pung Green',
+    'Dragon Pung Red',
+    'After a Kong',
+    'Robbing the Kong',
+    'Under the Sea',
+    'Under the River',
+    'Three Colored Straight',
+    'Pure Straight',
+    'Outside Hand',
+    'Seven Pairs',
+    'All Pungs',
+    'Three Concealed Pungs',
+    'All Terminals and Honors',
+    'Triple Pung',
+    'Three Kongs',
+    'Little Three Dragons',
+    'Double Ready',
+    'Half Flush',
+    'Terminals in All Sets',
+    'Twice Pure Double Chows',
+    'Full Flush',
+    'Thirteen Orphans',
+    'Thirteen Orphans 13-way Wait',
+    'Nine Gates',
+    'Pure Nine Gates',
+    'Blessing of Heaven',
+    'Blessing of Earth',
+    'Four Concealed Pungs',
+    'Four Concealed Pungs with Pair Wait',
+    'Four Kongs',
+    'All Green',
+    'All Terminals',
+    'All Honors',
+    'Big Three Dragons',
+    'Little Four Winds',
+    'Big Four Winds',)
+
 tmpl_summary = \
 '''Reference period:  {{started_at}} - {{finished_at}}
 Players            {% for p in data %}{{p.name}} {% endfor %}
@@ -30,9 +79,7 @@ Melding data
 
 tmpl_yaku_freq = \
 '''Frequency of yaku
-{% for y in yaku_table -%}
-{{y.name|indent(2, True)}}    {% for p in data %}{{ p.yaku_freq[y] }}  {% endfor %}
+{% for y in YakuTable -%}
+{{yaku_name_map[y]|indent(2, True)}}    {% for p in data %}{{ p.yaku_freq[y] }}  {% endfor %}
 {% endfor %}
 '''
-
-tmpl_value_tiles = '  Value tiles'

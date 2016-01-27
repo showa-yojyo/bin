@@ -8,70 +8,64 @@ TBW
 """
 
 from collections import namedtuple
+from enum import Enum
 
 Yaku = namedtuple('Yaku', (
-    'id',              # ID for sorting.
-    'name',            # My favorite spelling.
-    'name_mjscore',    # Spelling used in mjscore.txt.
-    'is_concealed_only',  # Determine if this yaku is concealed only.
+    'is_concealed_only', # Determine if this yaku is concealed only.
     'has_concealed_bonus', # Determine if the han raises when concealed.
-    'han',   # Han value based on OPEN hands. e.g. 清一色 -> 5 (not 6).
+    'han', # Han value based on OPEN hands. e.g. 清一色 -> 5 (not 6).
+    'name', # Spelling used in mjscore.txt.
     ))
 
-yaku_table = (
-    Yaku(1, '立直', 'リーチ', True, False, 1), # Riichi, Ready Hand.
-    Yaku(2, '一発', '一発', True, False, 1), # One Shot
-    Yaku(3, '門前清自摸和', '門前清模和', True, False, 1), # Self draw, Fully Concealed Hand
-    Yaku(4, '断么九', '断ヤオ', False, False, 1), # All Simples
-    Yaku(5, '平和', '平和', True, False, 1), # All Sequences, Pinfu
-    Yaku(6, '一盃口', '一盃口', True, False, 1), # Pure Double Chow/Sequences.
-    Yaku(7, '自風', '自風', False, False, 1), # Seat Wind (Value Tiles)
-    Yaku(8, '場風', '場風', False, False, 1), # Prevalent Wind (Value Tiles)
-    Yaku(9, '白', '白', False, False, 1), # Dragon Pung (Value Tiles)
-    Yaku(10, '発', '発', False, False, 1), # Dragon Pung (Value Tiles)
-    Yaku(11, '中', '中', False, False, 1), # Dragon Pung (Value Tiles)
-    Yaku(12, '嶺上開花', '嶺上開花', False, False, 1), # After a Kong; Dead wall draw.
-    Yaku(13, '搶槓', '槍槓', False, False, 1), # Robbing the Kong
-    Yaku(14, '海底撈月', '海底撈月', False, False, 1), # Under the Sea; Win by last draw.
-    Yaku(15, '河底撈魚', '河底撈魚', False, False, 1), # Under the River; Win by last discard.
-    Yaku(16, '三色同順', '三色同順', False, True, 1), # Mixed Triple Chow, Three Colored Straight
-    Yaku(17, '一気通貫', '一気通貫', False, True, 1), # Pure Straight
-    Yaku(18, '混全帯么九', '全帯', False, True, 1), # Outside Hand; Terminal or honor in each group.
-    Yaku(19, '七対子', '七対子', True, False, 2), # Seven Pairs
-    Yaku(20, '対々和', '対々和', False, False, 2), # All Pungs/Triplets
-    Yaku(21, '三暗刻', '三暗刻', False, False, 2),  # Three Concealed Pungs/Triplets
-    Yaku(22, '混老頭', '混老頭', False, False, 2), # All Terminals and Honors
-    Yaku(23, '三色同刻', '三色同刻', False, False, 2), # Triple Pung, Three Colored Triplets
-    Yaku(24, '三槓子', '三槓子', False, False, 2), # Three Kongs
-    Yaku(25, '小三元', '小三元', False, False, 2), # Little Three Dragons
-    Yaku(26, 'ダブル立直', 'ダブルリーチ', True, False, 2), # Double Riichi
-    Yaku(27, '混一色', '混一色', False, True, 2), # Half Flush
-    Yaku(28, '純全帯么九', '純全帯', False, True, 2), # Terminals in All Sets; Terminal in each meld.
-    Yaku(29, '二盃口', '二盃口', True, False, 3), # Twice Pure Double Chows; Two sets of identical sequences.
-    Yaku(30, '清一色', '清一色', False, True, 5), # Full Flush
-
-    Yaku(101, '国士無双', '国士無双', True, False, 13), # Thirteen Orphans
-    Yaku(102, '国士無双十三面待ち', '国士無双１３面待', True, False, 26), # Thirteen Orphans
-    Yaku(103, '九蓮宝燈', '九連宝燈', True, False, 13), # Nine Gates
-    Yaku(104, '純正九蓮宝燈', '九連宝燈９面待', True, False, 26), # Pure Nine Gates
-    Yaku(105, '天和', '天和', True, False, 13), # Blessing of Heaven, Heavenly Hand
-    Yaku(106, '地和', '地和', True, False, 13), # Blessing of Earth, Earthly Hand
-    Yaku(107, '四暗刻', '四暗刻', True, False, 13), # Four Concealed Pungs/Triplets
-    Yaku(108, '四暗刻単騎待ち', '四暗刻単騎待', True, False, 26), # Four Concealed Pungs/Triplets
-    Yaku(109, '四槓子', '四槓子', False, False, 13), # Four kongs
-    Yaku(110, '緑一色', '緑一色', False, False, 13), # All Green
-    Yaku(111, '清老頭', '清老頭', False, False, 13), # All Terminals
-    Yaku(112, '字一色', '字一色', False, False, 13), # All Honors
-    Yaku(113, '大三元', '大三元', False, False, 13), # Big Three Dragons
-    Yaku(114, '小四喜', '小四喜和', False, False, 13), # Little Four Winds
-    Yaku(115, '大四喜', '大四喜和', False, False, 26), # Big Four Winds
-    )
+class YakuTable(Enum):
+    Yaku01 = Yaku(True, False, 1, 'リーチ')
+    Yaku02 = Yaku(True, False, 1, '一発')
+    Yaku03 = Yaku(True, False, 1, '門前清模和')
+    Yaku04 = Yaku(False, False, 1, '断ヤオ')
+    Yaku05 = Yaku(True, False, 1, '平和')
+    Yaku06 = Yaku(True, False, 1, '一盃口')
+    Yaku07 = Yaku(False, False, 1, '自風')
+    Yaku08 = Yaku(False, False, 1, '場風')
+    Yaku09 = Yaku(False, False, 1, '白')
+    Yaku10 = Yaku(False, False, 1, '発')
+    Yaku11 = Yaku(False, False, 1, '中')
+    Yaku12 = Yaku(False, False, 1, '嶺上開花')
+    Yaku13 = Yaku(False, False, 1, '槍槓')
+    Yaku14 = Yaku(False, False, 1, '海底撈月')
+    Yaku15 = Yaku(False, False, 1, '河底撈魚')
+    Yaku16 = Yaku(False, True, 1, '三色同順')
+    Yaku17 = Yaku(False, True, 1, '一気通貫')
+    Yaku18 = Yaku(False, True, 1, '全帯')
+    Yaku19 = Yaku(True, False, 2, '七対子')
+    Yaku20 = Yaku(False, False, 2, '対々和')
+    Yaku21 = Yaku(False, False, 2, '三暗刻')
+    Yaku22 = Yaku(False, False, 2, '混老頭')
+    Yaku23 = Yaku(False, False, 2, '三色同刻')
+    Yaku24 = Yaku(False, False, 2, '三槓子')
+    Yaku25 = Yaku(False, False, 2, '小三元')
+    Yaku26 = Yaku(True, False, 2, 'ダブルリーチ')
+    Yaku27 = Yaku(False, True, 2, '混一色')
+    Yaku28 = Yaku(False, True, 2, '純全帯')
+    Yaku29 = Yaku(True, False, 3, '二盃口')
+    Yaku30 = Yaku(False, True, 5, '清一色')
+    Yaku31 = Yaku(True, False, 13, '国士無双')
+    Yaku32 = Yaku(True, False, 26, '国士無双１３面待')
+    Yaku33 = Yaku(True, False, 13, '九連宝燈')
+    Yaku34 = Yaku(True, False, 26, '九連宝燈９面待')
+    Yaku35 = Yaku(True, False, 13, '天和')
+    Yaku36 = Yaku(True, False, 13, '地和')
+    Yaku37 = Yaku(True, False, 13, '四暗刻')
+    Yaku38 = Yaku(True, False, 26, '四暗刻単騎待')
+    Yaku39 = Yaku(False, False, 13, '四槓子')
+    Yaku40 = Yaku(False, False, 13, '緑一色')
+    Yaku41 = Yaku(False, False, 13, '清老頭')
+    Yaku42 = Yaku(False, False, 13, '字一色')
+    Yaku43 = Yaku(False, False, 13, '大三元')
+    Yaku44 = Yaku(False, False, 13, '小四喜和')
+    Yaku45 = Yaku(False, False, 26, '大四喜和')
 
 # mapping from mjscore_name to yaku instance
-yaku_map = {yaku.name_mjscore:yaku for yaku in yaku_table}
-
-# value tiles, or 飜牌
-value_tiles = set(yaku for yaku in yaku_table if yaku.id in range(7, 12))
+yaku_map = {yaku.value.name:yaku for yaku in YakuTable}
 
 # possible yakuman grades in mjscore.txt
 yakuman_scalar = {
