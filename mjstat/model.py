@@ -9,6 +9,10 @@ TBW
 
 from collections import namedtuple
 from enum import Enum
+import datetime
+import dateutil.parser
+
+datetime_format = r'%Y/%m/%d %H:%M'
 
 Yaku = namedtuple('Yaku', (
     'is_concealed_only', # Determine if this yaku is concealed only.
@@ -76,3 +80,64 @@ yakuman_scalar = {
     '五倍':5,      # 40000, 80000
     '六倍':6,      # 48000, 96000
     '超':7,}       # 56000, 112000
+
+def create_score_records():
+    """Create new game data."""
+
+    return dict(
+        description='Game score recorded in mjscore.txt',
+        games=[],)
+
+def create_game_record(context):
+    """Create an empty game record."""
+
+    assert isinstance(context, dict)
+    assert 'games' in context
+
+    game = dict(
+        result=[None] * 4,
+        hands=[],
+        players=[None] * 4,)
+    context['games'].append(game)
+
+    assert context['games'][-1] == game
+    return game
+
+def create_hand_record(context):
+    """Create an empth hand and put into the current hands."""
+
+    game = context['games'][-1]
+    hands = game['hands']
+    hand = dict(
+        action_table=[],
+        balance={},
+        riichi_table=[False] * 4,
+        seat_table=[None] * 4,
+        start_hand_table=[None] * 4,
+        dora_table=[],
+        chows=[],
+        pungs=[],
+        kongs=[],)
+    hands.append(hand)
+
+    assert context['games'][-1]['hands'][-1] == hand
+    return hand
+
+def set_reference_period(context, config):
+    """Set reference period to the score records."""
+
+    since_date = None
+    until_date = None
+    if config.today:
+        today_date = datetime.date.today()
+        since_date = today_date.strftime(datetime_format)
+        until_date = (today_date + datetime.timedelta(1)).strftime(datetime_format)
+    else:
+        if config.since:
+            since_date = dateutil.parser.parse(config.since).strftime(datetime_format)
+
+        if config.until:
+            until_date = dateutil.parser.parse(config.until).strftime(datetime_format)
+
+    context['since'] = since_date
+    context['until'] = until_date

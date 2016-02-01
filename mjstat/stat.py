@@ -10,9 +10,8 @@ def evaluate(game_data, target_player, fundamental, yaku):
 
     The structure of `game_data` is like as follows::
 
-        game_data ::= description, date, game*;
+        game_data ::= description, game*, since?, until?;
           description ::= text;
-          date ::= datetime;
           game ::= result, hand+, player+, started_at, finished_at;
             result ::= (player->points){4};
               points ::= integer;
@@ -41,6 +40,8 @@ def evaluate(game_data, target_player, fundamental, yaku):
             player ::= text;
             started_at ::= datetime;
             finished_at ::= datetime;
+          since ::= date;
+          until ::= date;
 
     The structure of `player_data` is like as follows::
 

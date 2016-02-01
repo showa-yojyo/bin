@@ -68,11 +68,23 @@ def configure():
         default='en',
         help='set the language (ISO 639-1) for output')
 
-    # TODO: (priority: high) reference period as a parameter
-    parser.add_argument(
+    group = parser.add_argument_group('reference period')
+    group.add_argument(
         '--today',
         action='store_true',
         help='set reference period to today')
+
+    group.add_argument(
+        '--since', '--after',
+        dest='since',
+        metavar='<date>',
+        help='analyze statistics more recent than a specific date')
+
+    group.add_argument(
+        '--until', '--before',
+        dest='until',
+        metavar='<date>',
+        help='analyze statistics older than a specific date')
 
     parser.add_argument(
         '-T', '--target-player',

@@ -18,24 +18,18 @@ Summary of the transitions::
 
 """
 
-from datetime import datetime
+import datetime
+import dateutil.parser
 import re
 from docutils.statemachine import (State, StateMachine)
-from .model import yaku_map
-
-datetime_format = r'%Y/%m/%d %H:%M'
+from .model import (create_score_records,
+                    create_game_record,
+                    create_hand_record,
+                    set_reference_period,
+                    yaku_map)
 
 class MJScoreState(State):
     """Base class of state classes."""
-
-    def bof(self, context):
-        """Called at the beginning of data."""
-        assert isinstance(context, dict)
-
-        context['description'] = 'A demonstration of docutils.statemachine.'
-        context['date'] = datetime.today().strftime(datetime_format)
-        context['games'] = []
-        return context, []
 
     @property
     def config(self):
@@ -116,23 +110,21 @@ class GameOpening(MJScoreState):
     def handle_game_opening(self, match, context, next_state):
         """Parse the beginning of a game."""
 
+        # Determine whether to parse this game or not.
         started_at = match.group('timestamp')
-        if self.config.today:
-            # Determine whether to parse this game or not.
-            today = context['date']
 
-            # Compare two 'YYYY/MM/DD's.
-            if started_at.split()[0] != today.split()[0]:
-                return context, next_state, []
+        since_date = context['since']
+        if since_date and started_at < since_date:
+            return context, next_state, []
 
-        game = dict(
-            result=[None] * 4,
-            hands=[],
-            players=[None] * 4)
-        context['games'].append(game)
+        until_date = context['until']
+        if until_date and until_date <= started_at:
+            return context, next_state, []
 
+        game = create_game_record(context)
         game['started_at'] = started_at
 
+        assert 'started_at' in game
         return context, 'GameInitialCondition', []
 
 class GameInitialCondition(MJScoreState):
@@ -192,26 +184,14 @@ class HandState(MJScoreState):
     def handle_summary(self, match, context, next_state):
         """Parse the header of a hand."""
 
-        game = context['games'][-1]
-        hands = game['hands']
-        hand = dict(
-            title=match.group('title'),
-            action_table=[],
-            riichi_table=[False] * 4,
-            seat_table=[None] * 4,
-            start_hand_table=[None] * 4,
-            dora_table=[],
-            chows=[],
-            pungs=[],
-            kongs=[],)
+        hand = create_hand_record(context)
+        hand['title'] = match.group('title')
 
-        hand['balance'] = {}
         player_and_balance = match.group('balance').strip().split()
         if player_and_balance:
             hand['balance'].update([(
                 player_and_balance[i], int(player_and_balance[i + 1]),)
                     for i in range(0, len(player_and_balance), 2)])
-        hands.append(hand)
 
         return context, 'HandClosing', []
 
@@ -443,6 +423,7 @@ class GameClosing(MJScoreState):
         game = context['games'][-1]
         game['finished_at'] = match.group('timestamp')
 
+        assert 'finished_at' in game
         return context, 'GameOpening', []
 
 def parse_mjscore(input_lines, args):
@@ -458,8 +439,9 @@ def parse_mjscore(input_lines, args):
         debug=args.debug and args.verbose)
     state_machine.config = args
 
-    # TODO: (priority: low) Define score model.
-    context = {}
+    # TODO: (priority: low) Design score model.
+    context = create_score_records()
+    set_reference_period(context, args)
     state_machine.run(input_lines, context=context)
     state_machine.unlink()
 
