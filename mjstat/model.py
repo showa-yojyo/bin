@@ -111,6 +111,7 @@ def create_hand_record(context):
     hand = dict(
         action_table=[],
         balance={},
+        game=game, # parent
         riichi_table=[False] * 4,
         seat_table=[None] * 4,
         start_hand_table=[None] * 4,
@@ -141,3 +142,59 @@ def set_reference_period(context, config):
 
     context['since'] = since_date
     context['until'] = until_date
+
+def examine_action_table(hand):
+    """Examine the action history of a hand record."""
+
+    assert 'game' in hand
+    assert 'action_table' in hand
+    assert 'riichi_table' in hand
+
+    riichi_table = hand['riichi_table']
+    actions = hand['action_table']
+
+    chows = [[] for i in range(4)]
+    pungs = [[] for i in range(4)]
+    kongs = [[] for i in range(4)]
+
+    for i, action in enumerate(actions):
+        assert len(action) > 1
+        index, action_type = action[0], action[1]
+        assert index in '1234'
+        assert action_type in 'ACDGKNRd'
+        index = int(index) - 1
+
+        prev_action = actions[i - 1] if i > 0 else None
+
+        # Test if the action is riichi.
+        if action_type == 'R':
+            riichi_table[index] = True
+            continue
+        elif action_type == 'C':
+            assert prev_action
+            chows[index].append(prev_action[2:] + action[2:])
+            continue
+        elif action_type == 'N':
+            assert prev_action
+            pungs[index].append(prev_action[2:])
+            continue
+        elif action_type == 'K':
+            # Test if this is extending a melded pung to a kong, or 加槓.
+            tile = action[2:]
+            if tile in pungs[index]:
+                continue
+            # Test if this is a concealed kong, or 暗槓.
+            if prev_action and prev_action[1] == 'G':
+                continue
+            # Otherwise, this is a melded kong, or 大明槓.
+            assert (not prev_action) or (prev_action[1] in 'dD')
+            kongs[index].append(tile)
+            continue
+        elif action_type == 'A':
+            # Someone wins.
+            hand['winner'] = hand['game']['players'][index]
+            #break
+
+    hand['chows'] = chows
+    hand['pungs'] = pungs
+    hand['kongs'] = kongs

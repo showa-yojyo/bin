@@ -15,7 +15,7 @@ def evaluate(game_data, target_player, fundamental, yaku):
           game ::= result, hand+, player+, started_at, finished_at;
             result ::= (player->points){4};
               points ::= integer;
-            hand ::= action_table, balance, dora_table, seat_table,
+            hand ::= game, action_table, balance, dora_table, seat_table,
                      start_hand_table, chow*, pung*, kong*,
                      riichi_table, ending, winner?, winning_dora,
                      winning_value, winning_yaku_list;

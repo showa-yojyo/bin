@@ -8,7 +8,7 @@ Summary of the transitions::
     -> (3) HandState
     -> (4) HandClosing or (9) GamePlayerPlace
     (4) HandClosing
-    -> (5) HandStartHand
+    -> (5) HandStartHands
     -> (6) HandDoraSet
     -> (7) HandActionHistory
     -> return to (3)
@@ -25,6 +25,7 @@ from docutils.statemachine import (State, StateMachine)
 from .model import (create_score_records,
                     create_game_record,
                     create_hand_record,
+                    examine_action_table,
                     set_reference_period,
                     yaku_map)
 
@@ -35,62 +36,6 @@ class MJScoreState(State):
     def config(self):
         """Return the configuration."""
         return self.state_machine.config
-
-    def end_of_actions(self, context):
-        """The empty line immediately after action lines."""
-
-        # current hand
-        game = context['games'][-1]
-        hand = game['hands'][-1]
-        riichi_table = hand['riichi_table']
-
-        actions = hand['action_table']
-        chows = [[] for i in range(4)]
-        pungs = [[] for i in range(4)]
-        kongs = [[] for i in range(4)]
-
-        for i, action in enumerate(actions):
-            assert len(action) > 1
-            index, action_type = action[0], action[1]
-            assert index in '1234'
-            assert action_type in 'ACDGKNRd'
-            index = int(index) - 1
-
-            prev_action = actions[i - 1] if i > 0 else None
-
-            # Test if the action is riichi.
-            if action_type == 'R':
-                riichi_table[index] = True
-                continue
-            elif action_type == 'C':
-                assert prev_action
-                chows[index].append(prev_action[2:] + action[2:])
-                continue
-            elif action_type == 'N':
-                assert prev_action
-                pungs[index].append(prev_action[2:])
-                continue
-            elif action_type == 'K':
-                # Test if this is extending a melded pung to a kong, or 加槓.
-                tile = action[2:]
-                if tile in pungs[index]:
-                    continue
-                # Test if this is a concealed kong, or 暗槓.
-                if prev_action and prev_action[1] == 'G':
-                    continue
-                # Otherwise, this is a melded kong, or 大明槓.
-                assert (not prev_action) or (prev_action[1] in 'dD')
-                kongs[index].append(tile)
-                continue
-            elif action_type == 'A':
-                # Someone wins.
-                players = game['players']
-                hand['winner'] = players[index]
-                #break
-
-        hand['chows'] = chows
-        hand['pungs'] = pungs
-        hand['kongs'] = kongs
 
 class GameOpening(MJScoreState):
     """(1) Parse the first line of a game."""
@@ -247,7 +192,7 @@ class HandClosing(MJScoreState):
             hand['winning_dora'] = 0
         hand['winning_yaku_list'] = [yaku_map[i] for i in yaku_list.split()]
 
-        return context, 'HandStartHand', []
+        return context, 'HandStartHands', []
 
     def handle_draw(self, match, context, next_state):
         """Parse the line that includes 流局, etc."""
@@ -258,9 +203,9 @@ class HandClosing(MJScoreState):
 
         hand['ending'] = match.group()
 
-        return context, 'HandStartHand', []
+        return context, 'HandStartHands', []
 
-class HandStartHand(MJScoreState):
+class HandStartHands(MJScoreState):
     """(5) State for parsing start hands (dealt tiles to players)
     of a hand.
     """
@@ -285,10 +230,10 @@ class HandStartHand(MJScoreState):
         )                   # 13 tiles of a start hand, or 配牌
     ''', re.VERBOSE)
 
-    patterns = dict(handle_start_hand=start_hand_re)
-    initial_transitions = ['handle_start_hand']
+    patterns = dict(handle_start_hands=start_hand_re)
+    initial_transitions = ['handle_start_hands']
 
-    def handle_start_hand(self, match, context, next_state):
+    def handle_start_hands(self, match, context, next_state):
         """Handle lines of start hands."""
 
         # current hand
@@ -364,7 +309,7 @@ class HandActionHistory(MJScoreState):
             line = self.state_machine.next_line()
             match = self.actions_re.match(line)
             if not match:
-                self.end_of_actions(context)
+                examine_action_table(hand)
                 break
             actions = match.group('actions').split()
             action_table.extend(actions)
