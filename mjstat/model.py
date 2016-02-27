@@ -81,12 +81,15 @@ yakuman_scalar = {
     '六倍':6,      # 48000, 96000
     '超':7,}       # 56000, 112000
 
-def create_score_records():
+def create_score_records(settings):
     """Create new game data."""
 
-    return dict(
+    game_data = dict(
         description='Game score recorded in mjscore.txt',
         games=[],)
+
+    set_reference_period(game_data, settings)
+    return game_data
 
 def create_game_record(context):
     """Create an empty game record."""
@@ -124,24 +127,24 @@ def create_hand_record(context):
     assert context['games'][-1]['hands'][-1] == hand
     return hand
 
-def set_reference_period(context, config):
+def set_reference_period(game_data, settings):
     """Set reference period to the score records."""
 
     since_date = None
     until_date = None
-    if config.today:
+    if settings.today:
         today_date = datetime.date.today()
         since_date = today_date.strftime(datetime_format)
         until_date = (today_date + datetime.timedelta(1)).strftime(datetime_format)
     else:
-        if config.since:
-            since_date = dateutil.parser.parse(config.since).strftime(datetime_format)
+        if settings.since:
+            since_date = dateutil.parser.parse(settings.since).strftime(datetime_format)
 
-        if config.until:
-            until_date = dateutil.parser.parse(config.until).strftime(datetime_format)
+        if settings.until:
+            until_date = dateutil.parser.parse(settings.until).strftime(datetime_format)
 
-    context['since'] = since_date
-    context['until'] = until_date
+    game_data['since'] = since_date
+    game_data['until'] = until_date
 
 def examine_action_table(hand):
     """Examine the action history of a hand record."""

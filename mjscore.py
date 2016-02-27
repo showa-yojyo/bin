@@ -12,8 +12,10 @@ Usage:
 
 from argparse import (ArgumentParser, FileType)
 from configparser import (ConfigParser, Error)
+from docutils.io import (StringInput, FileInput)
 from os.path import expanduser
-from mjstat.states import parse_mjscore
+from mjstat.reader import MJScoreReader
+from mjstat.parser import MJScoreParser
 from mjstat.stat import evaluate
 from mjstat.translator import output
 import sys
@@ -113,26 +115,27 @@ def configure():
 def main():
     """The main function."""
 
-    args = configure()
+    settings = configure()
 
-    if args.debug:
+    if settings.debug:
         from mjstat.testdata import test_input
-        input_lines = [i.strip() for i in test_input.split('\n')]
+        source = StringInput(source=test_input)
     else:
-        input_lines = [i.strip() for i in args.input.readlines()]
+        source = FileInput(source=settings.input)
 
-    game_data = parse_mjscore(input_lines, args)
+    parser = MJScoreParser(settings)
+    reader = MJScoreReader()
+    game_data = reader.read(source, parser, settings)
 
-    if args.verbose:
+    if settings.verbose:
         from json import dump
         dump(game_data, sys.stdout, ensure_ascii=False, indent=4, sort_keys=True)
         sys.stdout.write("\n")
 
-    lang_code = args.language
-    target_player = args.target_player
-
-    stat_options = dict(fundamental=args.fundamental,
-                        yaku=args.yaku)
+    lang_code = settings.language
+    target_player = settings.target_player
+    stat_options = dict(fundamental=settings.fundamental,
+                        yaku=settings.yaku)
 
     if target_player == 'all':
         # Detect all players from game data.

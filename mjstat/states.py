@@ -21,12 +21,10 @@ Summary of the transitions::
 import datetime
 import dateutil.parser
 import re
-from docutils.statemachine import (State, StateMachine)
-from .model import (create_score_records,
-                    create_game_record,
+from docutils.statemachine import State
+from .model import (create_game_record,
                     create_hand_record,
                     examine_action_table,
-                    set_reference_period,
                     yaku_map)
 
 class MJScoreState(State):
@@ -370,24 +368,3 @@ class GameClosing(MJScoreState):
 
         assert 'finished_at' in game
         return context, 'GameOpening', []
-
-def parse_mjscore(input_lines, args):
-    """Parse mjscore.txt and return its contents.
-
-    :input_lines: Contents in mjscore.txt.
-    :args: Optional arguments.
-    """
-
-    state_machine = StateMachine(
-        state_classes=MJScoreState.__subclasses__(),
-        initial_state='GameOpening',
-        debug=args.debug and args.verbose)
-    state_machine.config = args
-
-    # TODO: (priority: low) Design score model.
-    context = create_score_records()
-    set_reference_period(context, args)
-    state_machine.run(input_lines, context=context)
-    state_machine.unlink()
-
-    return context
