@@ -29,11 +29,7 @@ from .model import (create_game_record,
 
 class MJScoreState(State):
     """Base class of state classes."""
-
-    @property
-    def config(self):
-        """Return the configuration."""
-        return self.state_machine.config
+    pass
 
 class GameOpening(MJScoreState):
     """(1) Parse the first line of a game."""

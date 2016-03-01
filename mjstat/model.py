@@ -86,7 +86,8 @@ def create_score_records(settings):
 
     game_data = dict(
         description='Game score recorded in mjscore.txt',
-        games=[],)
+        games=[],
+        settings=settings,)
 
     set_reference_period(game_data, settings)
     return game_data

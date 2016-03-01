@@ -7,25 +7,26 @@ from docutils.statemachine import StateMachine
 #class MJScoreParser(docutils.parsers.Parser):
 class MJScoreParser(object):
 
-    def __init__(self, settings):
+    def __init__(self):
         self.input_string = None
         self.game_data = None
         self.state_machine = None
-        self.settings = settings
-        assert 'debug' in self.settings
-        assert 'verbose' in self.settings
 
     def parse(self, input_string, game_data):
         """Parse `input_string` and populate `game_data`,
         a list of game records.
         """
 
+        settings = game_data['settings']
+        assert 'debug' in settings
+        assert 'verbose' in settings
+
         self.setup_parse(input_string, game_data)
         self.state_machine = StateMachine(
             state_classes=MJScoreState.__subclasses__(),
             initial_state='GameOpening',
-            debug=self.settings.debug and self.settings.verbose)
-        self.state_machine.config = self.settings
+            debug=settings.debug and settings.verbose)
+        self.state_machine.config = settings
 
         input_lines = [i.strip() for i in input_string.split('\n')]
 

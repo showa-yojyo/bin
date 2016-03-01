@@ -55,7 +55,9 @@ tmpl_summary = \
 '''集計期間           {{started_at}} - {{finished_at}}
 プレイヤー         {% for p in data %}{{p.name}} {% endfor %}
 ゲーム数           {{count_games}}
-局数               {{data[0].count_hands}}'''
+局数               {{data[0].count_hands}}
+
+'''
 
 tmpl_fundamental = \
 '''着順データ
@@ -75,6 +77,7 @@ tmpl_fundamental = \
   平均使用率       {% for p in data %}{{p.riichi_rate|format_percentage}}  {% endfor %}
 鳴きデータ
   平均鳴き回数     {% for p in data %}{{p.melding_rate|format_percentage}}  {% endfor %}
+
 '''
 
 tmpl_yaku_freq = \
@@ -82,4 +85,5 @@ tmpl_yaku_freq = \
 {% for y in YakuTable -%}
 {{yaku_name_map[y]|indent(2, True)}}    {% for p in data %}{{ p.yaku_freq[y] }}  {% endfor %}
 {% endfor %}
+
 '''

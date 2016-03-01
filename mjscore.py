@@ -12,12 +12,11 @@ Usage:
 
 from argparse import (ArgumentParser, FileType)
 from configparser import (ConfigParser, Error)
-from docutils.io import (StringInput, FileInput)
+from docutils.io import (StringInput, FileInput, FileOutput)
 from os.path import expanduser
 from mjstat.reader import MJScoreReader
 from mjstat.parser import MJScoreParser
-from mjstat.stat import evaluate
-from mjstat.translator import output
+from mjstat.writer import MJScoreWriter
 import sys
 
 __version__ = '0.0.0'
@@ -123,29 +122,12 @@ def main():
     else:
         source = FileInput(source=settings.input)
 
-    parser = MJScoreParser(settings)
+    parser = MJScoreParser()
     reader = MJScoreReader()
     game_data = reader.read(source, parser, settings)
 
-    if settings.verbose:
-        from json import dump
-        dump(game_data, sys.stdout, ensure_ascii=False, indent=4, sort_keys=True)
-        sys.stdout.write("\n")
-
-    lang_code = settings.language
-    target_player = settings.target_player
-    stat_options = dict(fundamental=settings.fundamental,
-                        yaku=settings.yaku)
-
-    if target_player == 'all':
-        # Detect all players from game data.
-        player_names = set().union(*(g['players'] for g in game_data['games']))
-    else:
-        player_names = (target_player,)
-
-    player_data = [evaluate(game_data, target_player, **stat_options)
-                   for target_player in player_names]
-    output(player_data, lang_code, **stat_options)
+    writer = MJScoreWriter()
+    writer.write(game_data, FileOutput(None))
 
 if __name__ == '__main__':
     main()

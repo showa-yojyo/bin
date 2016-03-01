@@ -55,7 +55,9 @@ tmpl_summary = \
 '''Reference period:  {{started_at}} - {{finished_at}}
 Players            {% for p in data %}{{p.name}} {% endfor %}
 Number of games    {{count_games}}
-Number of hands    {{data[0].count_hands}}'''
+Number of hands    {{data[0].count_hands}}
+
+'''
 
 tmpl_fundamental = \
 '''Placing data
@@ -75,6 +77,7 @@ Riichi data
   Riichi prob.     {% for p in data %}{{p.riichi_rate|format_percentage}}  {% endfor %}
 Melding data
   Melding prob.    {% for p in data %}{{p.melding_rate|format_percentage}}  {% endfor %}
+
 '''
 
 tmpl_yaku_freq = \
@@ -82,4 +85,5 @@ tmpl_yaku_freq = \
 {% for y in YakuTable -%}
 {{yaku_name_map[y]|indent(2, True)}}    {% for p in data %}{{ p.yaku_freq[y] }}  {% endfor %}
 {% endfor %}
+
 '''
