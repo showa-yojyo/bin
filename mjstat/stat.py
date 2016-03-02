@@ -1,102 +1,71 @@
 # -*- coding: utf-8 -*-
 """stat.py: The module for mahjong statistics.
+
+This module contains function `create_player_data` and several
+functions in order to evaluate player's statistical information.
+
+Player Data Elements
+======================================================================
+The structure of `player_data` is like as follows::
+
+  player_data ::= name, count_hands, game*, (placing_data,
+                  winning_data, lod_data, riich_data,
+                  melding_data)?, yaku_freq?;
+    name ::= text;
+    count_hands ::= integer;
+    placing_data ::= placing_distr, mean_placing,
+                     first_placing_rate, last_placing_rate;
+      placing_distr ::= integer{4};
+      mean_placing ::= value;
+      first_placing_rate ::= value;
+      last_placing_rate ::= value;
+    winning_data ::= winning_count, winning_rate, winning_mean,
+                     winning_mean_turns;
+      winning_count ::= integer;
+      winning_rate ::= value;
+      winning_mean ::= value;
+      winning_mean_turns ::= value;
+    lod_data ::= lod_count, lod_rate, lod_mean;
+      lod_count ::= integer;
+      lod_rate ::= value;
+      lod_mean ::= value;
+    riich_data ::= riichi_count, riichi_rate;
+      riichi_count ::= integer;
+      riichi_rate ::= value;
+    melding_data ::= melding_count, melding_rate;
+      melding_count ::= integer;
+      melding_rate ::= value;
+    yaku_freq ::= (Yaku -> integer)*
+
+Also see class `Yaku` and class `YakuTable` in module `mjstat.model`.
 """
 
 from .model import (yaku_map, YakuTable, yakuman_scalar)
 import re
 
-def evaluate(game_data, target_player, fundamental, yaku):
-    """Evaluate possibly numerous statistical values.
+def create_player_data(game_data, target_player):
+    """Create a new (fresh) player data object.
 
-    The structure of `game_data` is like as follows::
+    Args:
+        game_data (dict): See `mjstat.model.create_score_records`.
+        target_player (str): The target player's name.
 
-        game_data ::= description, game*, since?, until?;
-          description ::= text;
-          game ::= result, hand+, player+, started_at, finished_at;
-            result ::= (player->points){4};
-              points ::= integer;
-            hand ::= game, action_table, balance, dora_table, seat_table,
-                     start_hand_table, chow*, pung*, kong*,
-                     riichi_table, ending, winner?, winning_dora,
-                     winning_value, winning_yaku_list;
-              action_table ::= action+;
-                action ::= [1-4], [ACdDKNR], tile;
-              balance ::= player->points;
-              dora_table ::= text+, text+;
-              seat_table ::= seat{4};
-                seat ::= (東|南|西|北);
-              start_hand_table ::= start_hand{4};
-                start_hand ::= tile{13};
-                  tile ::= TODO;
-              chow ::= (tile{3})*;
-              pung ::= tile*;
-              kong ::= tile*;
-              riichi_table ::= bool{4};
-              ending ::= (ロン|ツモ|流局|四風連打|...);
-              winner ::= player;
-              winning_dora ::= integer;
-              winning_value ::= text;
-              winning_yaku_list ::= yaku+;
-            player ::= text;
-            started_at ::= datetime;
-            finished_at ::= datetime;
-          since ::= date;
-          until ::= date;
-
-    The structure of `player_data` is like as follows::
-
-        player_data ::= name, count_hands, game*, placing_data,
-                        winning_data, lod_data, riich_data,
-                        melding_data;
-        name ::= text;
-        count_hands ::= integer;
-        placing_data ::= placing_distr, mean_placing,
-                         first_placing_rate, last_placing_rate;
-          placing_distr ::= integer{4};
-          mean_placing ::= value;
-          first_placing_rate ::= value;
-          last_placing_rate ::= value;
-        winning_data ::= winning_count, winning_rate, winning_mean,
-                         winning_mean_turns;
-          winning_count ::= integer;
-          winning_rate ::= value;
-          winning_mean ::= value;
-          winning_mean_turns ::= value;
-        lod_data ::= lod_count, lod_rate, lod_mean;
-          lod_count ::= integer;
-          lod_rate ::= value;
-          lod_mean ::= value;
-        riich_data ::= riichi_count, riichi_rate;
-          riichi_count ::= integer;
-          riichi_rate ::= value;
-        melding_data ::= melding_count, melding_rate;
-          melding_count ::= integer;
-          melding_rate ::= value;
+    Returns:
+        A dict object which contains 'count_hands', 'games', and
+        'name' as keys.
     """
 
-    target_games = [g for g in game_data['games'] if target_player in g['players']]
-
-    player_data = dict(
+    target_games = [g for g in game_data['games']
+                    if target_player in g['players']]
+    return dict(
         count_hands=sum(len(game['hands']) for game in target_games),
         games=target_games,
         name=target_player,)
 
-    if fundamental:
-        evaluate_placing(player_data)
-        evaluate_winning(player_data)
-        evaluate_losing(player_data)
-        evaluate_riichi(player_data)
-        evaluate_melding(player_data)
-
-    if yaku:
-        evaluate_yaku_frequency(player_data)
-
-    # TODO: (challenge) 平均獲得チップ枚数 mean bonus chips
-
-    return player_data
-
 def evaluate_placing(player_data):
     """Evaluate frequency of target player's placing, or 着順表.
+
+    This function stores the following items to `player_data`:
 
     :placing_disr: the numbers of 1st, 2nd, 3rd and 4th places the
     player took.
@@ -105,6 +74,9 @@ def evaluate_placing(player_data):
     first place in a game.
     :last_placing_rate: the probability the player takes the
     4th, or last place in a game.
+
+    Args:
+        player_data (dict): See `mjstat.stat.create_player_data`.
     """
 
     player_data['placing_distr'] = []
@@ -157,14 +129,16 @@ han_char_table = {k:v for v, k in enumerate('一二三四', 1)}
 def evaluate_winning(player_data):
     """Evaluate target player's winning data.
 
+    This function stores the following items to `player_data`:
+
     :winning_count: the total numbers of the player's winning.
-
     :winning_rate: the probability the player wins in a hand.
-
     :winning_mean: the mean point the winner won par a hand.
-
     :winning_mean_turn: the mean turn the winner tsumo,
     or pick tiles from the wall par a hand.
+
+    Args:
+        player_data (dict): See `mjstat.stat.create_player_data`.
     """
 
     player_data['winning_count'] = 0
@@ -241,9 +215,14 @@ def evaluate_losing(player_data):
     """Evaluate target player's losses when he deals in an opponent
     player.
 
+    This function stores the following items to `player_data`:
+
     :lod_count: the number the player dealt in.
     :lod_rate: the probability the player deals in par a hand.
     :lod_mean: the mean point the player paid by dealing in.
+
+    Args:
+        player_data (dict): See `mjstat.stat.create_player_data`.
     """
 
     player_data['lod_count'] = 0
@@ -277,9 +256,14 @@ def evaluate_losing(player_data):
 def evaluate_riichi(player_data):
     """Evaluate target player's riichi rate.
 
+    This function stores the following items to `player_data`:
+
     :riichi_count: the number the player declared riichi.
     :riichi_rate: the probability the player declares riichi par
     a hand.
+
+    Args:
+        player_data (dict): See `mjstat.stat.create_player_data`.
     """
 
     player_data['riichi_count'] = 0
@@ -307,10 +291,15 @@ def evaluate_melding(player_data):
     N.B. Unlike できすぎくん criteria, this function evaluates how
     OFTEN the player makes use of melding in a hand.
 
+    This function stores the following items to `player_data`:
+
     :melding_count: the number the player called pung, chow, or
     (open) kong.
     :melding_rate: the expectation the player will call pung, chow,
     or (open) kong in a hand.
+
+    Args:
+        player_data (dict): See `mjstat.stat.create_player_data`.
     """
 
     player_data['melding_count'] = 0
@@ -334,7 +323,11 @@ def evaluate_melding(player_data):
         player_data['melding_rate'] = num_melding / num_hands
 
 def evaluate_yaku_frequency(player_data):
-    """Under construction."""
+    """Under construction.
+
+    Args:
+        player_data (dict): See `mjstat.stat.create_player_data`.
+    """
 
     yaku_counter = dict.fromkeys(YakuTable, 0)
 

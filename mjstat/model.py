@@ -1,10 +1,12 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""model.py: Define various data types used in Mahjong.
+"""model.py: Define various data types used in Riichi Mahjong.
 
-Set of Yaku
-====================
-TBW
+This module contains: class `Yaku`, the structure for Mahjong yaku;
+class `YakuTable`, the set of all applicable Mahjong yaku;
+a dictionary `yaku_map`, the mapping from yaku names to yaku objects
+described above; a dictionary `yakuman_scalar`, the mapping from
+yakuman grades to the multiplicand numbers; and a handful of
+functions for construction of score data.
 """
 
 from collections import namedtuple
@@ -82,7 +84,45 @@ yakuman_scalar = {
     '超':7,}       # 56000, 112000
 
 def create_score_records(settings):
-    """Create new game data."""
+    """Create new game data.
+
+    The structure of `game_data` is like as follows::
+
+        game_data ::= settings, description, game*, since?, until?;
+          settings ::= APPLICATION-DEPENDENT;
+          description ::= text;
+          game ::= result, hand+, player+, started_at, finished_at;
+            result ::= (player->points){4};
+              points ::= integer;
+            hand ::= game, action_table, balance, dora_table, seat_table,
+                     start_hand_table, chow*, pung*, kong*,
+                     riichi_table, ending, winner?, winning_dora,
+                     winning_value, winning_yaku_list;
+              action_table ::= action+;
+                action ::= [1-4], [ACdDKNR], tile;
+              balance ::= player->points;
+              dora_table ::= text+, text+;
+              seat_table ::= seat{4};
+                seat ::= (東|南|西|北);
+              start_hand_table ::= start_hand{4};
+                start_hand ::= tile{13};
+                  tile ::= TODO;
+              chow ::= (tile{3})*;
+              pung ::= tile*;
+              kong ::= tile*;
+              riichi_table ::= bool{4};
+              ending ::= (ロン|ツモ|流局|四風連打|...);
+              winner ::= player;
+              winning_dora ::= integer;
+              winning_value ::= text;
+              winning_yaku_list ::= yaku+;
+                yaku ::= TODO;
+            player ::= text;
+            started_at ::= datetime;
+            finished_at ::= datetime;
+          since ::= date;
+          until ::= date;
+    """
 
     game_data = dict(
         description='Game score recorded in mjscore.txt',

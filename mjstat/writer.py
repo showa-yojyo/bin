@@ -4,8 +4,15 @@
 
 #from docutils.writers import UnfilteredWriter
 from .languages import get_language
-from .stat import evaluate
+from .stat import (create_player_data,
+                   evaluate_placing,
+                   evaluate_winning,
+                   evaluate_losing,
+                   evaluate_riichi,
+                   evaluate_melding,
+                   evaluate_yaku_frequency)
 from .translator import fill_template
+from itertools import product
 
 #class MJScoreWriter(UnfilteredWriter):
 class MJScoreWriter(object):
@@ -55,9 +62,23 @@ class MJScoreWriter(object):
         else:
             player_names = (target_player,)
 
-        self.parts['player_data'] = [
-            evaluate(game_data, target_player, **stat_options)
-            for target_player in player_names]
+        player_data_list = [create_player_data(game_data, i) for i in player_names]
+
+        evaluators = []
+        if settings.fundamental:
+            evaluators.extend((
+                evaluate_placing,
+                evaluate_winning,
+                evaluate_losing,
+                evaluate_riichi,
+                evaluate_melding,))
+        if settings.yaku:
+            evaluators.append(evaluate_yaku_frequency)
+
+        for f, p in product(evaluators, player_data_list):
+            f(p)
+
+        self.parts['player_data'] = player_data_list
 
         assert 'player_data' in self.parts
         assert 'options' in self.parts
