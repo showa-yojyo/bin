@@ -41,6 +41,7 @@ Also see class `Yaku` and class `YakuTable` in module `mjstat.model`.
 """
 
 from .model import (yaku_map, YakuTable, yakuman_scalar)
+from collections import Counter
 import re
 
 # Mapping from special player names to key values.
@@ -101,10 +102,11 @@ def evaluate_placing(player_data):
         player_data (dict): See `mjstat.stat.create_player_data`.
     """
 
-    player_data['placing_distr'] = []
-    player_data['mean_placing'] = 0
-    player_data['first_placing_rate'] = 0
-    player_data['last_placing_rate'] = 0
+    player_data.update(
+        placing_distr=[],
+        mean_placing=0,
+        first_placing_rate=0,
+        last_placing_rate=0,)
 
     name = player_data['name']
     placing_distr = [0] * 4
@@ -121,10 +123,11 @@ def evaluate_placing(player_data):
 
     num_games = len(target_games)
     if num_games:
-        player_data['mean_placing'] = sum(
-            (v*i) for i, v in enumerate(placing_distr, 1)) / num_games
-        player_data['first_placing_rate'] = placing_distr[0] / num_games
-        player_data['last_placing_rate'] = placing_distr[-1] / num_games
+        player_data.update(
+            mean_placing=sum(
+                (v*i) for i, v in enumerate(placing_distr, 1)) / num_games,
+            first_placing_rate=placing_distr[0] / num_games,
+            last_placing_rate=placing_distr[-1] / num_games,)
 
 dora_re = re.compile(r'[裏赤]?ドラ(\d)+')
 
@@ -163,11 +166,12 @@ def evaluate_winning(player_data):
         player_data (dict): See `mjstat.stat.create_player_data`.
     """
 
-    player_data['winning_count'] = 0
-    player_data['winning_rate'] = 0
-    player_data['winning_mean'] = 0
-    player_data['winning_mean_han'] = 0
-    player_data['winning_mean_turns'] = 0
+    player_data.update(
+        winning_count=0,
+        winning_rate=0,
+        winning_mean=0,
+        winning_mean_han=0,
+        winning_mean_turns=0,)
 
     num_hands = player_data['count_hands']
     if not num_hands:
@@ -227,11 +231,12 @@ def evaluate_winning(player_data):
             total_han += han
 
     if num_winning:
-        player_data['winning_count'] = num_winning
-        player_data['winning_rate'] = num_winning / num_hands
-        player_data['winning_mean'] = total_points / num_winning
-        player_data['winning_mean_han'] = total_han / num_winning
-        player_data['winning_mean_turns'] = total_turns / num_winning
+        player_data.update(
+            winning_count=num_winning,
+            winning_rate=num_winning / num_hands,
+            winning_mean=total_points / num_winning,
+            winning_mean_han=total_han / num_winning,
+            winning_mean_turns=total_turns / num_winning,)
 
 def evaluate_losing(player_data):
     """Evaluate target player's losses when he deals in an opponent
@@ -247,9 +252,10 @@ def evaluate_losing(player_data):
         player_data (dict): See `mjstat.stat.create_player_data`.
     """
 
-    player_data['lod_count'] = 0
-    player_data['lod_rate'] = 0
-    player_data['lod_mean'] = 0
+    player_data.update(
+        lod_count=0,
+        lod_rate=0,
+        lod_mean=0,)
 
     num_hands = player_data['count_hands']
     if not num_hands:
@@ -271,9 +277,10 @@ def evaluate_losing(player_data):
                     total_losing_points += hand['balance'][name]
 
     if num_lod:
-        player_data['lod_count'] = num_lod
-        player_data['lod_rate'] = num_lod / num_hands
-        player_data['lod_mean'] = total_losing_points / num_lod
+        player_data.update(
+            lod_count=num_lod,
+            lod_rate=num_lod / num_hands,
+            lod_mean=total_losing_points / num_lod,)
 
 def evaluate_riichi(player_data):
     """Evaluate target player's riichi rate.
@@ -288,8 +295,9 @@ def evaluate_riichi(player_data):
         player_data (dict): See `mjstat.stat.create_player_data`.
     """
 
-    player_data['riichi_count'] = 0
-    player_data['riichi_rate'] = 0
+    player_data.update(
+        riichi_count=0,
+        riichi_rate=0,)
     num_hands = player_data['count_hands']
     if not num_hands:
         return
@@ -304,8 +312,9 @@ def evaluate_riichi(player_data):
                 num_riichi += 1
 
     if num_riichi:
-        player_data['riichi_count'] = num_riichi
-        player_data['riichi_rate'] = num_riichi / num_hands
+        player_data.update(
+            riichi_count=num_riichi,
+            riichi_rate=num_riichi / num_hands,)
 
 def evaluate_melding(player_data):
     """Evaluate target player's melding rate.
@@ -324,8 +333,9 @@ def evaluate_melding(player_data):
         player_data (dict): See `mjstat.stat.create_player_data`.
     """
 
-    player_data['melding_count'] = 0
-    player_data['melding_rate'] = 0
+    player_data.update(
+        melding_count=0,
+        melding_rate=0,)
     num_hands = player_data['count_hands']
     if not num_hands:
         return
@@ -341,26 +351,25 @@ def evaluate_melding(player_data):
                                for i in ('chows', 'pungs', 'kongs'))
 
     if num_melding:
-        player_data['melding_count'] = num_melding
-        player_data['melding_rate'] = num_melding / num_hands
+        player_data.update(
+            melding_count=num_melding,
+            melding_rate=num_melding / num_hands,)
 
 def evaluate_yaku_frequency(player_data):
-    """Under construction.
+    """Count all yaku occurrences that the player wins.
 
     Args:
         player_data (dict): See `mjstat.stat.create_player_data`.
     """
 
-    yaku_counter = dict.fromkeys(YakuTable, 0)
-
     name = player_data['name']
-    for g in player_data['games']:
-        index = g['players'].index(name)
-        for hand in g['hands']:
-            if (not 'winner' in hand) or (hand['winner'] != name):
-                continue
+    yaku_lists = (hand['winning_yaku_list'] for g in player_data['games']
+                     for hand in g['hands']
+                         if hand.get('winner', None) == name)
 
-            for yaku in hand['winning_yaku_list']:
-                yaku_counter[yaku] += 1
+    # Class collections.Counter is useful here.
+    yaku_counter = Counter()
+    for i in yaku_lists:
+        yaku_counter.update(i)
 
     player_data['yaku_freq'] = yaku_counter
