@@ -43,24 +43,46 @@ Also see class `Yaku` and class `YakuTable` in module `mjstat.model`.
 from .model import (yaku_map, YakuTable, yakuman_scalar)
 import re
 
-def create_player_data(game_data, target_player):
-    """Create a new (fresh) player data object.
+# Mapping from special player names to key values.
+default_players = {
+    'あなた':1,
+    '下家':2,
+    '対面':3,
+    '上家':4,
+    }
+
+def get_key(player_data):
+    """Return key value for sorting a list of `player_data`."""
+    player_name = player_data['name']
+    return default_players.get(player_name, hash(player_name))
+
+def create_player_data(game_data, *players):
+    """Create new (fresh) player data objects.
 
     Args:
         game_data (dict): See `mjstat.model.create_score_records`.
-        target_player (str): The target player's name.
+        players (vararg): A list of target players' names.
 
     Returns:
-        A dict object which contains 'count_hands', 'games', and
-        'name' as keys.
+        A list which contains dict objects which contain
+        'count_hands', 'games', and 'name' as keys.
     """
 
-    target_games = [g for g in game_data['games']
-                    if target_player in g['players']]
-    return dict(
-        count_hands=sum(len(game['hands']) for game in target_games),
-        games=target_games,
-        name=target_player,)
+    games = game_data['games']
+
+    data_list = []
+    for i in players:
+        target_games = [g for g in games if i in g['players']]
+        data = dict(
+            count_hands=sum(len(g['hands']) for g in target_games),
+            games=target_games,
+            name=i,)
+        data_list.append(data)
+
+    # Sort data_list by player names.
+    data_list = sorted(data_list, key=get_key)
+
+    return data_list
 
 def evaluate_placing(player_data):
     """Evaluate frequency of target player's placing, or 着順表.

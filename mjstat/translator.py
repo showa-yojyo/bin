@@ -11,18 +11,6 @@ def format_float(val):
 def format_percentage(val):
     return '{:.2%}'.format(val)
 
-# XXX
-default_players = {
-    'あなた':1,
-    '下家':2,
-    '対面':3,
-    '上家':4,
-    }
-
-def get_key_for_special_names(player_data):
-    """XXX"""
-    return default_players.get(player_data['name'], hash(player_data['name']))
-
 def fill_template(player_data, lang, fundamental, yaku):
     """Build long text which shows the statistics of the target
     player(s).
@@ -31,9 +19,6 @@ def fill_template(player_data, lang, fundamental, yaku):
     target_games = player_data[0]['games']
     if not target_games:
         return 'NO DATA'
-
-    # XXX
-    player_data = sorted(player_data, key=get_key_for_special_names)
 
     env = Environment(autoescape=False)
     env.filters['format_float'] = format_float

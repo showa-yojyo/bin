@@ -62,7 +62,7 @@ class MJScoreWriter(object):
         else:
             player_names = (target_player,)
 
-        player_data_list = [create_player_data(game_data, i) for i in player_names]
+        player_data_list = create_player_data(game_data, *player_names)
 
         evaluators = []
         if settings.fundamental:
