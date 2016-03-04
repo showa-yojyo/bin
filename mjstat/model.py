@@ -133,7 +133,14 @@ def create_score_records(settings):
     return game_data
 
 def create_game_record(context):
-    """Create an empty game record."""
+    """Create an empty game record.
+
+    Args:
+        context (dict): See function `create_score_records` above.
+
+    Returns:
+        A new dict object.
+    """
 
     assert isinstance(context, dict)
     assert 'games' in context
@@ -148,7 +155,14 @@ def create_game_record(context):
     return game
 
 def create_hand_record(context):
-    """Create an empth hand and put into the current hands."""
+    """Create an empty hand and store it to the current hands.
+
+    Args:
+        context (dict): See function `create_score_records` above.
+
+    Returns:
+        A new dict object.
+    """
 
     game = context['games'][-1]
     hands = game['hands']
@@ -169,7 +183,15 @@ def create_hand_record(context):
     return hand
 
 def set_reference_period(game_data, settings):
-    """Set reference period to the score records."""
+    """Set reference period to the score records.
+
+    Args:
+        game_data (dict): See function `create_score_records` above.
+        settings (argparse.Namespace): Command line arguments, etc.
+
+    Returns:
+        A new dict object.
+    """
 
     since_date = None
     until_date = None
@@ -184,11 +206,16 @@ def set_reference_period(game_data, settings):
         if settings.until:
             until_date = dateutil.parser.parse(settings.until).strftime(datetime_format)
 
-    game_data['since'] = since_date
-    game_data['until'] = until_date
+    game_data.update(
+        since=since_date,
+        until=until_date,)
 
 def examine_action_table(hand):
-    """Examine the action history of a hand record."""
+    """Examine the action history of a hand record.
+
+    Args:
+        hand (dict): See function `create_hand_record`.
+    """
 
     assert 'game' in hand
     assert 'action_table' in hand
@@ -239,6 +266,7 @@ def examine_action_table(hand):
             hand['winner'] = hand['game']['players'][index]
             #break
 
-    hand['chows'] = chows
-    hand['pungs'] = pungs
-    hand['kongs'] = kongs
+    hand.update(
+        chows=chows,
+        pungs=pungs,
+        kongs=kongs)

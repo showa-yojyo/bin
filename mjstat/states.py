@@ -85,7 +85,7 @@ class GameInitialCondition(MJScoreState):
         """Parse initial points and players."""
 
         game = context['games'][-1]
-        game['players'] = [i for i in match.groups()]
+        game['players'] = match.groups()
 
         return context, 'HandState', []
 

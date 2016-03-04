@@ -52,9 +52,8 @@ default_players = {
     '上家':4,
     }
 
-def get_key(player_data):
+def get_key(player_name):
     """Return key value for sorting a list of `player_data`."""
-    player_name = player_data['name']
     return default_players.get(player_name, hash(player_name))
 
 def create_player_data(game_data, *players):
@@ -72,16 +71,13 @@ def create_player_data(game_data, *players):
     games = game_data['games']
 
     data_list = []
-    for i in players:
+    for i in sorted(players, key=get_key):
         target_games = [g for g in games if i in g['players']]
         data = dict(
             count_hands=sum(len(g['hands']) for g in target_games),
             games=target_games,
             name=i,)
         data_list.append(data)
-
-    # Sort data_list by player names.
-    data_list = sorted(data_list, key=get_key)
 
     return data_list
 
