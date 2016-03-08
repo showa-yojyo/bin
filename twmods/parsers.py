@@ -64,7 +64,7 @@ def parser_user_single():
     """
 
     parser = ArgumentParser(add_help=False)
-    group = parser.add_mutually_exclusive_group(required=True)
+    group = parser.add_mutually_exclusive_group(required=False) # should be True
     group.add_argument(
         '-U', '--user-id',
         nargs='?',

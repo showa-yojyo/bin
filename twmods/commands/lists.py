@@ -431,7 +431,7 @@ def parser_listspec():
     """
 
     parser = ArgumentParser(add_help=False)
-    group = parser.add_mutually_exclusive_group(required=True)
+    group = parser.add_mutually_exclusive_group(required=False) # should be True
     group.add_argument(
         '-l', '--list-id',
         dest='list_id',
@@ -444,7 +444,7 @@ def parser_listspec():
         help='the slug of the list')
 
     # TODO: required only if <slug> is supplied
-    owner = parser.add_mutually_exclusive_group(required=False)
+    owner = parser.add_mutually_exclusive_group(required=False) # should be True
     owner.add_argument(
         '-OI', '--owner-id',
         metavar='<owner_id>',

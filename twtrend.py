@@ -24,7 +24,7 @@ class TwitterTrendManager(AbstractTwitterManager):
     def __init__(self):
         super().__init__('twtrend', make_commands(self))
 
-    def make_parser(self):
+    def make_parser(self, pre_parser):
         """Create the command line parser.
 
         Returns:
@@ -33,6 +33,7 @@ class TwitterTrendManager(AbstractTwitterManager):
         """
 
         parser = ArgumentParser(
+            parents=[pre_parser],
             description=description, epilog=epilog, usage=usage)
         parser.add_argument(
             '--version',

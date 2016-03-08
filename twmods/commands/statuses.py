@@ -326,7 +326,7 @@ class Oembed(AbstractTwitterStatusesCommand):
             help=self.__doc__)
 
         # This command has many optional parameters to implement manually.
-        group = parser.add_mutually_exclusive_group(required=True)
+        group = parser.add_mutually_exclusive_group(required=False) # should be True
         group.add_argument(
             '--id',
             dest='_id',

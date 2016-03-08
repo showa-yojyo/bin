@@ -158,7 +158,7 @@ class CommandShow(AbstractTwitterFriendshipCommand):
             aliases=FRIENDSHIPS_SHOW[1:],
             help=self.__doc__)
 
-        source = parser.add_mutually_exclusive_group(required=True)
+        source = parser.add_mutually_exclusive_group(required=False) # should be True
         source.add_argument(
             '-U', '--source-user-id',
             nargs='?',
@@ -170,7 +170,7 @@ class CommandShow(AbstractTwitterFriendshipCommand):
             dest='source_screen_name',
             help='the screen_name of the subject user')
 
-        target = parser.add_mutually_exclusive_group(required=True)
+        target = parser.add_mutually_exclusive_group(required=False) # should be True
         target.add_argument(
             '-V', '--target-user-id',
             nargs='?',

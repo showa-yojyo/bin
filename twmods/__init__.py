@@ -3,17 +3,18 @@
 """
 
 from secret import twitter_instance
-from abc import ABCMeta
-from abc import abstractmethod
-from argparse import ArgumentParser
+from abc import (ABCMeta, abstractmethod)
+from argparse import (ArgumentParser, FileType)
+from configparser import (ConfigParser, Error)
 from json import dump
 from twitter import TwitterHTTPError
 import logging
+from os.path import expanduser
 import sys
 
 epilog = "GitHub repository: https://github.com/showa-yojyo/bin"
 
-__version__ = '1.11.1'
+__version__ = '1.12.0'
 
 def make_logger(name=None):
     """Set up a logger with the specified name.
@@ -59,16 +60,39 @@ class AbstractTwitterManager(metaclass=ABCMeta):
             command_line: Raw command line arguments.
         """
 
-        root_parser = self.make_parser()
+        pre_parser = ArgumentParser(add_help=False)
+        pre_parser.add_argument(
+            '--config',
+            type=FileType(mode='r', encoding='utf-8'),
+            metavar='FILE',
+            help='path to config file')
+        args, remaining_argv = pre_parser.parse_known_args(command_line)
+
+        defaults = {}
+        config = ConfigParser()
+        if args.config:
+            config.read_file(args.config)
+        else:
+            default_config_path = expanduser('~/.twmanagerrc')
+            config.read(default_config_path)
+
+        try:
+            defaults = dict(config.items("General"))
+        except Error as e:
+            print('Warning: {}'.format(e), file=sys.stderr)
+
+        root_parser = self.make_parser(pre_parser)
 
         # Subcommands
         subparsers = root_parser.add_subparsers(help='commands')
 
         for cmd in self.commands:
             cmd_parser = cmd.create_parser(subparsers)
-            cmd_parser.set_defaults(func=cmd)
+            cmd_parser.set_defaults(func=cmd, **defaults)
 
-        self.args = root_parser.parse_args(command_line)
+        #root_parser.set_defaults(**defaults)
+        self.args = root_parser.parse_args(remaining_argv)
+
         if not 'func' in self.args:
             self.args.func = root_parser.print_help
 

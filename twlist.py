@@ -56,7 +56,7 @@ class TwitterListManager(AbstractTwitterManager):
     def __init__(self):
         super().__init__('twlist', make_commands(self))
 
-    def make_parser(self):
+    def make_parser(self, pre_parser):
         """Create the command line parser.
 
         Returns:
@@ -65,6 +65,7 @@ class TwitterListManager(AbstractTwitterManager):
         """
 
         parser = ArgumentParser(
+            parents=[pre_parser],
             description=description, epilog=epilog, usage=usage)
         parser.add_argument(
             '--version',

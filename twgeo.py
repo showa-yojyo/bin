@@ -30,7 +30,7 @@ class TwitterGeoManager(AbstractTwitterManager):
     def __init__(self):
         super().__init__('twgeo', make_commands(self))
 
-    def make_parser(self):
+    def make_parser(self, pre_parser):
         """Create the command line parser.
 
         Returns:
@@ -39,6 +39,7 @@ class TwitterGeoManager(AbstractTwitterManager):
         """
 
         parser = ArgumentParser(
+            parents=[pre_parser],
             description=description,
             epilog=epilog,
             usage=usage)

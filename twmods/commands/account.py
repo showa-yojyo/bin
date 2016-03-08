@@ -212,7 +212,7 @@ class CommandUpdateProfileBackgroundImage(AbstractTwitterAccountCommand):
                      parser_skip_status()],
             help=self.__doc__)
 
-        group = parser.add_mutually_exclusive_group(required=True)
+        group = parser.add_mutually_exclusive_group(required=False) # should be True
         group.add_argument(
             '-I', '--image',
             type=FileType('rb'),
