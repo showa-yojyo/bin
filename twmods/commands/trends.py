@@ -4,6 +4,7 @@ and its subclasses.
 """
 
 from . import AbstractTwitterCommand, call_decorator
+from ..parsers import filter_args
 from argparse import ArgumentParser
 
 # GET trends/available
@@ -60,9 +61,9 @@ class CommandClosest(AbstractTwitterTrendCommand):
         """Request GET trends/closest for Twitter."""
 
         request, args = self.tw.trends.closest, vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'lat', 'long',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            'lat', 'long')
+
         return kwargs, request
 
 class CommandPlace(AbstractTwitterTrendCommand):
@@ -90,11 +91,11 @@ class CommandPlace(AbstractTwitterTrendCommand):
         """Request GET trends/place for Twitter."""
 
         request, args = self.tw.trends.place, vars(self.args)
-        kwargs = {k:args[k] for k in (
-            '_id', 'exclude',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            '_id', 'exclude')
+
         return kwargs, request
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterTrendCommand.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in AbstractTwitterTrendCommand.__subclasses__())

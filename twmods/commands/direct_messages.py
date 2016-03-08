@@ -5,6 +5,7 @@ and its subclasses.
 
 from . import AbstractTwitterCommand, call_decorator
 from ..parsers import (
+    filter_args,
     cache,
     parser_user_single,
     parser_count_statuses,
@@ -50,10 +51,10 @@ class Command(AbstractTwitterDirectMessageCommand):
         """Request GET direct_messages for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'since_id', 'max_id',
-            'count', 'include_entities', 'skip_status',)
-                if (k in args) and (args[k] is not None)}
+            'count', 'include_entities', 'skip_status')
+
         return kwargs, self.tw.direct_messages
 
 class CommandDestroy(AbstractTwitterDirectMessageCommand):
@@ -75,9 +76,9 @@ class CommandDestroy(AbstractTwitterDirectMessageCommand):
         """Request POST direct_messages/destroy for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            '_id', 'include_entities',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            '_id', 'include_entities')
+
         return kwargs, self.tw.direct_messages.destroy
 
 class CommandNew(AbstractTwitterDirectMessageCommand):
@@ -101,9 +102,9 @@ class CommandNew(AbstractTwitterDirectMessageCommand):
         """Request POST direct_messages/new for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'user_id', 'screen_name', 'text')
-                if (k in args) and (args[k] is not None)}
+
         return kwargs, self.tw.direct_messages.new
 
 class CommandSent(AbstractTwitterDirectMessageCommand):
@@ -127,10 +128,10 @@ class CommandSent(AbstractTwitterDirectMessageCommand):
         """Request GET direct_messages/sent for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'since_id', 'max_id',
-            'count', 'page', 'include_entities',)
-                if (k in args) and (args[k] is not None)}
+            'count', 'page', 'include_entities')
+
         return kwargs, self.tw.direct_messages.sent
 
 class CommandShow(AbstractTwitterDirectMessageCommand):
@@ -151,7 +152,7 @@ class CommandShow(AbstractTwitterDirectMessageCommand):
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterDirectMessageCommand.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in AbstractTwitterDirectMessageCommand.__subclasses__())
 
 @cache
 def parser_id():

@@ -5,6 +5,7 @@ and its subclasses.
 
 from . import (AbstractTwitterCommand, call_decorator)
 from ..parsers import (
+    filter_args,
     parser_user_single,
     parser_cursor,
     parser_include_entities,
@@ -42,9 +43,9 @@ class CommandUsersCreate(AbstractTwitterMuteCommand):
         """Request POST mutes/users/create for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'user_id', 'screen_name',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            'user_id', 'screen_name')
+
         return kwargs, self.tw.mutes.users.create
 
 class CommandUsersDestroy(AbstractTwitterMuteCommand):
@@ -65,9 +66,9 @@ class CommandUsersDestroy(AbstractTwitterMuteCommand):
         """Request POST mutes/users/destroy for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'user_id', 'screen_name',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            'user_id', 'screen_name')
+
         return kwargs, self.tw.mutes.users.destroy
 
 class CommandUsersIds(AbstractTwitterMuteCommand):
@@ -88,8 +89,7 @@ class CommandUsersIds(AbstractTwitterMuteCommand):
         """Request GET mutes/users/ids for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in ('cursor')
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args, 'cursor')
         return kwargs, self.tw.mutes.users.ids
 
 class CommandUsersList(AbstractTwitterMuteCommand):
@@ -112,11 +112,11 @@ class CommandUsersList(AbstractTwitterMuteCommand):
         """Request GET mutes/users/list for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'cursor', 'include_entities', 'skip_status',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            'cursor', 'include_entities', 'skip_status')
+
         return kwargs, self.tw.mutes.users.list
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterMuteCommand.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in AbstractTwitterMuteCommand.__subclasses__())

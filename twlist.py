@@ -5,33 +5,33 @@ description = "A utility script to manage a Twitter list."
 
 usage = """
   twlist.py [--version] [--help]
-  twlist.py lists-statuses [-c | --count <n>]
+  twlist.py lists/statuses [-c | --count <n>]
     [--since-id <status_id>] [--max-id <status_id>]
     [-E | --include-entities] [--include-rts] <listspec>
-  twlist.py lists-members-create_all [<userspec>...]
+  twlist.py lists/members-create_all [<userspec>...]
     [-UF | --file-user-id <path>] [-SF | --file-screen-name <path>]
     <listspec>
-  twlist.py lists-members-destroy_all [<userspec>...]
+  twlist.py lists/members-destroy_all [<userspec>...]
     [-UF | --file-user-id <path>] [-SF | --file-screen-name <path>]
     <listspec>
-  twlist.py lists-members [-c | --count <n>] [--cursor <n>]
+  twlist.py lists/members [-c | --count <n>] [--cursor <n>]
     [-E | --include-entities] [--skip-status] <listspec>
-  twlist.py lists-subscribers [-c | --count <n>] [--cursor <n>]
+  twlist.py lists/subscribers [-c | --count <n>] [--cursor <n>]
     [-E | --include-entities] [--skip-status] <listspec>
-  twlist.py lists-subscribers-create <listspec>
-  twlist.py lists-subscribers-destroy <listspec>
-  twlist.py lists-memberships [-c | --count <n>] [--cursor <n>]
+  twlist.py lists/subscribers-create <listspec>
+  twlist.py lists/subscribers-destroy <listspec>
+  twlist.py lists/memberships [-c | --count <n>] [--cursor <n>]
     [--filter-to-owned-lists] <userspec>
-  twlist.py lists-ownerships [-c | --count <n>] [--cursor <n>]
+  twlist.py lists/ownerships [-c | --count <n>] [--cursor <n>]
     <userspec>
-  twlist.py lists-subscriptions [-c | --count <n>] [--cursor <n>]
+  twlist.py lists/subscriptions [-c | --count <n>] [--cursor <n>]
     <userspec>
-  twlist.py lists-create [-m | --mode <public | private>]
+  twlist.py lists/create [-m | --mode <public | private>]
     [-d | --description <DESC>] <name>
-  twlist.py lists-show <listspec>
-  twlist.py lists-update [-m | --mode <public | private>]
+  twlist.py lists/show <listspec>
+  twlist.py lists/update [-m | --mode <public | private>]
     [-d | --desccription <DESC>] [--name <NAME>] <listspec>
-  twlist.py lists-destroy <listspec>
+  twlist.py lists/destroy <listspec>
 
 where
   <userspec> ::= (-U | --user-id <user_id>)
@@ -48,7 +48,7 @@ from twmods.commands.lists import make_commands
 from argparse import ArgumentParser
 
 __doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.9.8'
+__version__ = '1.9.9'
 
 class TwitterListManager(AbstractTwitterManager):
     """This class handles commands about a Twitter list."""

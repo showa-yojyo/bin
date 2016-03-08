@@ -4,7 +4,9 @@ and its subclasses.
 """
 
 from . import AbstractTwitterCommand, call_decorator
-from ..parsers import (parser_include_entities, parser_skip_status)
+from ..parsers import (filter_args,
+                       parser_include_entities,
+                       parser_skip_status)
 from argparse import (ArgumentParser, FileType)
 
 # POST account/remove_profile_banner
@@ -122,11 +124,11 @@ class CommandSettingsP(AbstractTwitterAccountCommand):
         """Request POST account/settings for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'sleep_time_enabled', 'start_sleep_time', 'end_sleep_time',
             'time_zone', 'trend_location_woeid',
-            'allow_contributor_request', 'lang',)
-                if (k in args) and (args[k] is not None)}
+            'allow_contributor_request', 'lang')
+
         return kwargs, self.tw.account.settings
 
 class CommandUpdateDeliveryDevice(AbstractTwitterAccountCommand):
@@ -153,9 +155,9 @@ class CommandUpdateDeliveryDevice(AbstractTwitterAccountCommand):
         """Request POST account/update_delivery_device for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'device', 'include_entities',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            'device', 'include_entities')
+
         return kwargs, self.tw.account.update_delivery_device
 
 class CommandUpdateProfile(AbstractTwitterAccountCommand):
@@ -193,10 +195,10 @@ class CommandUpdateProfile(AbstractTwitterAccountCommand):
         """Request POST account/update_profile for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'name', 'url', 'location', 'description',
-            'profile_link_color',)
-                if (k in args) and (args[k] is not None)}
+            'profile_link_color')
+
         return kwargs, self.tw.account.update_profile
 
 class CommandUpdateProfileBackgroundImage(AbstractTwitterAccountCommand):
@@ -231,10 +233,9 @@ class CommandUpdateProfileBackgroundImage(AbstractTwitterAccountCommand):
         """Request POST account/update_profile_background_image for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'image', # will be base64-encoded by PTT.
-            'media_id', 'tile',)
-                if (k in args) and (args[k] is not None)}
+            'media_id', 'tile')
 
         return kwargs, self.tw.account.update_profile_background_image
 
@@ -276,10 +277,9 @@ class CommandUpdateProfileBanner(AbstractTwitterAccountCommand):
         """Request POST account/update_profile_banner for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'banner', # will be base64-encoded by PTT.
-            'width', 'height', 'offset_left', 'offset_top',)
-                if (k in args) and (args[k] is not None)}
+            'width', 'height', 'offset_left', 'offset_top')
 
         return kwargs, self.tw.account.update_profile_banner
 
@@ -304,10 +304,9 @@ class CommandUpdateProfileImage(AbstractTwitterAccountCommand):
         """Request POST account/update_profile_image for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'image', # will be base64-encoded by PTT.
-            'include_entities', 'skip_status',)
-                if (k in args) and (args[k] is not None)}
+            'include_entities', 'skip_status')
 
         return kwargs, self.tw.account.update_profile_image
 
@@ -334,11 +333,11 @@ class CommandVerifyCredentials(AbstractTwitterAccountCommand):
         """Request GET account/verify_credentials for Twitter."""
 
         request, args = self.tw.account.verify_credentials, vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'include_entities', 'skip_status', 'email',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            'include_entities', 'skip_status', 'email')
+
         return kwargs, request
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterAccountCommand.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in AbstractTwitterAccountCommand.__subclasses__())

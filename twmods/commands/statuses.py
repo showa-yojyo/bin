@@ -5,6 +5,7 @@ and its subclasses.
 
 from . import AbstractTwitterCommand, call_decorator
 from ..parsers import (
+    filter_args,
     cache,
     parser_user_single,
     parser_count_statuses,
@@ -55,10 +56,10 @@ class MentionsTimeline(AbstractTwitterStatusesCommand):
         """Request GET statuses/mentions_timeline for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'count', 'since_id', 'max_id',
-            'trim_user', 'contributor_details', 'include_entities',)
-                if (k in args) and (args[k] is not None)}
+            'trim_user', 'contributor_details', 'include_entities')
+
         return kwargs, self.tw.statuses.mentions_timeline
 
 class UserTimeline(AbstractTwitterStatusesCommand):
@@ -85,12 +86,11 @@ class UserTimeline(AbstractTwitterStatusesCommand):
         """Request GET statuses/user_timeline for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'user_id', 'screen_name',
             'count', 'since_id', 'max_id',
             'trim_user', 'exclude_replies', 'contributor_details',
-            'include_rts',)
-                if (k in args) and (args[k] is not None)}
+            'include_rts')
 
         return kwargs, self.tw.statuses.user_timeline
 
@@ -117,11 +117,10 @@ class HomeTimeline(AbstractTwitterStatusesCommand):
         """Request GET statuses/home_timeline for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'count', 'since_id', 'max_id',
             'trim_user', 'exclude_replies', 'contributor_details',
-            'include_rts',)
-                if (k in args) and (args[k] is not None)}
+            'include_rts')
 
         return kwargs, self.tw.statuses.home_timeline
 
@@ -147,10 +146,9 @@ class RetweetsOfMe(AbstractTwitterStatusesCommand):
         """Request GET statuses/retweets_of_me for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'count', 'since_id', 'max_id',
-            'trim_user', 'include_entities', 'include_user_entities',)
-                if (k in args) and (args[k] is not None)}
+            'trim_user', 'include_entities', 'include_user_entities')
 
         return kwargs, self.tw.statuses.retweets_of_me
 
@@ -174,9 +172,9 @@ class RetweetsId(AbstractTwitterStatusesCommand):
         """Request GET statuses/retweets/:id for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            '_id', 'count', 'trim_user',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            '_id', 'count', 'trim_user')
+
         return kwargs, self.tw.statuses.retweets._id
 
 class ShowId(AbstractTwitterStatusesCommand):
@@ -202,9 +200,9 @@ class ShowId(AbstractTwitterStatusesCommand):
         """Request GET statuses/show/:id for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            '_id', 'trim_user', 'include_my_retweet', 'include_entities',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            '_id', 'trim_user', 'include_my_retweet', 'include_entities')
+
         return kwargs, self.tw.statuses.show._id
 
 class DestroyId(AbstractTwitterStatusesCommand):
@@ -224,9 +222,9 @@ class DestroyId(AbstractTwitterStatusesCommand):
         """Request POST statuses/destroy/:id for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             '_id', 'trim_user',)
-                if (k in args) and (args[k] is not None)}
+
         return kwargs, self.tw.statuses.destroy._id
 
 class Update(AbstractTwitterStatusesCommand):
@@ -285,12 +283,12 @@ class Update(AbstractTwitterStatusesCommand):
         """Request POST statuses/update for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'status', 'in_reply_to_status_id',
             'possibly_sensitive', 'lat', 'long',
             'place_id', 'display_coordinates',
-            'trim_user', 'media_ids',)
-                if (k in args) and (args[k] is not None)}
+            'trim_user', 'media_ids')
+
         return kwargs, self.tw.statuses.update
 
 class RetweetId(AbstractTwitterStatusesCommand):
@@ -310,9 +308,9 @@ class RetweetId(AbstractTwitterStatusesCommand):
         """Request POST statuses/retweet/:id for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             '_id', 'trim_user',)
-                if (k in args) and (args[k] is not None)}
+
         return kwargs, self.tw.statuses.retweet._id
 
 class Oembed(AbstractTwitterStatusesCommand):
@@ -386,11 +384,10 @@ class Oembed(AbstractTwitterStatusesCommand):
         """Request GET statuses/oembed for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             '_id', 'url',
             'maxwidth', 'hide_media', 'hide_thread', 'omit_script',
-            'align', 'related', 'lang', 'widget_type', 'hide_tweet',)
-                if (k in args) and (args[k] is not None)}
+            'align', 'related', 'lang', 'widget_type', 'hide_tweet')
 
         return kwargs, self.tw.statuses.oembed
 
@@ -411,9 +408,8 @@ class RetweetersIds(AbstractTwitterStatusesCommand):
         """Request GET statuses/retweeters/ids for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            '_id', 'cursor', 'stringify_ids',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            '_id', 'cursor', 'stringify_ids')
 
         return kwargs, self.tw.statuses.retweeters_ids
 
@@ -445,14 +441,14 @@ class Lookup(AbstractTwitterStatusesCommand):
         """Request GET statuses/lookup for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            '_id', 'trim_user', 'include_entities', 'map',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            '_id', 'trim_user', 'include_entities', 'map')
+
         return kwargs, self.tw.statuses.lookup
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterStatusesCommand.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in AbstractTwitterStatusesCommand.__subclasses__())
 
 # parsers
 

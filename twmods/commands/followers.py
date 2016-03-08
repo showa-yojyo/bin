@@ -65,4 +65,4 @@ class FollowersList(AbstractTwitterFollowersCommand):
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterFollowersCommand.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in AbstractTwitterFollowersCommand.__subclasses__())

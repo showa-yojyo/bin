@@ -5,6 +5,7 @@ and its subclasses.
 
 from . import AbstractTwitterCommand, call_decorator
 from ..parsers import (
+    filter_args,
     parser_cursor,
     parser_user_single,
     parser_user_multiple,)
@@ -53,9 +54,9 @@ class CommandCreate(AbstractTwitterFriendshipCommand):
         """Request POST friendships/create for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'user_id', 'screen_name', 'follow')
-                if (k in args) and (args[k] is not None)}
+
         return kwargs, self.tw.friendships.create
 
 class CommandDestroy(AbstractTwitterFriendshipCommand):
@@ -76,9 +77,9 @@ class CommandDestroy(AbstractTwitterFriendshipCommand):
         """Request POST friendships/destroy for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'user_id', 'screen_name')
-                if (k in args) and (args[k] is not None)}
+
         return kwargs, self.tw.friendships.destroy
 
 class CommandIncoming(AbstractTwitterFriendshipCommand):
@@ -188,9 +189,9 @@ class CommandShow(AbstractTwitterFriendshipCommand):
         """Request GET friendships/show for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'source_user_id', 'source_screen_name',
-            'target_user_id', 'target_screen_name',)}
+            'target_user_id', 'target_screen_name')
         return kwargs, self.tw.friendships.show
 
 class CommandUpdate(AbstractTwitterFriendshipCommand):
@@ -235,14 +236,14 @@ class CommandUpdate(AbstractTwitterFriendshipCommand):
         """Request GET friendships/update for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'user_id',
             'screen_name',
             'device',
-            'retweets',) if (k in args) and (args[k] is not None)}
+            'retweets')
 
         return kwargs, self.tw.friendships.update
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterFriendshipCommand.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in AbstractTwitterFriendshipCommand.__subclasses__())

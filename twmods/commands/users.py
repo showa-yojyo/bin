@@ -5,6 +5,7 @@ and its subclasses.
 
 from . import AbstractTwitterCommand, call_decorator, output
 from ..parsers import (
+    filter_args,
     cache,
     parser_full,
     parser_page,
@@ -69,10 +70,10 @@ class Show(AbstractTwitterUsersCommand):
         """Request GET users/show for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'user_id', 'screen_name',
             'include_entities')
-              if k in args}
+
         return kwargs, self.tw.users.show
 
 class Search(AbstractTwitterUsersCommand):
@@ -106,10 +107,9 @@ class Search(AbstractTwitterUsersCommand):
         if args['full']:
             UP_TO = 20
             MAX_PAGE = 1000 // UP_TO
-            kwargs = {k:args[k] for k in (
+            kwargs = filter_args(args,
                 'q',
                 'include_entities')
-                    if (k in args) and (args[k] is not None)}
 
             results = []
             kwargs['count'] = UP_TO
@@ -130,12 +130,11 @@ class Search(AbstractTwitterUsersCommand):
                 logger.error('{}'.format(e))
                 #raise
         else:
-            kwargs = {k:args[k] for k in (
+            kwargs = filter_args(args,
                 'q',
                 'page',
                 'count',
                 'include_entities')
-                    if (k in args) and (args[k] is not None)}
 
             logger.info('args={}'.format(kwargs))
             results = request(**kwargs)
@@ -160,9 +159,9 @@ class ProfileBanner(AbstractTwitterUsersCommand):
         """Request GET users/profile_banner for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'user_id', 'screen_name',)
-                if k in args}
+        kwargs = filter_args(args,
+            'user_id', 'screen_name')
+
         return kwargs, self.tw.users.profile_banner
 
 class Suggestions(AbstractTwitterUsersCommand):
@@ -204,11 +203,11 @@ class ReportSpam(AbstractTwitterUsersCommand):
         """Request POST users/report_spam for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'user_id', 'screen_name',)
-                if k in args}
+        kwargs = filter_args(args,
+            'user_id', 'screen_name')
+
         return kwargs, self.tw.users.report_spam
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterUsersCommand.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in AbstractTwitterUsersCommand.__subclasses__())

@@ -62,4 +62,4 @@ class CommandList(AbstractTwitterFriendCommand):
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterFriendCommand.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in AbstractTwitterFriendCommand.__subclasses__())

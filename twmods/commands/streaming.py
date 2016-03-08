@@ -155,4 +155,4 @@ def parser_with_and_replies():
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterStreamingCommand.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in AbstractTwitterStreamingCommand.__subclasses__())

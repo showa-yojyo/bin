@@ -3,8 +3,8 @@
 and its subclasses.
 """
 
-from . import AbstractTwitterCommand, call_decorator
-from ..parsers import cache
+from . import (AbstractTwitterCommand, call_decorator)
+from ..parsers import (filter_args, cache)
 from argparse import ArgumentParser
 
 # GET geo/id/:place_id
@@ -64,9 +64,9 @@ class ReverseGeocode(AbstractTwitterGeoCommand):
         """Request GET geo/reverse_geocode for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'lat', 'long', 'accuracy', 'granularity', 'max_results')
-                if (k in args) and (args[k] is not None)}
+
         return kwargs, self.tw.geo.reverse_geocode
 
 class Search(AbstractTwitterGeoCommand):
@@ -112,15 +112,15 @@ class Search(AbstractTwitterGeoCommand):
         """Request GET geo/search for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'lat', 'long', 'accuracy', 'granularity', 'max_results',
             'query', 'ip', 'contained_within', 'street_address')
-                if (k in args) and (args[k] is not None)}
+
         return kwargs, self.tw.geo.search
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterGeoCommand.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in AbstractTwitterGeoCommand.__subclasses__())
 
 choices = ['poi', 'neighborhood', 'city', 'admin', 'country']
 

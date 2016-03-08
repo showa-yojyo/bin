@@ -68,4 +68,4 @@ class {{ subclass_name }}({{ base_class_name }}):
 {% endfor %}
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in {{ base_class_name }}.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in {{ base_class_name }}.__subclasses__())

@@ -4,10 +4,11 @@ and its subclasses.
 """
 
 from . import AbstractTwitterCommand, call_decorator
-from ..parsers import (parser_user_single,
-                parser_cursor,
-                parser_include_entities,
-                parser_skip_status)
+from ..parsers import (filter_args,
+                       parser_user_single,
+                       parser_cursor,
+                       parser_include_entities,
+                       parser_skip_status)
 from argparse import ArgumentParser
 
 # POST blocks/create
@@ -43,10 +44,10 @@ class CommandCreate(AbstractTwitterBlockCommand):
         """Request POST blocks/create for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'user_id', 'screen_name',
-            'include_entities', 'skip_status',)
-                if (k in args) and (args[k] is not None)}
+            'include_entities', 'skip_status')
+
         return kwargs, self.tw.blocks.create
 
 class CommandDestroy(AbstractTwitterBlockCommand):
@@ -69,10 +70,10 @@ class CommandDestroy(AbstractTwitterBlockCommand):
         """Request POST blocks/destroy for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'user_id', 'screen_name',
-            'include_entities', 'skip_status',)
-                if (k in args) and (args[k] is not None)}
+            'include_entities', 'skip_status')
+
         return kwargs, self.tw.blocks.destroy
 
 class CommandIds(AbstractTwitterBlockCommand):
@@ -93,8 +94,8 @@ class CommandIds(AbstractTwitterBlockCommand):
         """Request GET blocks/ids for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in ('cursor',)
-                  if (k in args) and (args[k] is not None)}
+        kwargs = filter(args, 'cursor')
+
         return kwargs, self.tw.blocks.ids
 
 class CommandList(AbstractTwitterBlockCommand):
@@ -117,11 +118,11 @@ class CommandList(AbstractTwitterBlockCommand):
         """Request GET blocks/list for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            'cursor', 'include_entities', 'skip_status',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            'cursor', 'include_entities', 'skip_status')
+
         return kwargs, self.tw.blocks.list
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterBlockCommand.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in AbstractTwitterBlockCommand.__subclasses__())

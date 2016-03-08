@@ -5,6 +5,7 @@ and its subclasses.
 
 from . import AbstractTwitterCommand, call_decorator
 from ..parsers import (
+    filter_args,
     cache,
     parser_user_single,
     parser_count_statuses,
@@ -42,9 +43,9 @@ class CommandCreate(AbstractTwitterFavoriteCommand):
         """Request POST favorites/create for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            '_id', 'include_entities',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            '_id', 'include_entities')
+
         return kwargs, self.tw.favorites.create
 
 class CommandDestroy(AbstractTwitterFavoriteCommand):
@@ -66,9 +67,9 @@ class CommandDestroy(AbstractTwitterFavoriteCommand):
         """Request POST favorites/destroy for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
-            '_id', 'include_entities',)
-                if (k in args) and (args[k] is not None)}
+        kwargs = filter_args(args,
+            '_id', 'include_entities')
+
         return kwargs, self.tw.favorites.destroy
 
 class CommandList(AbstractTwitterFavoriteCommand):
@@ -92,15 +93,15 @@ class CommandList(AbstractTwitterFavoriteCommand):
         """Request GET favorites/list for Twitter."""
 
         args = vars(self.args)
-        kwargs = {k:args[k] for k in (
+        kwargs = filter_args(args,
             'user_id', 'screen_name',
-            'count', 'since_id', 'max_id', 'include_entities',)
-                if (k in args) and (args[k] is not None)}
+            'count', 'since_id', 'max_id', 'include_entities')
+
         return kwargs, self.tw.favorites.list
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterFavoriteCommand.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in AbstractTwitterFavoriteCommand.__subclasses__())
 
 @cache
 def parser_id():

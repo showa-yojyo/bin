@@ -1,10 +1,37 @@
 # -*- coding: utf-8 -*-
-"""parsers.py
+"""parsers.py: This module contains functions for handling of
+arguments.
 """
 
-from abc import ABCMeta
-from abc import abstractmethod
-from argparse import (ArgumentParser, FileType)
+from abc import (ABCMeta, abstractmethod)
+from argparse import (ArgumentParser, FileType, Namespace)
+from itertools import chain
+
+def filter_args(args, key0, *keys):
+    """Return a new dict object with specific keys and without any
+    `None` value in it.
+
+    Args:
+        args (dict): A dict object obtained from e.g. `vars(parse_args())`.
+        key0 (str): The first key.
+        *keys (str): The rest keys if exist.
+
+    Returns:
+        A dict object.
+
+    >>> options = ['screen_name', 'skip_status', 'count']
+    >>> args = {screen_name='showa_yojyo', skip_status=False, count=None]
+    >>> filter_args(args, 'screen_name', 'user_id', 'count')
+    {'screen_name':'showa_yojyo', 'skip_status':False}
+    """
+
+    if isinstance(args, Namespace):
+        args = vars(args)
+
+    kwargs = {k:v for k, v in {
+                 k:args.get(k, None) for k in chain((key0,), keys)}.items()
+              if v is not None} # This allows `False` and `0`.
+    return kwargs
 
 def cache(func):
     instance = None
@@ -226,6 +253,10 @@ def parser_include_user_entities():
 
 @cache
 def parser_skip_status():
+    """Return the parent parser object for --skip-status optional
+    argument.
+    """
+
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         '--skip-status',

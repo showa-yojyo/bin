@@ -93,7 +93,7 @@ class CommandShowId(AbstractTwitterSavedSearchCommand):
 
 def make_commands(manager):
     """Prototype"""
-    return [cmd_t(manager) for cmd_t in AbstractTwitterSavedSearchCommand.__subclasses__()]
+    return (cmd_t(manager) for cmd_t in AbstractTwitterSavedSearchCommand.__subclasses__())
 
 @cache
 def parser_id():

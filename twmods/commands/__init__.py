@@ -2,9 +2,9 @@
 """__init__.py
 """
 
-from abc import ABCMeta
-from abc import abstractmethod
+from abc import (ABCMeta, abstractmethod)
 from .. import output
+from ..parsers import filter_args
 from itertools import (count, islice)
 from twitter import TwitterHTTPError
 import time
@@ -50,12 +50,11 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
         kwargs = dict(
             cursor=-1,
             stringify_ids=True,)
-        kwargs.update(
-            {k:args[k] for k in (
+        kwargs.update(filter_args(args,
                 'user_id',
                 'screen_name',
                 'count',
-                'cursor',) if (k in args) and (args[k] is not None)})
+                'cursor'))
         logger.info('args={}'.format(kwargs))
 
         results = []
@@ -83,11 +82,9 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
         logger, args = self.logger, vars(self.args)
 
         kwargs = dict(cursor=-1)
-        kwargs.update(
-            {k:args[k] for k in (
-                'user_id', 'screen_name',
-                'count', 'cursor', 'include_user_entities')
-             if (k in args) and (args[k] is not None)})
+        kwargs.update(filter_args(
+            'user_id', 'screen_name',
+            'count', 'cursor', 'include_user_entities'))
         logger.info('args={}'.format(kwargs))
 
         results = []
