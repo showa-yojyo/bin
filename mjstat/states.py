@@ -289,7 +289,7 @@ class HandActionHistory(MJScoreState):
     initial_transitions = ['handle_actions']
 
     def handle_actions(self, match, context, next_state):
-        """Handle a line which describes a part of all players' actions."""
+        """Handle all the lines that describe actions."""
 
         # current hand
         game = context['games'][-1]
@@ -303,10 +303,11 @@ class HandActionHistory(MJScoreState):
             line = self.state_machine.next_line()
             match = self.actions_re.match(line)
             if not match:
-                examine_action_table(hand)
                 break
             actions = match.group('actions').split()
             action_table.extend(actions)
+
+        examine_action_table(hand)
 
         return context, 'HandState', []
 
