@@ -93,12 +93,12 @@ def configure():
         help='specify the target player of statistics')
 
     parser.add_argument(
-        '--fundamental',
+        '-F', '--fundamental',
         action='store_true',
         help='produce fundamental statistics')
 
     parser.add_argument(
-        '--yaku',
+        '-Y', '--yaku',
         action='store_true',
         help='produce frequency of yaku')
 
