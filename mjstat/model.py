@@ -96,7 +96,7 @@ def create_score_records(settings):
               points ::= integer;
             hand ::= game, action_table, balance, dora_table, seat_table,
                      start_hand_table, chow*, pung*, kong*,
-                     riichi_table, ending, winner?, winning_dora,
+                     ending, winner?, winning_dora,
                      winning_value, winning_yaku_list;
               action_table ::= action+;
                 action ::= [1-4], [ACdDKNR], tile;
@@ -110,7 +110,6 @@ def create_score_records(settings):
               chow ::= (tile{3})*;
               pung ::= tile*;
               kong ::= tile*;
-              riichi_table ::= bool{4};
               ending ::= (ロン|ツモ|流局|四風連打|...);
               winner ::= player;
               winning_dora ::= integer;
@@ -170,7 +169,6 @@ def create_hand_record(context):
         action_table=[],
         balance={},
         game=game, # parent
-        riichi_table=[False] * 4,
         seat_table=[None] * 4,
         start_hand_table=[None] * 4,
         dora_table=[],
@@ -219,9 +217,7 @@ def examine_action_table(hand):
 
     assert 'game' in hand
     assert 'action_table' in hand
-    assert 'riichi_table' in hand
 
-    riichi_table = hand['riichi_table']
     actions = hand['action_table']
 
     chows = [[] for i in range(4)]
@@ -237,11 +233,7 @@ def examine_action_table(hand):
 
         prev_action = actions[i - 1] if i > 0 else None
 
-        # Test if the action is riichi.
-        if action_type == 'R':
-            riichi_table[index] = True
-            continue
-        elif action_type == 'C':
+        if action_type == 'C':
             assert prev_action
             chows[index].append(prev_action[2:] + action[2:])
             continue

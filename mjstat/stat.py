@@ -283,7 +283,8 @@ def evaluate_riichi(player_data):
 
     This function stores the following items to `player_data`:
 
-    :riichi_count: the number the player declared riichi.
+    :riichi_count: the number the player successfully declared
+    riichi.
     :riichi_rate: the probability the player declares riichi par
     a hand.
 
@@ -301,11 +302,24 @@ def evaluate_riichi(player_data):
     num_riichi = 0
     name = player_data['name']
     for g in player_data['games']:
-        index = g['players'].index(name)
+        player_index = g['players'].index(name) + 1
+        riichi_mark = '{}R'.format(player_index)
         for hand in g['hands']:
-            riichi_table = hand['riichi_table']
-            if riichi_table[index]:
-                num_riichi += 1
+            actions = hand['action_table']
+            num_action = len(actions)
+            try:
+                i = actions.index(riichi_mark)
+                rest_actions = actions[i + 1:]
+                if len(rest_actions) == 1 or len(rest_actions) > 2:
+                    # the 4th riichi in a 四家立直
+                    # or rest_actions[0] does not deal in another
+                    # player.
+                    num_riichi += 1
+                elif rest_actions[1].endswith('A'):
+                    # A deal-in.
+                    pass
+            except ValueError:
+                pass
 
     if num_riichi:
         player_data.update(
