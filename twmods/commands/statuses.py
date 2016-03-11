@@ -27,6 +27,7 @@ STATUSES_SHOW_ID = ('statuses/show/:id', 'show',)
 STATUSES_DESTROY_ID = ('statuses/destroy/:id', 'destroy',)
 STATUSES_UPDATE = ('statuses/update', 'update',)
 STATUSES_RETWEET_ID = ('statuses/retweet/:id', 'retweet',)
+STATUSES_UNRETWEET_ID = ('statuses/unretweet/:id', 'unretweet',)
 STATUSES_OEMBED = ('statuses/oembed', 'oembed',)
 STATUSES_RETWEETERS_IDS = ('statuses/retweeters/ids', 'retweeters',)
 STATUSES_LOOKUP = ('statuses/lookup', 'lookup',)
@@ -312,6 +313,28 @@ class RetweetId(AbstractTwitterStatusesCommand):
             '_id', 'trim_user',)
 
         return kwargs, self.tw.statuses.retweet._id
+
+class UnretweetId(AbstractTwitterStatusesCommand):
+    """Untweet a retweeted status."""
+
+    def create_parser(self, subparsers):
+        parser = subparsers.add_parser(
+            STATUSES_UNRETWEET_ID[0],
+            aliases=STATUSES_UNRETWEET_ID[1:],
+            parents=[parser_trim_user(),
+                     parser_status_id()], # ?'id'
+            help=self.__doc__)
+        return parser
+
+    @call_decorator
+    def __call__(self):
+        """Request POST statuses/unretweet/:id for Twitter."""
+
+        args = vars(self.args)
+        kwargs = filter_args(args,
+            '_id', 'trim_user',)
+
+        return kwargs, self.tw.statuses.unretweet._id
 
 class Oembed(AbstractTwitterStatusesCommand):
     """Output a single tweet, specified by either a tweet web URL or

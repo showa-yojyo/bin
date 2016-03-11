@@ -28,7 +28,7 @@ usage = """
     [--place-id <place>] [--display-coordinates] [--trim-user]
     [--media-ids <media_id>] <text>
   twstatus.py statuses/retweet/:id  [--trim-user] <status_id>
-
+  twstatus.py statuses/unretweet/:id  [--trim-user] <status_id>
   twstatus.py statuses/oembed [--max-width <n>] [--hide-media]
     [--hide-thread] [--omit-script] [--omit-script]
     [--align {none,center,left,right}] [--related <csv-of-screen-names>]
@@ -51,7 +51,7 @@ from twmods.commands.statuses import make_commands
 from argparse import ArgumentParser
 
 __doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 class TwitterStatusManager(AbstractTwitterManager):
     """This class handles commands about Twitter statuses."""
