@@ -24,7 +24,6 @@ import re
 from docutils.statemachine import State
 from .model import (create_game_record,
                     create_hand_record,
-                    examine_action_table,
                     yaku_map)
 
 class MJScoreState(State):
@@ -306,8 +305,6 @@ class HandActionHistory(MJScoreState):
                 break
             actions = match.group('actions').split()
             action_table.extend(actions)
-
-        examine_action_table(hand)
 
         return context, 'HandState', []
 

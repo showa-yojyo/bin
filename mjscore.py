@@ -17,6 +17,7 @@ from os.path import expanduser
 from mjstat.reader import MJScoreReader
 from mjstat.parser import MJScoreParser
 from mjstat.writer import MJScoreWriter
+from mjstat.model import apply_transforms
 import sys
 
 __version__ = '0.0.0'
@@ -125,6 +126,8 @@ def main():
     parser = MJScoreParser()
     reader = MJScoreReader()
     game_data = reader.read(source, parser, settings)
+
+    apply_transforms(game_data)
 
     writer = MJScoreWriter()
     writer.write(game_data, FileOutput(None))

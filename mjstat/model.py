@@ -13,6 +13,7 @@ from collections import namedtuple
 from enum import Enum
 import datetime
 import dateutil.parser
+from itertools import product
 
 datetime_format = r'%Y/%m/%d %H:%M'
 
@@ -208,8 +209,28 @@ def set_reference_period(game_data, settings):
         since=since_date,
         until=until_date,)
 
-def examine_action_table(hand):
-    """Examine the action history of a hand record.
+def find_winner(hand):
+    """Find the winner of all hands.
+
+    Args:
+        hand (dict): See function `create_hand_record`.
+    """
+
+    assert 'game' in hand
+    assert 'action_table' in hand
+
+    # first_or_default
+    winner = next((x for x in hand['action_table']
+                   if x.endswith('A')), None)
+    if not winner:
+        return
+
+    index = int(winner[0]) - 1
+    assert index in range(4)
+    hand['winner'] = hand['game']['players'][index]
+
+def find_meldings(hand):
+    """Find meldings (tile-calls) happened in a hand.
 
     Args:
         hand (dict): See function `create_hand_record`.
@@ -253,12 +274,29 @@ def examine_action_table(hand):
             assert (not prev_action) or (prev_action[1] in 'dD')
             kongs[index].append(tile)
             continue
-        elif action_type == 'A':
-            # Someone wins.
-            hand['winner'] = hand['game']['players'][index]
-            #break
 
     hand.update(
         chows=chows,
         pungs=pungs,
         kongs=kongs)
+
+def apply_transforms(game_data):
+    """Apply a sort of transforms to elements in `game_data`.
+
+    Args:
+        game_data (dict): See function `create_score_records` above.
+    """
+
+    assert 'games' in game_data
+    assert 'settings' in game_data
+
+    settings = game_data['settings']
+    transforms = []
+    if settings.fundamental or settings.yaku:
+        transforms.append(find_winner)
+    if settings.fundamental:
+        transforms.append(find_meldings)
+
+    for g in game_data['games']:
+        for transform, hand in product(transforms, g['hands']):
+            transform(hand)
