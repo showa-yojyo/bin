@@ -95,9 +95,9 @@ def fill_template(player_data, lang, fundamental, yaku):
     player(s).
     """
 
-    target_games = player_data[0]['games']
+    target_games = player_data[0]['games'] if player_data else None
     if not target_games:
-        return 'NO DATA'
+        return 'NO DATA\n'
 
     env = Environment(autoescape=False)
     env.filters.update(
