@@ -4,14 +4,13 @@
 
 Usage:
   twformat.py [--version] [--help]
-  twformat.py [FILE]...
+  twformat.py [-L | --logmode] [FILE]...
 """
 
 __version__ = '0.0.0'
 
 import sys
-from argparse import ArgumentParser
-from argparse import FileType
+from argparse import (ArgumentParser, FileType)
 from json import load
 
 def make_parser():
@@ -23,41 +22,56 @@ def make_parser():
         default=sys.stdin,
         type=FileType('r', encoding='utf-8'),
         help='JSON files to format')
+    parser.add_argument(
+        '-L', '--logmode',
+        action='store_true',
+        help='enable log mode')
 
     return parser
 
-def format_json(inputs):
-    # users/search
-    # lists/members
-    csv_header = (
-        'id',
-        'screen_name',
-        'name',
-        'protected',
-        'lang',
-        'location',
-        'friends_count',
-        'followers_count',
-        'description',
-        'url',
-        'status[text]',
-        'status[source]',)
-    csv_format = '\t'.join(('{' + i + '}' for i in csv_header))
-    csv_format_w = '\t'.join(('{' + i + '}' for i in csv_header[:-2]))
+# users/search
+# lists/members
+csv_header = (
+    'id',
+    'screen_name',
+    'name',
+    'protected',
+    'lang',
+    'location',
+    'friends_count',
+    'followers_count',
+    'description',
+    'url',
+    'status[text]',
+    'status[source]',)
 
-    for fp in inputs:
+# statuses/user_timeline --trim-user -X
+csv_header_log = (
+    'id',
+    'created_at',
+    'text',)
+
+def format_json(args):
+    if args.logmode:
+        fmt = '\t'.join(('{' + i + '}' for i in csv_header_log))
+    else:
+        csv_format = '\t'.join(('{' + i + '}' for i in csv_header))
+        csv_format_w = '\t'.join(('{' + i + '}' for i in csv_header[:-2]))
+
+    for fp in args.files:
         json_obj = load(fp)
         for i in json_obj:
-            if 'status' in i:
-                fmt = csv_format
-            else:
-                fmt = csv_format_w
+            if not args.logmode:
+                if 'status' in i:
+                    fmt = csv_format
+                else:
+                    fmt = csv_format_w
             print(fmt.format(**i).replace('\r', '').replace('\n', '\\n'))
 
 def main(params=sys.argv[1:]):
     parser = make_parser()
     args = parser.parse_args(params)
-    format_json(args.files)
+    format_json(args)
 
 if __name__ == '__main__':
     main()
