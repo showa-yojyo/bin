@@ -1,9 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
-description = "Demonstrate Twitter's GET geo/xxx endpoints."
+from argparse import ArgumentParser
 
-usage = """
+from twmods import AbstractTwitterManager
+from twmods import EPILOG
+from twmods.commands.geo import make_commands
+
+DESCRIPTION = "Demonstrate Twitter's GET geo/xxx endpoints."
+
+USAGE = """
   twgeo.py [--version] [--help]
   twgeo.py geo/id/:place_id <place_id>
   twgeo.py geo/reverse_geocode [--lat <angle>] [--long <angle>]
@@ -16,13 +23,9 @@ usage = """
     [-s | --street-address <addr>]
 """
 
-from twmods import AbstractTwitterManager
-from twmods import epilog
-from twmods.commands.geo import make_commands
-from argparse import ArgumentParser
-
-__doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.0.2'
+# pylint: disable=redefined-builtin
+__doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
+__version__ = '1.0.3'
 
 class TwitterGeoManager(AbstractTwitterManager):
     "Demonstrate Twitter's GET geo/xxx endpoints."
@@ -34,15 +37,15 @@ class TwitterGeoManager(AbstractTwitterManager):
         """Create the command line parser.
 
         Returns:
-            An instance of argparse.ArgumentParser that will store the command line
-            parameters.
+            An instance of argparse.ArgumentParser that will store the
+            command line parameters.
         """
 
         parser = ArgumentParser(
             parents=[pre_parser],
-            description=description,
-            epilog=epilog,
-            usage=usage)
+            description=DESCRIPTION,
+            epilog=EPILOG,
+            usage=USAGE)
         parser.add_argument(
             '--version',
             action='version',

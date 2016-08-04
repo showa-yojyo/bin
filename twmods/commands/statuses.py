@@ -3,6 +3,8 @@
 and its subclasses.
 """
 
+from argparse import ArgumentParser
+
 from . import AbstractTwitterCommand, call_decorator
 from ..parsers import (
     filter_args,
@@ -14,11 +16,11 @@ from ..parsers import (
     parser_include_entities,
     parser_include_rts,
     parser_include_user_entities)
-from argparse import ArgumentParser
 
 # commands
 
-STATUSES_MENTIONS_TIMELINE = ('statuses/mentions_timeline', 'mentions_timeline', 'mt',)
+STATUSES_MENTIONS_TIMELINE = (
+    'statuses/mentions_timeline', 'mentions_timeline', 'mt',)
 STATUSES_USER_TIMELINE = ('statuses/user_timeline', 'user_timeline', 'ut',)
 STATUSES_HOME_TIMELINE = ('statuses/home_timeline', 'home_timeline', 'ht',)
 STATUSES_RETWEETS_OF_ME = ('statuses/retweets_of_me', 'retweets_of_me', 'rom',)
@@ -32,7 +34,9 @@ STATUSES_OEMBED = ('statuses/oembed', 'oembed',)
 STATUSES_RETWEETERS_IDS = ('statuses/retweeters/ids', 'retweeters',)
 STATUSES_LOOKUP = ('statuses/lookup', 'lookup',)
 
+# pylint: disable=abstract-method
 class AbstractTwitterStatusesCommand(AbstractTwitterCommand):
+    """n/a"""
     pass
 
 class MentionsTimeline(AbstractTwitterStatusesCommand):
@@ -56,12 +60,12 @@ class MentionsTimeline(AbstractTwitterStatusesCommand):
     def __call__(self):
         """Request GET statuses/mentions_timeline for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'count', 'since_id', 'max_id',
             'trim_user', 'contributor_details', 'include_entities')
 
-        return kwargs, self.tw.statuses.mentions_timeline
+        return kwargs, self.twhandler.statuses.mentions_timeline
 
 class UserTimeline(AbstractTwitterStatusesCommand):
     """Output a collection of the most recent tweets posted by the
@@ -86,14 +90,14 @@ class UserTimeline(AbstractTwitterStatusesCommand):
     def __call__(self):
         """Request GET statuses/user_timeline for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'user_id', 'screen_name',
             'count', 'since_id', 'max_id',
             'trim_user', 'exclude_replies', 'contributor_details',
             'include_rts')
 
-        return kwargs, self.tw.statuses.user_timeline
+        return kwargs, self.twhandler.statuses.user_timeline
 
 class HomeTimeline(AbstractTwitterStatusesCommand):
     """Output a collection of the most recent tweets and retweets
@@ -117,13 +121,13 @@ class HomeTimeline(AbstractTwitterStatusesCommand):
     def __call__(self):
         """Request GET statuses/home_timeline for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'count', 'since_id', 'max_id',
             'trim_user', 'exclude_replies', 'contributor_details',
             'include_rts')
 
-        return kwargs, self.tw.statuses.home_timeline
+        return kwargs, self.twhandler.statuses.home_timeline
 
 class RetweetsOfMe(AbstractTwitterStatusesCommand):
     """Output the most recent tweets authored by the authenticating
@@ -146,12 +150,12 @@ class RetweetsOfMe(AbstractTwitterStatusesCommand):
     def __call__(self):
         """Request GET statuses/retweets_of_me for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'count', 'since_id', 'max_id',
             'trim_user', 'include_entities', 'include_user_entities')
 
-        return kwargs, self.tw.statuses.retweets_of_me
+        return kwargs, self.twhandler.statuses.retweets_of_me
 
 class RetweetsId(AbstractTwitterStatusesCommand):
     """Output a collection of the 100 most recent retweets of the
@@ -172,11 +176,12 @@ class RetweetsId(AbstractTwitterStatusesCommand):
     def __call__(self):
         """Request GET statuses/retweets/:id for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             '_id', 'count', 'trim_user')
 
-        return kwargs, self.tw.statuses.retweets._id
+        # pylint: disable=protected-access
+        return kwargs, self.twhandler.statuses.retweets._id
 
 class ShowId(AbstractTwitterStatusesCommand):
     """Output a single tweet, specified by the id parameter."""
@@ -200,11 +205,12 @@ class ShowId(AbstractTwitterStatusesCommand):
     def __call__(self):
         """Request GET statuses/show/:id for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             '_id', 'trim_user', 'include_my_retweet', 'include_entities')
 
-        return kwargs, self.tw.statuses.show._id
+        # pylint: disable=protected-access
+        return kwargs, self.twhandler.statuses.show._id
 
 class DestroyId(AbstractTwitterStatusesCommand):
     """Destroy the status specified by the required ID parameter."""
@@ -222,11 +228,12 @@ class DestroyId(AbstractTwitterStatusesCommand):
     def __call__(self):
         """Request POST statuses/destroy/:id for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             '_id', 'trim_user',)
 
-        return kwargs, self.tw.statuses.destroy._id
+        # pylint: disable=protected-access
+        return kwargs, self.twhandler.statuses.destroy._id
 
 class Update(AbstractTwitterStatusesCommand):
     """Update the authenticating user's current status, also known
@@ -269,28 +276,30 @@ class Update(AbstractTwitterStatusesCommand):
             '--display-coordinates',
             dest='display_coordinates',
             action='store_true',
-            help='put a pin on the exact coordinates a tweet has been sent from')
+            help='put a pin on the exact coordinates '
+                 'a tweet has been sent from')
         parser.add_argument(
             '--media-ids',
             dest='media_ids',
             help='a list of media ids to associate with the tweet')
         parser.add_argument(
             'status',
-            help='the text of your status update, typically up to 140 characters')
+            help='the text of your status update, '
+                 'typically up to 140 characters')
 
         return parser
 
     def __call__(self):
         """Request POST statuses/update for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'status', 'in_reply_to_status_id',
             'possibly_sensitive', 'lat', 'long',
             'place_id', 'display_coordinates',
             'trim_user', 'media_ids')
 
-        return kwargs, self.tw.statuses.update
+        return kwargs, self.twhandler.statuses.update
 
 class RetweetId(AbstractTwitterStatusesCommand):
     """Retweet a tweet."""
@@ -308,11 +317,12 @@ class RetweetId(AbstractTwitterStatusesCommand):
     def __call__(self):
         """Request POST statuses/retweet/:id for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             '_id', 'trim_user',)
 
-        return kwargs, self.tw.statuses.retweet._id
+        # pylint: disable=protected-access
+        return kwargs, self.twhandler.statuses.retweet._id
 
 class UnretweetId(AbstractTwitterStatusesCommand):
     """Untweet a retweeted status."""
@@ -330,11 +340,12 @@ class UnretweetId(AbstractTwitterStatusesCommand):
     def __call__(self):
         """Request POST statuses/unretweet/:id for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             '_id', 'trim_user',)
 
-        return kwargs, self.tw.statuses.unretweet._id
+        # pylint: disable=protected-access
+        return kwargs, self.twhandler.statuses.unretweet._id
 
 class Oembed(AbstractTwitterStatusesCommand):
     """Output a single tweet, specified by either a tweet web URL or
@@ -349,7 +360,8 @@ class Oembed(AbstractTwitterStatusesCommand):
             help=self.__doc__)
 
         # This command has many optional parameters to implement manually.
-        group = parser.add_mutually_exclusive_group(required=False) # should be True
+        # required should be True
+        group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument(
             '--id',
             dest='_id',
@@ -385,7 +397,8 @@ class Oembed(AbstractTwitterStatusesCommand):
         parser.add_argument(
             '--related',
             metavar='<csv-of-screen-names>',
-            help='a comma-separated list of Twitter usernames related to your content')
+            help='a comma-separated list of Twitter usernames '
+                 'related to your content')
         parser.add_argument(
             '--lang',
             help='the language of returned HTML')
@@ -393,12 +406,14 @@ class Oembed(AbstractTwitterStatusesCommand):
             '--widget-type',
             dest='widget_type',
             choices=['video'],
-            help='set to video to return a Twitter Video embed for the given tweet')
+            help='set to video to return a Twitter Video '
+                 'embed for the given tweet')
         parser.add_argument(
             '--hide-tweet',
             dest='hide_tweet',
             action='store_true',
-            help='link directly to the tweet url instead of displaying a tweet overlay')
+            help='link directly to the tweet url instead of '
+                 'displaying a tweet overlay')
 
         return parser
 
@@ -406,13 +421,13 @@ class Oembed(AbstractTwitterStatusesCommand):
     def __call__(self):
         """Request GET statuses/oembed for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             '_id', 'url',
             'maxwidth', 'hide_media', 'hide_thread', 'omit_script',
             'align', 'related', 'lang', 'widget_type', 'hide_tweet')
 
-        return kwargs, self.tw.statuses.oembed
+        return kwargs, self.twhandler.statuses.oembed
 
 class RetweetersIds(AbstractTwitterStatusesCommand):
     """Output a collection of up to 100 user IDs."""
@@ -430,11 +445,11 @@ class RetweetersIds(AbstractTwitterStatusesCommand):
     def __call__(self):
         """Request GET statuses/retweeters/ids for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             '_id', 'cursor', 'stringify_ids')
 
-        return kwargs, self.tw.statuses.retweeters_ids
+        return kwargs, self.twhandler.statuses.retweeters_ids
 
 class Lookup(AbstractTwitterStatusesCommand):
     """Output fully-hydrated tweet objects for up to 100 tweets per
@@ -455,7 +470,8 @@ class Lookup(AbstractTwitterStatusesCommand):
         parser.add_argument(
             '_id',
             metavar='<status_id>',
-            help='a comma separated list of tweet IDs, up to 100 are allowed in a single request')
+            help='a comma separated list of tweet IDs, '
+                 'up to 100 are allowed in a single request')
 
         return parser
 
@@ -463,15 +479,18 @@ class Lookup(AbstractTwitterStatusesCommand):
     def __call__(self):
         """Request GET statuses/lookup for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             '_id', 'trim_user', 'include_entities', 'map')
 
-        return kwargs, self.tw.statuses.lookup
+        return kwargs, self.twhandler.statuses.lookup
 
 def make_commands(manager):
     """Prototype"""
-    return (cmd_t(manager) for cmd_t in AbstractTwitterStatusesCommand.__subclasses__())
+
+    # pylint: disable=no-member
+    return (cmd_t(manager) for cmd_t in
+            AbstractTwitterStatusesCommand.__subclasses__())
 
 # parsers
 

@@ -3,7 +3,7 @@
 and its subclasses.
 """
 
-from . import AbstractTwitterCommand, call_decorator
+from . import AbstractTwitterCommand
 from ..parsers import (
     parser_user_single,
     parser_count_users,
@@ -11,7 +11,6 @@ from ..parsers import (
     parser_cursor,
     parser_skip_status,
     parser_include_user_entities)
-from argparse import ArgumentParser
 
 # GET friends/ids
 # GET friends/list
@@ -19,7 +18,9 @@ from argparse import ArgumentParser
 FRIENDS_IDS = ('friends/ids', 'fri')
 FRIENDS_LIST = ('friends/list', 'frl')
 
+# pylint: disable=abstract-method
 class AbstractTwitterFriendCommand(AbstractTwitterCommand):
+    """n/a"""
     pass
 
 class CommandIds(AbstractTwitterFriendCommand):
@@ -39,7 +40,7 @@ class CommandIds(AbstractTwitterFriendCommand):
 
     def __call__(self):
         """Request GET friends/ids for Twitter."""
-        self._list_ids(self.tw.friends.ids)
+        self.list_ids(self.twhandler.friends.ids)
 
 class CommandList(AbstractTwitterFriendCommand):
     """List all of the users the specified user is following."""
@@ -58,8 +59,11 @@ class CommandList(AbstractTwitterFriendCommand):
 
     def __call__(self):
         """Request GET friends/list for Twitter."""
-        self._list_common(self.tw.friends.list)
+        self._list_common(self.twhandler.friends.list)
 
 def make_commands(manager):
     """Prototype"""
-    return (cmd_t(manager) for cmd_t in AbstractTwitterFriendCommand.__subclasses__())
+
+    # pylint: disable=no-member
+    return (cmd_t(manager) for cmd_t in
+            AbstractTwitterFriendCommand.__subclasses__())

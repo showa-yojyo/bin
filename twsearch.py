@@ -1,9 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
-description = "A utility script to search Twitter statuses."
+from argparse import ArgumentParser
+import time
 
-usage = """
+from twitter import TwitterHTTPError
+
+from twmods import EPILOG
+from twmods import make_logger
+from twmods import output
+from twmods.parsers import (parser_full,
+                            parser_since_max_ids,
+                            parser_include_entities)
+
+from secret import twitter_instance
+
+DESCRIPTION = "A utility script to search Twitter statuses."
+
+USAGE = """
   twsearch.py [--version] [--help]
   twsearch.py [-F | --full] [-g | --geocode <geocode>]
     [--lang <language>] [--locale <locale>]
@@ -14,19 +29,9 @@ usage = """
     <query>
 """
 
-from secret import twitter_instance
-from twitter import TwitterHTTPError
-from twmods import epilog
-from twmods import make_logger
-from twmods import output
-from twmods import (parser_full,
-                    parser_since_max_ids,
-                    parser_include_entities)
-from argparse import ArgumentParser
-import time
-
-__doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.3.2'
+# pylint: disable=redefined-builtin
+__doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
+__version__ = '1.3.3'
 
 COUNT_MAX = 100
 
@@ -39,12 +44,12 @@ def configure():
     """
 
     parser = ArgumentParser(
-        description=description,
+        description=DESCRIPTION,
         parents=[parser_full(),
                  parser_since_max_ids(),
                  parser_include_entities()],
-        epilog=epilog,
-        usage=usage)
+        epilog=EPILOG,
+        usage=USAGE)
     parser.add_argument(
         '--version',
         action='version',
@@ -60,7 +65,8 @@ def configure():
     parser.add_argument(
         '--lang',
         nargs='?',
-        help='restrict tweets to the given language, given by an ISO 639-1 code')
+        help='restrict tweets to the given language, '
+             'given by an ISO 639-1 code')
     parser.add_argument(
         '--locale',
         nargs='?',
@@ -97,8 +103,8 @@ def main():
     args = vars(parser.parse_args())
 
     logger = make_logger('twsearch')
-    tw = twitter_instance()
-    request = tw.search.tweets
+    twhandler = twitter_instance()
+    request = twhandler.search.tweets
 
     kwargs = {k:args[k] for k in (
         'q',
@@ -109,7 +115,7 @@ def main():
         'until',
         'since_id', 'max_id',
         'include_entities',)
-            if (k in args) and (args[k] is not None)}
+              if (k in args) and (args[k] is not None)}
 
     results = None
     if args['full']:
@@ -118,10 +124,10 @@ def main():
         try:
             while True:
                 response = request(**kwargs)
-                metadata = response['search_metadata']
+                #metadata = response['search_metadata']
                 if 'statuses' in response and response['statuses']:
                     statuses = response['statuses']
-                    max_id = metadata['max_id']
+                    #max_id = metadata['max_id']
                     since_id = statuses[-1]['id']
                 else:
                     logger.info("finished")
@@ -136,8 +142,8 @@ def main():
 
                 kwargs['max_id'] = since_id - 1
                 time.sleep(2)
-        except TwitterHTTPError as e:
-            logger.info('{}'.format(e))
+        except TwitterHTTPError as ex:
+            logger.info('{}'.format(ex))
             #raise
     else:
         logger.info('search.tweets params={}'.format(kwargs))

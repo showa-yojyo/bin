@@ -1,20 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
-description = "Demonstrate Twitter's GET help/xxx endpoints."
+from argparse import ArgumentParser
+from secret import twitter_instance
+from twmods import EPILOG
+from twmods import output
 
-usage = """
+DESCRIPTION = "Demonstrate Twitter's GET help/xxx endpoints."
+
+USAGE = """
   twhelp.py [--version] [--help]
   twhelp.py configuration | languages | privacy | tos
 """
 
-from argparse import ArgumentParser
-from secret import twitter_instance
-from twmods import epilog
-from twmods import output
-
-__doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.0.0'
+# pylint: disable=redefined-builtin
+__doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
+__version__ = '1.0.1'
 
 def configure():
     """Parse the command line parameters.
@@ -25,15 +27,15 @@ def configure():
     """
 
     root_parser = ArgumentParser(
-        description=description,
-        epilog=epilog,
-        usage=usage)
+        description=DESCRIPTION,
+        epilog=EPILOG,
+        usage=USAGE)
     root_parser.add_argument(
         '--version',
         action='version',
         version=__version__)
 
-    COMMANDS = (
+    commands = (
         dict(func=request_help_configuration,
              command='help/configuration',
              aliases=['configuration', 'config'],
@@ -52,7 +54,7 @@ def configure():
              help='print Twitter Terms of Service'))
 
     subparsers = root_parser.add_subparsers(help='commands')
-    for cmd in COMMANDS:
+    for cmd in commands:
         parser = subparsers.add_parser(
             cmd['command'],
             aliases=cmd['aliases'],
@@ -62,25 +64,31 @@ def configure():
     return root_parser
 
 def request_decorator(request):
+    """Decorate a function that returns an endpoint."""
     def request_wrapper():
+        """Output the response received from Twitter."""
         output(request(twitter_instance())())
     return request_wrapper
 
 @request_decorator
-def request_help_configuration(tw):
-    return tw.help.configuration
+def request_help_configuration(twhandler):
+    """Return the handler for GET help/configuration."""
+    return twhandler.help.configuration
 
 @request_decorator
-def request_help_languages(tw):
-    return tw.help.languages
+def request_help_languages(twhandler):
+    """Return the handler for GET help/languages."""
+    return twhandler.help.languages
 
 @request_decorator
-def request_help_privacy(tw):
-    return tw.help.privacy
+def request_help_privacy(twhandler):
+    """Return the handler for GET help/privacy."""
+    return twhandler.help.privacy
 
 @request_decorator
-def request_help_tos(tw):
-    return tw.help.tos
+def request_help_tos(twhandler):
+    """Return the handler for GET help/tos."""
+    return twhandler.help.tos
 
 def main(args=None):
     """The main function."""

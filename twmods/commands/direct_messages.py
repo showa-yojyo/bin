@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-"""direct_messages.py: Implementation of class AbstractTwitterDirectMessageCommand
-and its subclasses.
+"""direct_messages.py: Implementation of class
+AbstractTwitterDirectMessageCommand and its subclasses.
 """
+
+from argparse import ArgumentParser
 
 from . import AbstractTwitterCommand, call_decorator
 from ..parsers import (
@@ -13,7 +15,6 @@ from ..parsers import (
     parser_since_max_ids,
     parser_include_entities,
     parser_skip_status,)
-from argparse import ArgumentParser
 
 # GET direct_messages
 # POST direct_messages/destroy
@@ -27,7 +28,9 @@ DM_NEW = ('direct_messages/new', 'new', 'create')
 DM_SENT = ('direct_messages/sent', 'sent')
 DM_SHOW = ('direct_messages/show', 'show')
 
+# pylint: disable=abstract-method
 class AbstractTwitterDirectMessageCommand(AbstractTwitterCommand):
+    """n/a"""
     pass
 
 class Command(AbstractTwitterDirectMessageCommand):
@@ -50,12 +53,12 @@ class Command(AbstractTwitterDirectMessageCommand):
     def __call__(self):
         """Request GET direct_messages for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'since_id', 'max_id',
             'count', 'include_entities', 'skip_status')
 
-        return kwargs, self.tw.direct_messages
+        return kwargs, self.twhandler.direct_messages
 
 class CommandDestroy(AbstractTwitterDirectMessageCommand):
     """Destroy the direct message specified in the required ID
@@ -75,11 +78,11 @@ class CommandDestroy(AbstractTwitterDirectMessageCommand):
     def __call__(self):
         """Request POST direct_messages/destroy for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             '_id', 'include_entities')
 
-        return kwargs, self.tw.direct_messages.destroy
+        return kwargs, self.twhandler.direct_messages.destroy
 
 class CommandNew(AbstractTwitterDirectMessageCommand):
     """Send a new direct message to the specified user from the
@@ -101,11 +104,11 @@ class CommandNew(AbstractTwitterDirectMessageCommand):
     def __call__(self):
         """Request POST direct_messages/new for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'user_id', 'screen_name', 'text')
 
-        return kwargs, self.tw.direct_messages.new
+        return kwargs, self.twhandler.direct_messages.new
 
 class CommandSent(AbstractTwitterDirectMessageCommand):
     """Print the 20 most recent direct messages sent by the
@@ -127,12 +130,12 @@ class CommandSent(AbstractTwitterDirectMessageCommand):
     def __call__(self):
         """Request GET direct_messages/sent for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'since_id', 'max_id',
             'count', 'page', 'include_entities')
 
-        return kwargs, self.tw.direct_messages.sent
+        return kwargs, self.twhandler.direct_messages.sent
 
 class CommandShow(AbstractTwitterDirectMessageCommand):
     """Print a single direct message, specified by an id parameter."""
@@ -148,14 +151,21 @@ class CommandShow(AbstractTwitterDirectMessageCommand):
     @call_decorator
     def __call__(self):
         """Request GET direct_messages/show for Twitter."""
-        return dict(_id=self.args._id), self.tw.direct_messages.show
+
+        # pylint: disable=protected-access
+        return dict(_id=self.args._id), self.twhandler.direct_messages.show
 
 def make_commands(manager):
     """Prototype"""
-    return (cmd_t(manager) for cmd_t in AbstractTwitterDirectMessageCommand.__subclasses__())
+
+    # pylint: disable=no-member
+    return (cmd_t(manager) for cmd_t in
+            AbstractTwitterDirectMessageCommand.__subclasses__())
 
 @cache
 def parser_id():
+    """Return the parser for id argument."""
+
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         '_id',

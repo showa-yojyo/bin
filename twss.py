@@ -1,9 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
-description = "A utility script to call saved_searches/xxx of Twitter API."
+from argparse import ArgumentParser
 
-usage = """
+from twmods import AbstractTwitterManager
+from twmods import EPILOG
+from twmods.commands.saved_searches import make_commands
+
+DESCRIPTION = "A utility script to call saved_searches/xxx of Twitter API."
+
+USAGE = """
   twss.py [--version] [--help]
   twss.py saved_searches/create <query>
   twss.py saved_searches/destroy/:id <id>
@@ -11,13 +18,9 @@ usage = """
   twss.py saved_searches/show/:id <id>
 """
 
-from twmods import AbstractTwitterManager
-from twmods import epilog
-from twmods.commands.saved_searches import make_commands
-from argparse import ArgumentParser
-
-__doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.0.1'
+# pylint: disable=redefined-builtin
+__doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
+__version__ = '1.0.2'
 
 class TwitterSavedSearchManager(AbstractTwitterManager):
     """This class handles saved_searches/xxx endpoints of Twitter API."""
@@ -29,13 +32,13 @@ class TwitterSavedSearchManager(AbstractTwitterManager):
         """Create the command line parser.
 
         Returns:
-            An instance of argparse.ArgumentParser that will store the command line
-            parameters.
+            An instance of argparse.ArgumentParser that will store the
+            command line parameters.
         """
 
         parser = ArgumentParser(
             parents=[pre_parser],
-            description=description, epilog=epilog, usage=usage)
+            description=DESCRIPTION, epilog=EPILOG, usage=USAGE)
         parser.add_argument(
             '--version',
             action='version',

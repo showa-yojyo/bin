@@ -5,7 +5,6 @@ and its subclasses.
 
 from . import AbstractTwitterCommand, call_decorator
 from ..parsers import filter_args
-from argparse import ArgumentParser
 
 # GET trends/available
 # GET trends/closest
@@ -15,7 +14,9 @@ TREND_AVAILABLE = ('trends/available', 'available')
 TREND_CLOSEST = ('trends/closest', 'closest')
 TREND_PLACE = ('trends/place', 'place')
 
+# pylint: disable=abstract-method
 class AbstractTwitterTrendCommand(AbstractTwitterCommand):
+    """n/a"""
     pass
 
 class CommandAvailable(AbstractTwitterTrendCommand):
@@ -34,7 +35,7 @@ class CommandAvailable(AbstractTwitterTrendCommand):
     def __call__(self):
         """Request GET trends/available for Twitter."""
 
-        return {}, self.tw.trends.available
+        return {}, self.twhandler.trends.available
 
 class CommandClosest(AbstractTwitterTrendCommand):
     """Print the locations that Twitter has trending topic
@@ -60,8 +61,9 @@ class CommandClosest(AbstractTwitterTrendCommand):
     def __call__(self):
         """Request GET trends/closest for Twitter."""
 
-        request, args = self.tw.trends.closest, vars(self.args)
-        kwargs = filter_args(args,
+        request, args = self.twhandler.trends.closest, vars(self.args)
+        kwargs = filter_args(
+            args,
             'lat', 'long')
 
         return kwargs, request
@@ -90,12 +92,16 @@ class CommandPlace(AbstractTwitterTrendCommand):
     def __call__(self):
         """Request GET trends/place for Twitter."""
 
-        request, args = self.tw.trends.place, vars(self.args)
-        kwargs = filter_args(args,
+        request, args = self.twhandler.trends.place, vars(self.args)
+        kwargs = filter_args(
+            args,
             '_id', 'exclude')
 
         return kwargs, request
 
 def make_commands(manager):
     """Prototype"""
-    return (cmd_t(manager) for cmd_t in AbstractTwitterTrendCommand.__subclasses__())
+
+    # pylint: disable=no-member
+    return (cmd_t(manager) for cmd_t in
+            AbstractTwitterTrendCommand.__subclasses__())

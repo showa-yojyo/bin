@@ -1,20 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
-description = """A utility script to call GET application/rate_limit_status
+from argparse import ArgumentParser
+from twmods import (EPILOG, output)
+from secret import twitter_instance
+
+DESCRIPTION = """A utility script to call GET application/rate_limit_status
 of Twitter API."""
 
-usage = """
+USAGE = """
   twapplication.py [--version] [--help]
   twapplication.py <cvs-of-resource-families>
 """
 
-from secret import twitter_instance
-from twmods import (epilog, output)
-from argparse import ArgumentParser
-
-__doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.0.0'
+# pylint: disable=redefined-builtin
+__doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
+__version__ = '1.0.1'
 
 def configure():
     """Parse the command line parameters.
@@ -25,9 +27,9 @@ def configure():
     """
 
     root_parser = ArgumentParser(
-        description=description,
-        epilog=epilog,
-        usage=usage)
+        description=DESCRIPTION,
+        epilog=EPILOG,
+        usage=USAGE)
     root_parser.add_argument(
         '--version',
         action='version',
@@ -48,11 +50,11 @@ def main(command_line=None):
     parser = configure()
     args = parser.parse_args(command_line)
 
-    tw = twitter_instance()
+    twhandler = twitter_instance()
 
     # Get the current rate limits for methods belonging to the
     # specified resource families.
-    response = tw.application.rate_limit_status(
+    response = twhandler.application.rate_limit_status(
         resources=args.resources)
     output(response)
 

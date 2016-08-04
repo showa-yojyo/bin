@@ -1,9 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
-description = "Twitter Streaming API Utility"
+from argparse import ArgumentParser
+from pprint import pprint
 
-usage = """
+from twitter import TwitterHTTPError
+from twitter.stream import (Timeout, HeartbeatTimeout, Hangup)
+from secret import twitter_stream
+
+from twmods import AbstractTwitterManager
+from twmods import EPILOG
+from twmods.commands.streaming import make_commands
+
+DESCRIPTION = "Twitter Streaming API Utility"
+
+USAGE = """
   twstream.py [--version] [--help]
   twstream.py <common-options> statuses-sample
   twstream.py <common-options> statuses-filter [--follow <CSV>]
@@ -20,17 +32,9 @@ where
   [--filter-level {none,low,medium}] [--language <language>]
 """
 
-from secret import twitter_stream
-from twitter import TwitterHTTPError
-from twitter.stream import Timeout, HeartbeatTimeout, Hangup
-from twmods import AbstractTwitterManager
-from twmods import epilog
-from twmods.commands.streaming import make_commands
-from argparse import ArgumentParser
-from pprint import pprint
-
-__doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.1.3'
+# pylint: disable=redefined-builtin
+__doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
+__version__ = '1.1.4'
 
 class TwitterStreamManager(AbstractTwitterManager):
     """Twitter Streaming API Utility"""
@@ -42,13 +46,13 @@ class TwitterStreamManager(AbstractTwitterManager):
         """Create the command line parser.
 
         Returns:
-            An instance of argparse.ArgumentParser that will store the command line
-            parameters.
+            An instance of argparse.ArgumentParser that will store the
+            command line parameters.
         """
 
         parser = ArgumentParser(
             parents=[pre_parser],
-            description=description, epilog=epilog, usage=usage)
+            description=DESCRIPTION, epilog=EPILOG, usage=USAGE)
         parser.add_argument(
             '--version',
             action='version',
@@ -78,7 +82,8 @@ class TwitterStreamManager(AbstractTwitterManager):
             action='store_true',
             default=False,
             dest='stall_warnings',
-            help='enable periodic warning messages if the client is in danger of being disconnected')
+            help='enable periodic warning messages if the client is '
+                 'in danger of being disconnected')
         group.add_argument(
             '--filter-level',
             dest='filter_level',
@@ -95,49 +100,50 @@ class TwitterStreamManager(AbstractTwitterManager):
 
         try:
             self.args.func()
-        except TwitterHTTPError as e:
-            self.logger.error('{}'.format(e))
+        except TwitterHTTPError as ex:
+            self.logger.error('{}'.format(ex))
             raise
 
     def request_statuses_sample(self):
         """Request GET statuses/sample for Twitter."""
 
-        tw = self._setup_stream()
+        twhandler = self._setup_stream()
+        args = vars(self.args)
         query_args = {k:args[k] for k in (
             'delimited', 'stall_warnings',)
-                if k in args}
+                      if k in args}
 
-        g = tw.statuses.sample(**query_args)
-        self._output_statuses(g)
+        _output_statuses(twhandler.statuses.sample(**query_args))
 
     def request_statuses_filter(self):
         """Request POST statuses/filter for Twitter."""
 
-        tw = self._setup_stream()
+        twhandler = self._setup_stream()
+        args = vars(self.args)
         query_args = {k:args[k] for k in (
             'follow', 'track', 'locations',
             'delimited', 'stall_warnings',)
-                if k in args}
+                      if k in args}
 
-        g = tw.statuses.filter(**query_args)
-        self._output_statuses(g)
+        _output_statuses(twhandler.statuses.filter(**query_args))
 
     def request_user(self):
         """Request GET user for Twitter."""
 
-        tw = self._setup_stream(domain='userstream.twitter.com')
+        twhandler = self._setup_stream(domain='userstream.twitter.com')
+        args = vars(self.args)
         query_args = {k:args[k] for k in (
             'delimited', 'stall_warnings',
             'with', 'replies',
             'track', 'locations',)
-                if k in args}
+                      if k in args}
 
-        for msg in tw.user(**query_args):
-            if not tweet:
+        for msg in twhandler.user(**query_args):
+            if not msg:
                 continue
 
-            if tweet in (Timeout, HeartbeatTimeout, Hangup):
-                print("{}".format(tweet))
+            if msg in (Timeout, HeartbeatTimeout, Hangup):
+                print("{}".format(msg))
                 break
 
             # Friends lists.
@@ -166,27 +172,28 @@ class TwitterStreamManager(AbstractTwitterManager):
     def request_site(self):
         """Request GET site for Twitter."""
 
-        tw = self._setup_stream(domain='sitestream.twitter.com')
+        twhandler = self._setup_stream(domain='sitestream.twitter.com')
+        args = vars(self.args)
         query_args = {k:args[k] for k in (
             'follow',
             'delimited', 'stall_warnings',
             'with', 'replies',)
-                if k in args}
+                      if k in args}
 
-        for msg in tw.site(**query_args):
+        for msg in twhandler.site(**query_args):
             pprint(msg)
 
     def request_statuses_firehose(self):
         """Request GET statuses/firehose for Twitter."""
 
-        tw = self._setup_stream()
+        twhandler = self._setup_stream()
+        args = vars(self.args)
         query_args = {k:args[k] for k in (
             'count',
             'delimited', 'stall_warnings',)
-                if k in args}
+                      if k in args}
 
-        g = tw.statuses.firehose(**query_args)
-        self._output_statuses(g)
+        _output_statuses(twhandler.statuses.firehose(**query_args))
 
     def _setup_stream(self, **kwargs):
         """x"""
@@ -196,36 +203,36 @@ class TwitterStreamManager(AbstractTwitterManager):
             'timeout',
             'block',
             'heartbeat_timeout')
-                if k in args}
+                       if k in args}
         return twitter_stream(**kwargs, **stream_args)
 
-    def _output_statuses(self, gen):
-        """x"""
+def _output_statuses(gen):
+    """x"""
 
-        csv_header = (
-            'id',
-            'created_at',
-            'user[screen_name]',
-            'user[name]',
-            #'source',
-            'text',)
-        csv_format = '|'.join(('{' + i + '}' for i in csv_header))
+    csv_header = (
+        'id',
+        'created_at',
+        'user[screen_name]',
+        'user[name]',
+        #'source',
+        'text',)
+    csv_format = '|'.join(('{' + i + '}' for i in csv_header))
 
-        for tweet in gen:
-            if not tweet:
-                continue
+    for tweet in gen:
+        if not tweet:
+            continue
 
-            if tweet in (Timeout, HeartbeatTimeout, Hangup):
-                print("{}".format(tweet))
-                break
+        if tweet in (Timeout, HeartbeatTimeout, Hangup):
+            print("{}".format(tweet))
+            break
 
-            if 'text' in tweet:
-                #pprint(tweet)
-                line = csv_format.format(**tweet)
-                print(line.replace('\r', '').replace('\n', '\\n'))
-                continue
+        if 'text' in tweet:
+            #pprint(tweet)
+            line = csv_format.format(**tweet)
+            print(line.replace('\r', '').replace('\n', '\\n'))
+            continue
 
-            print("Unknown {}".format(tweet))
+        print("Unknown {}".format(tweet))
 
 def main(command_line=None):
     """The main function.

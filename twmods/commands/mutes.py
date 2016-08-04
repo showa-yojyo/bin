@@ -10,7 +10,6 @@ from ..parsers import (
     parser_cursor,
     parser_include_entities,
     parser_skip_status)
-from argparse import ArgumentParser
 
 # POST mutes/users/create
 # POST mutes/users/destroy
@@ -22,7 +21,9 @@ MUTE_USERS_DESTROY = ('mutes/users/destroy', 'destroy')
 MUTE_USERS_IDS = ('mutes/users/ids', 'ids')
 MUTE_USERS_LIST = ('mutes/users/list', 'list')
 
+# pylint: disable=abstract-method
 class AbstractTwitterMuteCommand(AbstractTwitterCommand):
+    """n/a"""
     pass
 
 class CommandUsersCreate(AbstractTwitterMuteCommand):
@@ -42,11 +43,11 @@ class CommandUsersCreate(AbstractTwitterMuteCommand):
     def __call__(self):
         """Request POST mutes/users/create for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'user_id', 'screen_name')
 
-        return kwargs, self.tw.mutes.users.create
+        return kwargs, self.twhandler.mutes.users.create
 
 class CommandUsersDestroy(AbstractTwitterMuteCommand):
     """Un-mute the user specified in the ID parameter for the
@@ -65,11 +66,11 @@ class CommandUsersDestroy(AbstractTwitterMuteCommand):
     def __call__(self):
         """Request POST mutes/users/destroy for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'user_id', 'screen_name')
 
-        return kwargs, self.tw.mutes.users.destroy
+        return kwargs, self.twhandler.mutes.users.destroy
 
 class CommandUsersIds(AbstractTwitterMuteCommand):
     """Print an array of numeric user ids the authenticating user
@@ -90,7 +91,7 @@ class CommandUsersIds(AbstractTwitterMuteCommand):
 
         args = vars(self.args)
         kwargs = filter_args(args, 'cursor')
-        return kwargs, self.tw.mutes.users.ids
+        return kwargs, self.twhandler.mutes.users.ids
 
 class CommandUsersList(AbstractTwitterMuteCommand):
     """Print an array of user objects the authenticating user has
@@ -111,12 +112,15 @@ class CommandUsersList(AbstractTwitterMuteCommand):
     def __call__(self):
         """Request GET mutes/users/list for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'cursor', 'include_entities', 'skip_status')
 
-        return kwargs, self.tw.mutes.users.list
+        return kwargs, self.twhandler.mutes.users.list
 
 def make_commands(manager):
     """Prototype"""
-    return (cmd_t(manager) for cmd_t in AbstractTwitterMuteCommand.__subclasses__())
+
+    # pylint: disable=no-member
+    return (cmd_t(manager) for cmd_t in
+            AbstractTwitterMuteCommand.__subclasses__())

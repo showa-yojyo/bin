@@ -3,9 +3,10 @@
 and its subclasses.
 """
 
-from . import AbstractTwitterCommand, call_decorator
-from ..parsers import cache
 from argparse import ArgumentParser
+
+from . import AbstractTwitterCommand
+from ..parsers import cache
 
 # Public API
 # GET statuses/sample
@@ -29,7 +30,9 @@ STREAMING_SITE = ('site',)
 # GET statuses/firehose
 STREAMING_STATUSES_FIREHOSE = ('statuses/firehose', 'firehose', 'fire')
 
+# pylint: disable=abstract-method
 class AbstractTwitterStreamingCommand(AbstractTwitterCommand):
+    """n/a"""
     pass
 
 class StatusesSample(AbstractTwitterStreamingCommand):
@@ -117,7 +120,8 @@ def parser_track_and_locations():
     parser.add_argument(
         '--locations',
         metavar='CSV',
-        help='A comma-separated list of coordinates specifying a set of bounding boxes to filter tweets')
+        help='A comma-separated list of coordinates specifying a set of '
+             'bounding boxes to filter tweets')
 
     return parser
 
@@ -155,4 +159,7 @@ def parser_with_and_replies():
 
 def make_commands(manager):
     """Prototype"""
-    return (cmd_t(manager) for cmd_t in AbstractTwitterStreamingCommand.__subclasses__())
+
+    # pylint: disable=no-member
+    return (cmd_t(manager) for cmd_t in
+            AbstractTwitterStreamingCommand.__subclasses__())

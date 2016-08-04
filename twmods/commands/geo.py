@@ -3,9 +3,10 @@
 and its subclasses.
 """
 
+from argparse import ArgumentParser
+
 from . import (AbstractTwitterCommand, call_decorator)
 from ..parsers import (filter_args, cache)
-from argparse import ArgumentParser
 
 # GET geo/id/:place_id
 # POST geo/place DEPRECATED
@@ -16,7 +17,9 @@ GEO_ID_PLACE_ID = ('geo/id/:place_id', 'id')
 GEO_REVERSE_GEOCODE = ('geo/reverse_geocode', 'reverse')
 GEO_SEARCH = ('geo/search', 'search')
 
+# pylint: disable=abstract-method
 class AbstractTwitterGeoCommand(AbstractTwitterCommand):
+    """n/a"""
     pass
 
 class IdPlaceId(AbstractTwitterGeoCommand):
@@ -29,15 +32,17 @@ class IdPlaceId(AbstractTwitterGeoCommand):
             help=self.__doc__)
         parser.add_argument(
             'place_id',
-            help='a place in the world where can be retrieved from geo/reverse_geocode')
+            help='a place in the world where can be retrieved '
+                 'from geo/reverse_geocode')
         return parser
 
     @call_decorator
     def __call__(self):
         """Request GET geo/id/:place_id for Twitter."""
 
+        # pylint: disable=protected-access
         kwargs = dict(_id=self.args.place_id)
-        return kwargs, self.tw.geo.id._id # hack?
+        return kwargs, self.twhandler.geo.id._id # hack?
 
 class ReverseGeocode(AbstractTwitterGeoCommand):
     """Search for up to 20 places that can be used as a place_id."""
@@ -63,11 +68,11 @@ class ReverseGeocode(AbstractTwitterGeoCommand):
     def __call__(self):
         """Request GET geo/reverse_geocode for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'lat', 'long', 'accuracy', 'granularity', 'max_results')
 
-        return kwargs, self.tw.geo.reverse_geocode
+        return kwargs, self.twhandler.geo.reverse_geocode
 
 class Search(AbstractTwitterGeoCommand):
     """Search for places that can be attached to a statuses/update."""
@@ -89,7 +94,8 @@ class Search(AbstractTwitterGeoCommand):
         parser.add_argument(
             '-q', '--query',
             metavar='<text>',
-            help='free-form text to match against while executing a geo-based query')
+            help='free-form text to match against '
+                 'while executing a geo-based query')
         parser.add_argument(
             '-i', '--ip-address',
             dest='ip',
@@ -99,7 +105,8 @@ class Search(AbstractTwitterGeoCommand):
             '-c', '--contained-within',
             dest='contained_within',
             metavar='<place_id>',
-            help='the place_id which you would like to restrict the search results to')
+            help='the place_id which you would like '
+                 'to restrict the search results to')
         parser.add_argument(
             '-s', '--street-address',
             dest='street_address',
@@ -111,29 +118,34 @@ class Search(AbstractTwitterGeoCommand):
     def __call__(self):
         """Request GET geo/search for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'lat', 'long', 'accuracy', 'granularity', 'max_results',
             'query', 'ip', 'contained_within', 'street_address')
 
-        return kwargs, self.tw.geo.search
+        return kwargs, self.twhandler.geo.search
 
 def make_commands(manager):
     """Prototype"""
-    return (cmd_t(manager) for cmd_t in AbstractTwitterGeoCommand.__subclasses__())
 
-choices = ['poi', 'neighborhood', 'city', 'admin', 'country']
+    # pylint: disable=no-member
+    return (cmd_t(manager) for cmd_t in
+            AbstractTwitterGeoCommand.__subclasses__())
+
+CHOICES = ('poi', 'neighborhood', 'city', 'admin', 'country')
 
 @cache
 def parser_geo_common():
+    """Return the parser for common arguments."""
+
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         '-a', '--accuracy',
         help='a hint on the region in which to search')
     parser.add_argument(
         '-g', '--granularity',
-        choices=choices,
-        metavar='|'.join(choices),
+        choices=CHOICES,
+        metavar='|'.join(CHOICES),
         help='the minimal granularity of place types to return')
     parser.add_argument(
         '-m', '--max-results',

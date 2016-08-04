@@ -12,13 +12,13 @@ Usage:
 
 from argparse import (ArgumentParser, FileType)
 from configparser import (ConfigParser, Error)
-from docutils.io import (StringInput, FileInput, FileOutput)
 from os.path import expanduser
+import sys
+from docutils.io import (StringInput, FileInput, FileOutput)
 from mjstat.reader import MJScoreReader
 from mjstat.parser import MJScoreParser
 from mjstat.writer import MJScoreWriter
 from mjstat.model import apply_transforms
-import sys
 
 __version__ = '0.0.0'
 
@@ -44,8 +44,8 @@ def configure():
 
     try:
         defaults = dict(config.items("General"))
-    except Error as e:
-        print('Warning: {}'.format(e), file=sys.stderr)
+    except Error as ex:
+        print('Warning: {}'.format(ex), file=sys.stderr)
 
     parser = ArgumentParser(
         parents=[parser],
@@ -117,9 +117,10 @@ def main():
 
     settings = configure()
 
+    # pylint: disable=redefined-variable-type
     if settings.debug:
-        from mjstat.testdata import test_input
-        source = StringInput(source=test_input)
+        from mjstat.testdata import TEST_INPUT
+        source = StringInput(source=TEST_INPUT)
     else:
         source = FileInput(source=settings.input)
 

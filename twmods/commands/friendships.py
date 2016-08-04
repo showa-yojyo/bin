@@ -9,7 +9,6 @@ from ..parsers import (
     parser_cursor,
     parser_user_single,
     parser_user_multiple,)
-from argparse import ArgumentParser
 
 # POST friendships/create - FRIENDSHIP_CREATE
 # POST friendships/destroy - FRIENDSHIP_DESTROY
@@ -29,7 +28,9 @@ FRIENDSHIPS_OUTGOING = ('friendships/outgoing', 'out')
 FRIENDSHIPS_SHOW = ('friendships/show', 'relation')
 FRIENDSHIPS_UPDATE = ('friendships/update', 'update')
 
+# pylint: disable=abstract-method
 class AbstractTwitterFriendshipCommand(AbstractTwitterCommand):
+    """n/a"""
     pass
 
 class CommandCreate(AbstractTwitterFriendshipCommand):
@@ -53,11 +54,11 @@ class CommandCreate(AbstractTwitterFriendshipCommand):
     def __call__(self):
         """Request POST friendships/create for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'user_id', 'screen_name', 'follow')
 
-        return kwargs, self.tw.friendships.create
+        return kwargs, self.twhandler.friendships.create
 
 class CommandDestroy(AbstractTwitterFriendshipCommand):
     """Allows the authenticating user to unfollow the user specified
@@ -76,11 +77,11 @@ class CommandDestroy(AbstractTwitterFriendshipCommand):
     def __call__(self):
         """Request POST friendships/destroy for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'user_id', 'screen_name')
 
-        return kwargs, self.tw.friendships.destroy
+        return kwargs, self.twhandler.friendships.destroy
 
 class CommandIncoming(AbstractTwitterFriendshipCommand):
     """Print IDs for every user who has a pending request to follow
@@ -97,7 +98,7 @@ class CommandIncoming(AbstractTwitterFriendshipCommand):
 
     def __call__(self):
         """Request GET friendships/incoming for Twitter."""
-        self.manager._list_ids(self.tw.friendships.incoming)
+        self.manager.list_ids(self.twhandler.friendships.incoming)
 
 class CommandLookup(AbstractTwitterFriendshipCommand):
     """Print the relationships of you to specified users."""
@@ -112,7 +113,7 @@ class CommandLookup(AbstractTwitterFriendshipCommand):
 
     def __call__(self):
         """Request GET friendships/lookup for Twitter."""
-        self._request_users_csv(self.tw.friendships.lookup)
+        self._request_users_csv(self.twhandler.friendships.lookup)
 
 class CommandNoRetweetsIds(AbstractTwitterFriendshipCommand):
     """Print IDs that you do not want to receive retweets from."""
@@ -128,7 +129,7 @@ class CommandNoRetweetsIds(AbstractTwitterFriendshipCommand):
     def __call__(self):
         """Request GET friendships/no_retweets/ids for Twitter."""
 
-        return {}, self.tw.friendships.no_retweets.ids
+        return {}, self.twhandler.friendships.no_retweets.ids
 
 class CommandOutgoing(AbstractTwitterFriendshipCommand):
     """Print IDs for protected user for whom you have a pending
@@ -145,7 +146,7 @@ class CommandOutgoing(AbstractTwitterFriendshipCommand):
 
     def __call__(self):
         """Request GET friendships/outgoing for Twitter."""
-        self.manager._list_ids(self.tw.friendships.outgoing)
+        self.manager.list_ids(self.twhandler.friendships.outgoing)
 
 class CommandShow(AbstractTwitterFriendshipCommand):
     """Describe detailed information about the relationship between
@@ -158,7 +159,8 @@ class CommandShow(AbstractTwitterFriendshipCommand):
             aliases=FRIENDSHIPS_SHOW[1:],
             help=self.__doc__)
 
-        source = parser.add_mutually_exclusive_group(required=False) # should be True
+        # required should be True
+        source = parser.add_mutually_exclusive_group(required=False)
         source.add_argument(
             '-U', '--source-user-id',
             nargs='?',
@@ -170,7 +172,8 @@ class CommandShow(AbstractTwitterFriendshipCommand):
             dest='source_screen_name',
             help='the screen_name of the subject user')
 
-        target = parser.add_mutually_exclusive_group(required=False) # should be True
+        # required should be True
+        target = parser.add_mutually_exclusive_group(required=False)
         target.add_argument(
             '-V', '--target-user-id',
             nargs='?',
@@ -188,11 +191,11 @@ class CommandShow(AbstractTwitterFriendshipCommand):
     def __call__(self):
         """Request GET friendships/show for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'source_user_id', 'source_screen_name',
             'target_user_id', 'target_screen_name')
-        return kwargs, self.tw.friendships.show
+        return kwargs, self.twhandler.friendships.show
 
 class CommandUpdate(AbstractTwitterFriendshipCommand):
     """Allows one to enable or disable retweets and device
@@ -235,15 +238,18 @@ class CommandUpdate(AbstractTwitterFriendshipCommand):
     def __call__(self):
         """Request GET friendships/update for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'user_id',
             'screen_name',
             'device',
             'retweets')
 
-        return kwargs, self.tw.friendships.update
+        return kwargs, self.twhandler.friendships.update
 
 def make_commands(manager):
     """Prototype"""
-    return (cmd_t(manager) for cmd_t in AbstractTwitterFriendshipCommand.__subclasses__())
+
+    # pylint: disable=no-member
+    return (cmd_t(manager) for cmd_t in
+            AbstractTwitterFriendshipCommand.__subclasses__())

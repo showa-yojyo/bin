@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-"""parsers.py: This module contains functions for handling of
-arguments.
+"""parsers.py: This module contains functions for arguments of the program.
 """
 
-from abc import (ABCMeta, abstractmethod)
 from argparse import (ArgumentParser, FileType, Namespace)
 from itertools import chain
 
@@ -29,13 +27,17 @@ def filter_args(args, key0, *keys):
         args = vars(args)
 
     kwargs = {k:v for k, v in {
-                 k:args.get(k, None) for k in chain((key0,), keys)}.items()
+        k:args.get(k, None) for k in chain((key0,), keys)}.items()
               if v is not None} # This allows `False` and `0`.
     return kwargs
 
 def cache(func):
+    """Implement GoF Singleton pattern."""
+
     instance = None
     def inner():
+        """Singleton"""
+
         nonlocal instance
         if instance:
             return instance
@@ -178,6 +180,8 @@ def parser_cursor():
 
 @cache
 def parser_page():
+    """Return the parent parser object for --page optional argument."""
+
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         '-p', '--page',
@@ -245,10 +249,10 @@ def parser_include_user_entities():
 
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
-            '--include-user-entities',
-            dest='include_user_entities',
-            action='store_true',
-            help='include the user entities node')
+        '--include-user-entities',
+        dest='include_user_entities',
+        action='store_true',
+        help='include the user entities node')
     return parser
 
 @cache

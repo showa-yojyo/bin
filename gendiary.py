@@ -29,7 +29,7 @@ from calendar import Calendar
 from argparse import ArgumentParser, FileType
 from jinja2 import Environment
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 DIARY_TEMPLATE = """\
 {#-
@@ -96,6 +96,7 @@ Args:
 </html>
 """
 
+# pylint: disable=too-few-public-methods
 class MyFileType(FileType):
     """Unfortunately, argparse.FileType does not accept newline
     parameter.
@@ -107,7 +108,7 @@ class MyFileType(FileType):
 
         try:
             return open(path, self._mode, self._bufsize,
-                self._encoding, self._errors, newline='\n')
+                        self._encoding, self._errors, newline='\n')
         finally:
             pass
 

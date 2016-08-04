@@ -3,19 +3,18 @@
 and its subclasses.
 """
 
+import time
+
+from twitter import TwitterHTTPError
+
 from . import AbstractTwitterCommand, call_decorator, output
 from ..parsers import (
     filter_args,
-    cache,
     parser_full,
     parser_page,
     parser_user_single,
     parser_user_multiple,
     parser_include_entities)
-from argparse import ArgumentParser
-from twitter import TwitterHTTPError
-from itertools import count
-import time
 
 # Available subcommands.
 # names[0] and names[1:] are the official name and aliases, respectively.
@@ -35,10 +34,12 @@ USERS_REPORT_SPAM = ('users/report_spam', 'spam')
 # GET users/suggestions/:slug/members - n/a
 # POST users/report_spam <- USERS_REPORT_SPAM
 
+# pylint: disable=abstract-method
 class AbstractTwitterUsersCommand(AbstractTwitterCommand):
+    """n/a"""
     pass
 
-class Lookup():
+class Lookup(AbstractTwitterUsersCommand):
     """Print fully-hydrated user objects."""
 
     def create_parser(self, subparsers):
@@ -51,7 +52,7 @@ class Lookup():
 
     def __call__(self):
         """Request GET users/lookup for Twitter."""
-        self._request_users_csv(self.tw.users.lookup)
+        self._request_users_csv(self.twhandler.users.lookup)
 
 class Show(AbstractTwitterUsersCommand):
     """Print information about the user."""
@@ -69,12 +70,15 @@ class Show(AbstractTwitterUsersCommand):
     def __call__(self):
         """Request GET users/show for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'user_id', 'screen_name',
             'include_entities')
 
-        return kwargs, self.tw.users.show
+        return kwargs, self.twhandler.users.show
+
+UP_TO = 20
+MAX_PAGE = 1000 // UP_TO
 
 class Search(AbstractTwitterUsersCommand):
     """Search public user accounts."""
@@ -102,12 +106,11 @@ class Search(AbstractTwitterUsersCommand):
         """Request GET users/search for Twitter."""
 
         logger, args = self.logger, vars(self.args)
-        request = self.tw.users.search
+        request = self.twhandler.users.search
         results = None
         if args['full']:
-            UP_TO = 20
-            MAX_PAGE = 1000 // UP_TO
-            kwargs = filter_args(args,
+            kwargs = filter_args(
+                args,
                 'q',
                 'include_entities')
 
@@ -126,11 +129,12 @@ class Search(AbstractTwitterUsersCommand):
                         break
 
                     time.sleep(2)
-            except TwitterHTTPError as e:
-                logger.error('{}'.format(e))
+            except TwitterHTTPError as ex:
+                logger.error('{}'.format(ex))
                 #raise
         else:
-            kwargs = filter_args(args,
+            kwargs = filter_args(
+                args,
                 'q',
                 'page',
                 'count',
@@ -142,8 +146,8 @@ class Search(AbstractTwitterUsersCommand):
         logger.info('finished')
 
 class ProfileBanner(AbstractTwitterUsersCommand):
-    """Print a map of the available size variations 
-    of the specified user's profile banner.
+    """Print a map of the available size variations of the specified
+    user's profile banner.
     """
 
     def create_parser(self, subparsers):
@@ -158,11 +162,11 @@ class ProfileBanner(AbstractTwitterUsersCommand):
     def __call__(self):
         """Request GET users/profile_banner for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'user_id', 'screen_name')
 
-        return kwargs, self.tw.users.profile_banner
+        return kwargs, self.twhandler.users.profile_banner
 
 class Suggestions(AbstractTwitterUsersCommand):
     """Print the list of suggested user categories."""
@@ -182,10 +186,10 @@ class Suggestions(AbstractTwitterUsersCommand):
         """Request GET users/suggestions for Twitter."""
 
         args = self.args
-        kwargs  = {}
+        kwargs = {}
         if 'lang' in args:
             kwargs['lang'] = args.lang
-        return kwargs, self.tw.users.suggestions
+        return kwargs, self.twhandler.users.suggestions
 
 class ReportSpam(AbstractTwitterUsersCommand):
     """Report the specified user as a spam account to Twitter."""
@@ -202,12 +206,15 @@ class ReportSpam(AbstractTwitterUsersCommand):
     def __call__(self):
         """Request POST users/report_spam for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'user_id', 'screen_name')
 
-        return kwargs, self.tw.users.report_spam
+        return kwargs, self.twhandler.users.report_spam
 
 def make_commands(manager):
     """Prototype"""
-    return (cmd_t(manager) for cmd_t in AbstractTwitterUsersCommand.__subclasses__())
+
+    # pylint: disable=no-member
+    return (cmd_t(manager) for cmd_t in
+            AbstractTwitterUsersCommand.__subclasses__())

@@ -12,10 +12,11 @@ functions for construction of score data.
 from collections import namedtuple
 from enum import Enum
 import datetime
-import dateutil.parser
 from itertools import product
 
-datetime_format = r'%Y/%m/%d %H:%M'
+import dateutil.parser
+
+DATETIME_FORMAT = r'%Y/%m/%d %H:%M'
 
 Yaku = namedtuple('Yaku', (
     'is_concealed_only', # Determine if this yaku is concealed only.
@@ -25,6 +26,8 @@ Yaku = namedtuple('Yaku', (
     ))
 
 class YakuTable(Enum):
+    """A table that contains all of Mahjong yaku."""
+
     Yaku01 = Yaku(True, False, 1, 'リーチ')
     Yaku02 = Yaku(True, False, 1, '一発')
     Yaku03 = Yaku(True, False, 1, '門前清模和')
@@ -72,10 +75,10 @@ class YakuTable(Enum):
     Yaku45 = Yaku(False, False, 26, '大四喜和')
 
 # mapping from mjscore_name to yaku instance
-yaku_map = {yaku.value.name:yaku for yaku in YakuTable}
+YAKU_MAP = {yaku.value.name:yaku for yaku in YakuTable}
 
 # possible yakuman grades in mjscore.txt
-yakuman_scalar = {
+YAKUMAN_SCALAR = {
     #'':1,         # 8000, 16000
     'ダブル':2,    # 16000, 32000
     'トリプル':3,  # 24000, 48000
@@ -196,14 +199,17 @@ def set_reference_period(game_data, settings):
     until_date = None
     if settings.today:
         today_date = datetime.date.today()
-        since_date = today_date.strftime(datetime_format)
-        until_date = (today_date + datetime.timedelta(1)).strftime(datetime_format)
+        since_date = today_date.strftime(DATETIME_FORMAT)
+        until_date = (today_date + datetime.timedelta(1)).strftime(
+            DATETIME_FORMAT)
     else:
         if settings.since:
-            since_date = dateutil.parser.parse(settings.since).strftime(datetime_format)
+            since_date = dateutil.parser.parse(settings.since).strftime(
+                DATETIME_FORMAT)
 
         if settings.until:
-            until_date = dateutil.parser.parse(settings.until).strftime(datetime_format)
+            until_date = dateutil.parser.parse(settings.until).strftime(
+                DATETIME_FORMAT)
 
     game_data.update(
         since=since_date,
@@ -297,6 +303,6 @@ def apply_transforms(game_data):
     if settings.fundamental:
         transforms.append(find_meldings)
 
-    for g in game_data['games']:
-        for transform, hand in product(transforms, g['hands']):
+    for i in game_data['games']:
+        for transform, hand in product(transforms, i['hands']):
             transform(hand)

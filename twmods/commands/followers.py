@@ -3,16 +3,14 @@
 and its subclasses.
 """
 
-from . import AbstractTwitterCommand, call_decorator
+from . import AbstractTwitterCommand
 from ..parsers import (
     parser_user_single,
-    parser_user_multiple,
     parser_count_users,
     parser_count_users_many,
     parser_cursor,
     parser_skip_status,
     parser_include_user_entities)
-from argparse import ArgumentParser
 
 # Available subcommands.
 # names[0] and names[1:] are the official name and aliases, respectively.
@@ -22,7 +20,9 @@ FOLLOWERS_LIST = ('followers/list', 'fol')
 # GET followers/ids - FOLLOWERS_IDS
 # GET followers/list - FOLLOWERS_LIST
 
+# pylint: disable=abstract-method
 class AbstractTwitterFollowersCommand(AbstractTwitterCommand):
+    """n/a"""
     pass
 
 class FollowersIds(AbstractTwitterFollowersCommand):
@@ -42,7 +42,7 @@ class FollowersIds(AbstractTwitterFollowersCommand):
 
     def __call__(self):
         """Request GET followers/ids for Twitter."""
-        self._list_ids(self.tw.followers.ids)
+        self.list_ids(self.twhandler.followers.ids)
 
 class FollowersList(AbstractTwitterFollowersCommand):
     """List all of the users following the specified user."""
@@ -61,8 +61,11 @@ class FollowersList(AbstractTwitterFollowersCommand):
 
     def __call__(self):
         """Request GET followers/list for Twitter."""
-        self._list_common(self.tw.followers.list)
+        self._list_common(self.twhandler.followers.list)
 
 def make_commands(manager):
     """Prototype"""
-    return (cmd_t(manager) for cmd_t in AbstractTwitterFollowersCommand.__subclasses__())
+
+    # pylint: disable=no-member
+    return (cmd_t(manager) for cmd_t in
+            AbstractTwitterFollowersCommand.__subclasses__())

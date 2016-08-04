@@ -1,9 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
-description = "A utility script to call followers/xxx of Twitter API."
+from argparse import ArgumentParser
 
-usage = """
+from twmods import AbstractTwitterManager
+from twmods import EPILOG
+from twmods.commands.followers import make_commands
+
+DESCRIPTION = "A utility script to call followers/xxx of Twitter API."
+
+USAGE = """
   twfollower.py [--version] [--help]
   twfollower.py followers/ids [-c | --count <n>] [--cursor <n>]
     <userspec>
@@ -15,13 +22,9 @@ where
                | (-S | --screen-name <screen_name>)
 """
 
-from twmods import AbstractTwitterManager
-from twmods import epilog
-from twmods.commands.followers import make_commands
-from argparse import ArgumentParser
-
-__doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.10.1'
+# pylint: disable=redefined-builtin
+__doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
+__version__ = '1.10.2'
 
 class TwitterFollowerManager(AbstractTwitterManager):
     """This class handles followers/xxx endpoints of Twitter API."""
@@ -33,13 +36,13 @@ class TwitterFollowerManager(AbstractTwitterManager):
         """Create the command line parser.
 
         Returns:
-            An instance of argparse.ArgumentParser that will store the command line
-            parameters.
+            An instance of argparse.ArgumentParser that will store the
+            command line parameters.
         """
 
         parser = ArgumentParser(
             parents=[pre_parser],
-            description=description, epilog=epilog, usage=usage)
+            description=DESCRIPTION, epilog=EPILOG, usage=USAGE)
         parser.add_argument(
             '--version',
             action='version',

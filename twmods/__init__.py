@@ -2,19 +2,21 @@
 """__init__.py
 """
 
-from secret import twitter_instance
 from abc import (ABCMeta, abstractmethod)
 from argparse import (ArgumentParser, FileType)
 from configparser import (ConfigParser, Error)
 from json import dump
-from twitter import TwitterHTTPError
 import logging
 from os.path import expanduser
 import sys
 
-epilog = "GitHub repository: https://github.com/showa-yojyo/bin"
+from twitter import TwitterHTTPError
 
-__version__ = '1.12.0'
+from secret import twitter_instance
+
+EPILOG = "GitHub repository: https://github.com/showa-yojyo/bin"
+
+__version__ = '1.12.1'
 
 def make_logger(name=None):
     """Set up a logger with the specified name.
@@ -28,7 +30,8 @@ def make_logger(name=None):
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
     handler = logging.StreamHandler(sys.stderr)
-    formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s')
+    formatter = logging.Formatter(
+        '%(asctime)s:%(name)s:%(levelname)s:%(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     return logger
@@ -40,7 +43,7 @@ class AbstractTwitterManager(metaclass=ABCMeta):
     managers that are used in utility scripts.
     """
 
-    def __init__(self, name, commands=list()):
+    def __init__(self, name, commands=None):
         """Create a new manager with the given name.
 
         Args:
@@ -48,10 +51,10 @@ class AbstractTwitterManager(metaclass=ABCMeta):
             commands: A list which contains command objects.
         """
 
-        self.tw = None
+        self.twhandler = None
         self.logger = make_logger(name)
         self.args = None
-        self.commands = commands
+        self.commands = commands or []
 
     def setup(self, command_line=None):
         """Setup this instance.
@@ -78,8 +81,8 @@ class AbstractTwitterManager(metaclass=ABCMeta):
 
         try:
             defaults = dict(config.items("General"))
-        except Error as e:
-            print('Warning: {}'.format(e), file=sys.stderr)
+        except Error as ex:
+            print('Warning: {}'.format(ex), file=sys.stderr)
 
         root_parser = self.make_parser(pre_parser)
 
@@ -97,7 +100,7 @@ class AbstractTwitterManager(metaclass=ABCMeta):
             self.args.func = root_parser.print_help
 
     @abstractmethod
-    def make_parser(self):
+    def make_parser(self, pre_parser):
         """Create the command line parser.
 
         Returns:
@@ -109,13 +112,13 @@ class AbstractTwitterManager(metaclass=ABCMeta):
     def execute(self):
         """Execute the specified command."""
 
-        if not self.tw:
-            self.tw = twitter_instance()
+        if not self.twhandler:
+            self.twhandler = twitter_instance()
 
         try:
             self.args.func()
-        except TwitterHTTPError as e:
-            self.logger.error('{}'.format(e))
+        except TwitterHTTPError as ex:
+            self.logger.error('{}'.format(ex))
             raise
 
 def output(data, fp=sys.stdout):

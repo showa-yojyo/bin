@@ -40,12 +40,13 @@ The structure of `player_data` is like as follows::
 Also see class `Yaku` and class `YakuTable` in module `mjstat.model`.
 """
 
-from .model import (yaku_map, YakuTable, yakuman_scalar)
 from collections import Counter
 import re
 
+from .model import YAKUMAN_SCALAR
+
 # Mapping from special player names to key values.
-default_players = {
+DEFAULT_PLAYERS = {
     'あなた':1,
     '下家':2,
     '対面':3,
@@ -54,7 +55,7 @@ default_players = {
 
 def get_key(player_name):
     """Return key value for sorting a list of `player_data`."""
-    return default_players.get(player_name, hash(player_name))
+    return DEFAULT_PLAYERS.get(player_name, hash(player_name))
 
 def create_player_data(game_data, *players):
     """Create new (fresh) player data objects.
@@ -125,7 +126,7 @@ def evaluate_placing(player_data):
             first_placing_rate=placing_distr[0] / num_games,
             last_placing_rate=placing_distr[-1] / num_games,)
 
-dora_re = re.compile(r'[裏赤]?ドラ(\d)+')
+DORA_RE = re.compile(r'[裏赤]?ドラ(\d)+')
 
 def count_han(yakulist, concealed=False):
     """Count the total number of han (doubles)."""
@@ -139,13 +140,13 @@ def count_han(yakulist, concealed=False):
 
     return total_han
 
-winning_value_re = re.compile(r'''
+WINNING_VALUE_RE = re.compile(r'''
 (?P<hu>\d+)符
 \s*
 (?P<han>.+)飜
 ''', re.VERBOSE)
 
-han_char_table = {k:v for v, k in enumerate('一二三四', 1)}
+HAN_CHAR_TABLE = {k:v for v, k in enumerate('一二三四', 1)}
 
 def evaluate_winning(player_data):
     """Evaluate target player's winning data.
@@ -173,36 +174,31 @@ def evaluate_winning(player_data):
     if not num_hands:
         return
 
-    name = player_data['name']
-
     num_winning = 0
     total_points = 0
     total_turns = 0
     total_han = 0
     name = player_data['name']
-    for g in player_data['games']:
+    for i in player_data['games']:
         # pattern must be 1G, 2G, 3G or 4G.
-        index = g['players'].index(name)
+        index = i['players'].index(name)
         pattern = '{:d}G'.format(index + 1)
 
-        for hand in g['hands']:
-            winner_name = hand.get('winner', None)
-            if name != winner_name:
+        for hand in i['hands']:
+            if name != hand.get('winner', None):
                 continue
 
             assert hand['balance']
-            points = hand['balance'][name]
-            total_points += points
+            total_points += hand['balance'][name]
             num_winning += 1
 
-            action_table = hand['action_table']
-            total_turns += sum(1 for i in action_table
-                if i.startswith(pattern))
+            total_turns += sum(1 for j in hand['action_table']
+                               if j.startswith(pattern))
 
             value = hand['winning_value']
-            m = winning_value_re.match(value)
-            if m:
-                han = han_char_table[m.group('han')]
+            hu_han = WINNING_VALUE_RE.match(value)
+            if hu_han:
+                han = HAN_CHAR_TABLE[hu_han.group('han')]
             else:
                 # Pattern 満貫 covers 満貫 itself as well as
                 # 跳満, 倍満 and 三倍満.
@@ -218,7 +214,7 @@ def evaluate_winning(player_data):
                 else:
                     index = value.find('役満')
                     if index > 0:
-                        han = 13 * yakuman_scalar[value[:index]]
+                        han = 13 * YAKUMAN_SCALAR[value[:index]]
                     elif index == 0:
                         han = 13
                     else:
@@ -260,9 +256,9 @@ def evaluate_losing(player_data):
     num_lod = 0
     total_losing_points = 0
     name = player_data['name']
-    for g in player_data['games']:
-        index = g['players'].index(name)
-        for hand in g['hands']:
+    for i in player_data['games']:
+        index = i['players'].index(name)
+        for hand in i['hands']:
             if hand['ending'] == 'ロン':
                 # For instance, if the action table ends with
                 # '... 1d3p 4A', player #4 wins from player #1.
@@ -301,12 +297,12 @@ def evaluate_riichi(player_data):
 
     num_riichi = 0
     name = player_data['name']
-    for g in player_data['games']:
-        player_index = g['players'].index(name) + 1
+    for i in player_data['games']:
+        player_index = i['players'].index(name) + 1
         riichi_mark = '{}R'.format(player_index)
-        for hand in g['hands']:
+        for hand in i['hands']:
             actions = hand['action_table']
-            num_action = len(actions)
+            #num_action = len(actions)
             try:
                 i = actions.index(riichi_mark)
                 rest_actions = actions[i + 1:]
@@ -352,13 +348,13 @@ def evaluate_melding(player_data):
 
     num_melding = 0
     name = player_data['name']
-    for g in player_data['games']:
-        index = g['players'].index(name)
-        for hand in g['hands']:
+    for i in player_data['games']:
+        index = i['players'].index(name)
+        for hand in i['hands']:
             # If できすぎくん's style is preferred,
             # just increment num_melding one only if rhs > 1.
-            num_melding += sum(len(hand[i][index])
-                               for i in ('chows', 'pungs', 'kongs'))
+            num_melding += sum(len(hand[j][index])
+                               for j in ('chows', 'pungs', 'kongs'))
 
     if num_melding:
         player_data.update(
@@ -373,9 +369,9 @@ def evaluate_yaku_frequency(player_data):
     """
 
     name = player_data['name']
-    yaku_lists = (hand['winning_yaku_list'] for g in player_data['games']
-                     for hand in g['hands']
-                         if hand.get('winner', None) == name)
+    yaku_lists = (hand['winning_yaku_list'] for i in player_data['games']
+                  for hand in i['hands']
+                  if hand.get('winner', None) == name)
 
     # Class collections.Counter is useful here.
     yaku_counter = Counter()

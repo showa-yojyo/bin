@@ -7,13 +7,15 @@ Usage:
   twformat.py [-L | --logmode] [FILE]...
 """
 
-__version__ = '0.0.0'
-
-import sys
 from argparse import (ArgumentParser, FileType)
 from json import load
+import sys
+
+__version__ = '0.0.0'
 
 def make_parser():
+    """TBW"""
+
     parser = ArgumentParser(description=__doc__)
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument(
@@ -31,7 +33,7 @@ def make_parser():
 
 # users/search
 # lists/members
-csv_header = (
+CSV_HEADER = (
     'id',
     'screen_name',
     'name',
@@ -46,17 +48,19 @@ csv_header = (
     'status[source]',)
 
 # statuses/user_timeline --trim-user -X
-csv_header_log = (
+CSV_HEADER_LOG = (
     'id',
     'created_at',
     'text',)
 
 def format_json(args):
+    """TBW"""
+
     if args.logmode:
-        fmt = '\t'.join(('{' + i + '}' for i in csv_header_log))
+        fmt = '\t'.join(('{' + i + '}' for i in CSV_HEADER_LOG))
     else:
-        csv_format = '\t'.join(('{' + i + '}' for i in csv_header))
-        csv_format_w = '\t'.join(('{' + i + '}' for i in csv_header[:-2]))
+        csv_format = '\t'.join(('{' + i + '}' for i in CSV_HEADER))
+        csv_format_w = '\t'.join(('{' + i + '}' for i in CSV_HEADER[:-2]))
 
     for fp in args.files:
         json_obj = load(fp)
@@ -69,6 +73,8 @@ def format_json(args):
             print(fmt.format(**i).replace('\r', '').replace('\n', '\\n'))
 
 def main(params=sys.argv[1:]):
+    """TBW"""
+
     parser = make_parser()
     args = parser.parse_args(params)
     format_json(args)

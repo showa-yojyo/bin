@@ -3,8 +3,8 @@
 """gentwscript.py A temporary script to generate skeleton.
 """
 from argparse import (ArgumentParser, FileType)
-from jinja2 import (Environment, FileSystemLoader)
 from json import load
+from jinja2 import (Environment, FileSystemLoader)
 
 __version__ = '0.0.0'
 
@@ -50,12 +50,14 @@ def twmods(env, json_data):
 
     for kwargs in json_data:
         # Generate a script file.
-        with open('tw{}.py'.format(kwargs['basename']), mode='w', newline='') as fout:
+        with open('tw{}.py'.format(kwargs['basename']),
+                  mode='w', newline='') as fout:
             fout.write(tmpl_script.render(**kwargs))
             fout.write('\n')
 
         # Generate a module file.
-        with open('twmods/commands/{}.py'.format(kwargs['command_module']), mode='w', newline='') as fout:
+        with open('twmods/commands/{}.py'.format(
+            kwargs['command_module']), mode='w', newline='') as fout:
             fout.write(tmpl_command_module.render(**kwargs))
             fout.write('\n')
 
@@ -78,9 +80,10 @@ def pttdemo(env, json_data):
             fout.write('\n')
 
         for i in endpoints:
-            # file name e.g. POST lists/memberships/create -> lists-memberships-create.py
-            file_name = i.split(' ')[1].replace('/', '-').replace(':', '') + '.py'
-            with open(file_name, mode='w', newline='') as fout:
+            # file name e.g. POST lists/memberships/create
+            # -> lists-memberships-create.py
+            file_name = i.split(' ')[1].replace('/', '-').replace(':', '')
+            with open(file_name + '.py', mode='w', newline='') as fout:
                 fout.write(tmpl_script.render(endpoint=i))
                 fout.write('\n')
 

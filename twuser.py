@@ -1,9 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
-description = "A utility script to manage Twitter users."
+from argparse import ArgumentParser
 
-usage = """
+from twmods import AbstractTwitterManager
+from twmods import EPILOG
+from twmods.commands.users import make_commands
+
+DESCRIPTION = "A utility script to manage Twitter users."
+
+USAGE = """
   twuser.py [--version] [--help]
   twuser.py users-lookup [<userspec>...]
     [-UF | --file-user-id <path>]
@@ -20,13 +27,9 @@ where
                | (-S | --screen-name <screen_name>)
 """
 
-from twmods import AbstractTwitterManager
-from twmods import epilog
-from twmods.commands.users import make_commands
-from argparse import ArgumentParser
-
-__doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.1.3'
+# pylint: disable=redefined-builtin
+__doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
+__version__ = '1.1.4'
 
 class TwitterUserManager(AbstractTwitterManager):
     """This class handles commands about a Twitter users."""
@@ -44,7 +47,7 @@ class TwitterUserManager(AbstractTwitterManager):
 
         parser = ArgumentParser(
             parents=[pre_parser],
-            description=description, epilog=epilog, usage=usage)
+            description=DESCRIPTION, epilog=EPILOG, usage=USAGE)
         parser.add_argument(
             '--version',
             action='version',

@@ -2,7 +2,9 @@
 """writer.py: Define class MJScoreWriter.
 """
 
+from itertools import product
 #from docutils.writers import UnfilteredWriter
+from jinja2 import Environment
 from .languages import get_language
 from .model import YakuTable
 from .stat import (create_player_data,
@@ -12,11 +14,10 @@ from .stat import (create_player_data,
                    evaluate_riichi,
                    evaluate_melding,
                    evaluate_yaku_frequency)
-from itertools import product
-from jinja2 import Environment
 
 #class MJScoreWriter(UnfilteredWriter):
 class MJScoreWriter(object):
+    """Write score data to e.g. stdout."""
 
     def __init__(self):
         self.language = None
@@ -73,8 +74,8 @@ class MJScoreWriter(object):
         if settings.yaku:
             evaluators.append(evaluate_yaku_frequency)
 
-        for f, p in product(evaluators, player_data_list):
-            f(p)
+        for func, player in product(evaluators, player_data_list):
+            func(player)
 
         self.parts.update(
             player_data=player_data_list,
@@ -85,9 +86,11 @@ class MJScoreWriter(object):
         assert 'options' in self.parts
 
 def format_float(val):
+    """Set a floating point number into a specific format."""
     return '{:.2f}'.format(val)
 
 def format_percentage(val):
+    """Set a percentile into a specific format."""
     return '{:.2%}'.format(val)
 
 def fill_template(player_data, lang, fundamental, yaku):

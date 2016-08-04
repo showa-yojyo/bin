@@ -3,6 +3,8 @@
 and its subclasses.
 """
 
+from argparse import ArgumentParser
+
 from . import AbstractTwitterCommand, call_decorator
 from ..parsers import (
     filter_args,
@@ -11,7 +13,6 @@ from ..parsers import (
     parser_count_statuses,
     parser_since_max_ids,
     parser_include_entities,)
-from argparse import ArgumentParser
 
 # POST favorites/create
 # POST favorites/destroy
@@ -21,7 +22,9 @@ FAV_CREATE = ('favorites/create', 'create')
 FAV_DESTROY = ('favorites/destroy', 'destroy')
 FAV_LIST = ('favorites/list', 'list')
 
+# pylint: disable=abstract-method
 class AbstractTwitterFavoriteCommand(AbstractTwitterCommand):
+    """n/a"""
     pass
 
 class CommandCreate(AbstractTwitterFavoriteCommand):
@@ -42,11 +45,11 @@ class CommandCreate(AbstractTwitterFavoriteCommand):
     def __call__(self):
         """Request POST favorites/create for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             '_id', 'include_entities')
 
-        return kwargs, self.tw.favorites.create
+        return kwargs, self.twhandler.favorites.create
 
 class CommandDestroy(AbstractTwitterFavoriteCommand):
     """Un-like the status specified in the ID parameter as the
@@ -66,11 +69,11 @@ class CommandDestroy(AbstractTwitterFavoriteCommand):
     def __call__(self):
         """Request POST favorites/destroy for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             '_id', 'include_entities')
 
-        return kwargs, self.tw.favorites.destroy
+        return kwargs, self.twhandler.favorites.destroy
 
 class CommandList(AbstractTwitterFavoriteCommand):
     """Print the 20 most recent Tweets liked by the authenticating
@@ -92,19 +95,24 @@ class CommandList(AbstractTwitterFavoriteCommand):
     def __call__(self):
         """Request GET favorites/list for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'user_id', 'screen_name',
             'count', 'since_id', 'max_id', 'include_entities')
 
-        return kwargs, self.tw.favorites.list
+        return kwargs, self.twhandler.favorites.list
 
 def make_commands(manager):
     """Prototype"""
-    return (cmd_t(manager) for cmd_t in AbstractTwitterFavoriteCommand.__subclasses__())
+
+    # pylint: disable=no-member
+    return (cmd_t(manager) for cmd_t in
+            AbstractTwitterFavoriteCommand.__subclasses__())
 
 @cache
 def parser_id():
+    """Return the parser for id argument."""
+
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         '_id',

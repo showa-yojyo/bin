@@ -3,13 +3,15 @@
 """
 
 from abc import (ABCMeta, abstractmethod)
-from .. import output
-from ..parsers import filter_args
 from itertools import (count, islice)
-from twitter import TwitterHTTPError
 import time
 
-__version__ = '1.8.5'
+from twitter import TwitterHTTPError
+
+from .. import output
+from ..parsers import filter_args
+
+__version__ = '1.8.6'
 
 class AbstractTwitterCommand(metaclass=ABCMeta):
     """Prototype"""
@@ -20,25 +22,32 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
 
     @property
     def args(self):
+        """Return the arguments."""
         return self.manager.args
 
     @property
     def logger(self):
+        """Return the logger."""
         return self.manager.logger
 
     @property
-    def tw(self):
-        return self.manager.tw
+    def twhandler(self):
+        """Return the Twitter handler."""
+        return self.manager.twhandler
 
     @abstractmethod
-    def create_parser(self, subparsers): pass
+    def create_parser(self, subparsers):
+        """Create an argument parser including subparsers."""
+        pass
 
     @abstractmethod
-    def __call__(self): pass
+    def __call__(self):
+        """Invoke the command."""
+        pass
 
     # Helper methods
 
-    def _list_ids(self, request):
+    def list_ids(self, request):
         """Print user IDs.
 
         Args:
@@ -51,10 +60,10 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
             cursor=-1,
             stringify_ids=True,)
         kwargs.update(filter_args(args,
-                'user_id',
-                'screen_name',
-                'count',
-                'cursor'))
+                                  'user_id',
+                                  'screen_name',
+                                  'count',
+                                  'cursor'))
         logger.info('args={}'.format(kwargs))
 
         results = []
@@ -65,8 +74,8 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
                 next_cursor = response['next_cursor']
                 logger.info('next_cursor: {}'.format(next_cursor))
                 kwargs['cursor'] = next_cursor
-        except TwitterHTTPError as e:
-            logger.info('{}'.format(e))
+        except TwitterHTTPError as ex:
+            logger.info('{}'.format(ex))
             #raise
 
         print('\n'.join(results))
@@ -79,7 +88,7 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
             request: A PTT request method for Twitter API.
         """
 
-        logger, args = self.logger, vars(self.args)
+        logger = self.logger
 
         kwargs = dict(cursor=-1)
         kwargs.update(filter_args(
@@ -95,8 +104,8 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
                 next_cursor = response['next_cursor']
                 logger.info('next_cursor: {}'.format(next_cursor))
                 kwargs['cursor'] = next_cursor
-        except TwitterHTTPError as e:
-            logger.info('{}'.format(e))
+        except TwitterHTTPError as ex:
+            logger.info('{}'.format(ex))
             #raise
 
         output(results)
@@ -131,10 +140,12 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
                 if not csv:
                     break
 
-                logger.info("[{:04d}]-[{:04d}] Waiting...".format(i, i + up_to))
+                logger.info("[{:04d}]-[{:04d}] Waiting...".format(
+                    i, i + up_to))
                 response = request(user_id=csv, **kwargs)
                 results.extend(response)
-                logger.info("[{:04d}]-[{:04d}] Processed: {}".format(i, i + up_to, csv))
+                logger.info("[{:04d}]-[{:04d}] Processed: {}".format(
+                    i, i + up_to, csv))
                 time.sleep(2)
 
         # screen_name
@@ -150,19 +161,23 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
                 if not csv:
                     break
 
-                logger.info("[{:04d}]-[{:04d}] Waiting...".format(i, i + up_to))
+                logger.info("[{:04d}]-[{:04d}] Waiting...".format(
+                    i, i + up_to))
                 response = request(screen_name=csv, **kwargs)
                 results.extend(response)
 
-                logger.info("[{:04d}]-[{:04d}] Processed: {}".format(i, i + up_to, csv))
+                logger.info("[{:04d}]-[{:04d}] Processed: {}".format(
+                    i, i + up_to, csv))
                 time.sleep(2)
 
         output(results)
         logger.info('finished')
 
-def call_decorator(op):
+def call_decorator(operation):
+    """Decorate a request operation."""
     def inner(cmd):
-        kwargs, request = op(cmd)
+        """Invoke cmd.operation and execute it."""
+        kwargs, request = operation(cmd)
         logger = cmd.manager.logger
         logger.info('args={}'.format(kwargs))
         output(request(**kwargs))

@@ -18,13 +18,13 @@ Summary of the transitions::
 
 """
 
-import datetime
-import dateutil.parser
 import re
 from docutils.statemachine import State
 from .model import (create_game_record,
                     create_hand_record,
-                    yaku_map)
+                    YAKU_MAP)
+
+# pylint: disable=unused-argument, no-self-use
 
 class MJScoreState(State):
     """Base class of state classes."""
@@ -125,11 +125,12 @@ class HandState(MJScoreState):
         hand = create_hand_record(context)
         hand['title'] = match.group('title')
 
-        player_and_balance = match.group('balance').strip().split()
-        if player_and_balance:
+        player_balance = match.group('balance').strip().split()
+        if player_balance:
             hand['balance'].update([(
-                player_and_balance[i], int(player_and_balance[i + 1]),)
-                    for i in range(0, len(player_and_balance), 2)])
+                player_balance[i],
+                int(player_balance[i + 1]),) for
+                                    i in range(0, len(player_balance), 2)])
 
         return context, 'HandClosing', []
 
@@ -183,7 +184,7 @@ class HandClosing(MJScoreState):
         else:
             yaku_list = match.group('winning_yaku_without_dora')
             hand['winning_dora'] = 0
-        hand['winning_yaku_list'] = [yaku_map[i] for i in yaku_list.split()]
+        hand['winning_yaku_list'] = [YAKU_MAP[i] for i in yaku_list.split()]
 
         return context, 'HandStartHands', []
 
@@ -238,10 +239,10 @@ class HandStartHands(MJScoreState):
         hand['seat_table'][index] = seat
         hand['start_hand_table'][index] = start_hand
 
-        for i in range(3):
-            m = self.start_hand_re.match(
+        for _ in range(3):
+            id_seat = self.start_hand_re.match(
                 self.state_machine.next_line())
-            player, seat, start_hand = m.group('id', 'seat', 'start_hand')
+            player, seat, start_hand = id_seat.group('id', 'seat', 'start_hand')
             index = int(player) - 1
             hand['seat_table'][index] = seat
             hand['start_hand_table'][index] = start_hand
@@ -253,7 +254,7 @@ class HandDoraSet(MJScoreState):
 
     # Regex for the line that indicates all of dora tiles.
     dora_set_re = re.compile(r'''
-        \[表ドラ\](?P<dora>[^\s]+)           # XXX: dot matches any of tiles
+        \[表ドラ\](?P<dora>[^\s]+)
         (\s*\[裏ドラ\](?P<uradora>.+))?      # XXX: dot matches any of tiles
     ''', re.VERBOSE)
 

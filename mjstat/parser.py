@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """parser.py: Define class MJScoreParser.
 """
-from .states import MJScoreState
 from docutils.statemachine import StateMachine
+from .states import MJScoreState
 
 #class MJScoreParser(docutils.parsers.Parser):
 class MJScoreParser(object):
+    """Parse the content of mjscore.txt."""
 
     def __init__(self):
         self.input_string = None
@@ -22,6 +23,7 @@ class MJScoreParser(object):
         assert 'verbose' in settings
 
         self.setup_parse(input_string, game_data)
+        # pylint: disable=no-member
         self.state_machine = StateMachine(
             state_classes=MJScoreState.__subclasses__(),
             initial_state='GameOpening',

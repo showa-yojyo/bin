@@ -9,7 +9,6 @@ from ..parsers import (filter_args,
                        parser_cursor,
                        parser_include_entities,
                        parser_skip_status)
-from argparse import ArgumentParser
 
 # POST blocks/create
 # POST blocks/destroy
@@ -21,7 +20,9 @@ BLOCK_DESTROY = ('blocks/destroy', 'destroy')
 BLOCK_IDS = ('blocks/ids', 'ids')
 BLOCK_LIST = ('blocks/list', 'list')
 
+# pylint: disable=abstract-method
 class AbstractTwitterBlockCommand(AbstractTwitterCommand):
+    """n/a"""
     pass
 
 class CommandCreate(AbstractTwitterBlockCommand):
@@ -43,12 +44,12 @@ class CommandCreate(AbstractTwitterBlockCommand):
     def __call__(self):
         """Request POST blocks/create for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'user_id', 'screen_name',
             'include_entities', 'skip_status')
 
-        return kwargs, self.tw.blocks.create
+        return kwargs, self.twhandler.blocks.create
 
 class CommandDestroy(AbstractTwitterBlockCommand):
     """Un-blocks the user specified in the ID parameter for the
@@ -69,12 +70,12 @@ class CommandDestroy(AbstractTwitterBlockCommand):
     def __call__(self):
         """Request POST blocks/destroy for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'user_id', 'screen_name',
             'include_entities', 'skip_status')
 
-        return kwargs, self.tw.blocks.destroy
+        return kwargs, self.twhandler.blocks.destroy
 
 class CommandIds(AbstractTwitterBlockCommand):
     """Print a collection of user objects that the authenticating
@@ -93,10 +94,9 @@ class CommandIds(AbstractTwitterBlockCommand):
     def __call__(self):
         """Request GET blocks/ids for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter(args, 'cursor')
+        kwargs = filter_args(vars(self.args), 'cursor')
 
-        return kwargs, self.tw.blocks.ids
+        return kwargs, self.twhandler.blocks.ids
 
 class CommandList(AbstractTwitterBlockCommand):
     """Print a collection of user objects that the authenticating
@@ -117,12 +117,14 @@ class CommandList(AbstractTwitterBlockCommand):
     def __call__(self):
         """Request GET blocks/list for Twitter."""
 
-        args = vars(self.args)
-        kwargs = filter_args(args,
+        kwargs = filter_args(
+            vars(self.args),
             'cursor', 'include_entities', 'skip_status')
 
-        return kwargs, self.tw.blocks.list
+        return kwargs, self.twhandler.blocks.list
 
 def make_commands(manager):
     """Prototype"""
-    return (cmd_t(manager) for cmd_t in AbstractTwitterBlockCommand.__subclasses__())
+    # pylint: disable=no-member
+    return (cmd_t(manager) for cmd_t in
+            AbstractTwitterBlockCommand.__subclasses__())

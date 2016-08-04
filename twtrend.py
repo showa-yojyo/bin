@@ -1,22 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
-description = "A utility script to call trends/xxx of Twitter API."
+from argparse import ArgumentParser
 
-usage = """
+from twmods import AbstractTwitterManager
+from twmods import EPILOG
+from twmods.commands.trends import make_commands
+
+DESCRIPTION = "A utility script to call trends/xxx of Twitter API."
+
+USAGE = """
   twtrend.py [--version] [--help]
   twtrend.py trends/available
   twtrend.py trends/closest <longitude> <latitude>
   twtrend.py trends/place [--exclude {hashtags}] <woeid>
 """
 
-from twmods import AbstractTwitterManager
-from twmods import epilog
-from twmods.commands.trends import make_commands
-from argparse import ArgumentParser
-
-__doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.0.1'
+# pylint: disable=redefined-builtin
+__doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
+__version__ = '1.0.2'
 
 class TwitterTrendManager(AbstractTwitterManager):
     """This class handles trends/xxx endpoints of Twitter API."""
@@ -28,13 +31,13 @@ class TwitterTrendManager(AbstractTwitterManager):
         """Create the command line parser.
 
         Returns:
-            An instance of argparse.ArgumentParser that will store the command line
-            parameters.
+            An instance of argparse.ArgumentParser that will store the
+            command line parameters.
         """
 
         parser = ArgumentParser(
             parents=[pre_parser],
-            description=description, epilog=epilog, usage=usage)
+            description=DESCRIPTION, epilog=EPILOG, usage=USAGE)
         parser.add_argument(
             '--version',
             action='version',

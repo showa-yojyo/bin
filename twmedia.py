@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
-description = "Demonstrate Twitter's POST media/upload endpoint."
+from argparse import (ArgumentParser, FileType)
+from secret import twitter_instance
+from twmods import (EPILOG, output)
 
-usage = """
+DESCRIPTION = "Demonstrate Twitter's POST media/upload endpoint."
+
+USAGE = """
   twmedia.py [--version] [--help]
   twmedia.py [--additional-owners <csv-of-user-ids>] FILE
 """
 
-from argparse import (ArgumentParser, FileType)
-from secret import twitter_instance
-from twmods import (epilog, output)
-
-__doc__ = '\n'.join((description, usage, epilog))
-__version__ = '1.0.1'
+# pylint: disable=redefined-builtin
+__doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
+__version__ = '1.0.2'
 
 def configure():
     """Parse the command line parameters.
@@ -24,9 +26,9 @@ def configure():
     """
 
     root_parser = ArgumentParser(
-        description=description,
-        epilog=epilog,
-        usage=usage)
+        description=DESCRIPTION,
+        epilog=EPILOG,
+        usage=USAGE)
     root_parser.add_argument(
         '--version',
         action='version',
@@ -69,8 +71,8 @@ def main(args=None):
     # before they are flushed from the servers (if not associated
     # with a Tweet or Card).
 
-    tw = twitter_instance(domain='upload.twitter.com')
-    response = tw.media.upload(**kwargs)
+    twhandler = twitter_instance(domain='upload.twitter.com')
+    response = twhandler.media.upload(**kwargs)
     output(response)
 
 if __name__ == '__main__':
