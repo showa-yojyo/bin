@@ -11,7 +11,7 @@ from twitter import TwitterHTTPError
 from .. import output
 from ..parsers import filter_args
 
-__version__ = '1.8.6'
+__version__ = '1.9.0'
 
 class AbstractTwitterCommand(metaclass=ABCMeta):
     """Prototype"""
@@ -65,6 +65,11 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
                                   'count',
                                   'cursor'))
         logger.info('args={}'.format(kwargs))
+        if self.manager.dry_run:
+            def request_dry_run(**kwargs):
+                """Dummy."""
+                return {'cursor':None, 'ids':[],}
+            request = request_dry_run
 
         results = []
         try:
@@ -95,6 +100,11 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
             'user_id', 'screen_name',
             'count', 'cursor', 'include_user_entities'))
         logger.info('args={}'.format(kwargs))
+        if self.manager.dry_run:
+            def request_dry_run(**kwargs):
+                """Dummy."""
+                return {'cursor':None, 'users':[],}
+            request = request_dry_run
 
         results = []
         try:
@@ -122,6 +132,33 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
 
         logger, args = self.logger, self.args
         logger.info('{} args: {}'.format(request.__name__, args))
+        if self.manager.dry_run:
+            def request_dry_run(**kwargs):
+                """Dummy."""
+                return []
+            request = request_dry_run
+
+        def invoke_requests(user_spec_name, user_specs, **kwargs):
+            """Invoke requests."""
+
+            if not user_specs:
+                return
+
+            for i in count(0, up_to):
+                csv = ','.join(islice(user_specs, i, i + up_to))
+                if not csv:
+                    break
+
+                logger.info("[{:04d}]-[{:04d}] Waiting...".format(
+                    i, i + up_to))
+                response = request(**{user_spec_name:csv}, **kwargs)
+                results.extend(response)
+                logger.info("[{:04d}]-[{:04d}] Processed: {}".format(
+                    i, i + up_to, csv))
+                time.sleep(2)
+
+        # TODO: lists/xxx never get results.
+        results = []
 
         # Obtain the target users.
         # user_id
@@ -131,22 +168,7 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
         if args.file_user_id:
             user_ids.extend(line.rstrip() for line in args.file_user_id)
 
-        # TODO: lists/xxx never get results.
-        results = []
-
-        if user_ids:
-            for i in count(0, up_to):
-                csv = ','.join(islice(user_ids, i, i + up_to))
-                if not csv:
-                    break
-
-                logger.info("[{:04d}]-[{:04d}] Waiting...".format(
-                    i, i + up_to))
-                response = request(user_id=csv, **kwargs)
-                results.extend(response)
-                logger.info("[{:04d}]-[{:04d}] Processed: {}".format(
-                    i, i + up_to, csv))
-                time.sleep(2)
+        invoke_requests('user_id', user_ids, **kwargs)
 
         # screen_name
         screen_names = []
@@ -155,20 +177,7 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
         if args.file_screen_name:
             screen_names.extend(line.rstrip() for line in args.file_screen_name)
 
-        if screen_names:
-            for i in count(0, up_to):
-                csv = ','.join(islice(screen_names, i, i + up_to))
-                if not csv:
-                    break
-
-                logger.info("[{:04d}]-[{:04d}] Waiting...".format(
-                    i, i + up_to))
-                response = request(screen_name=csv, **kwargs)
-                results.extend(response)
-
-                logger.info("[{:04d}]-[{:04d}] Processed: {}".format(
-                    i, i + up_to, csv))
-                time.sleep(2)
+        invoke_requests('screen_name', screen_names, **kwargs)
 
         output(results)
         logger.info('finished')
@@ -178,9 +187,12 @@ def call_decorator(operation):
     def inner(cmd):
         """Invoke cmd.operation and execute it."""
         kwargs, request = operation(cmd)
+
         logger = cmd.manager.logger
         logger.info('args={}'.format(kwargs))
-        output(request(**kwargs))
+        if not cmd.manager.dry_run:
+            output(request(**kwargs))
+
         logger.info('finished')
 
     return inner

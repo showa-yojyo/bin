@@ -16,7 +16,7 @@ from secret import twitter_instance
 
 EPILOG = "GitHub repository: https://github.com/showa-yojyo/bin"
 
-__version__ = '1.12.1'
+__version__ = '1.13.0'
 
 def make_logger(name=None):
     """Set up a logger with the specified name.
@@ -55,6 +55,12 @@ class AbstractTwitterManager(metaclass=ABCMeta):
         self.logger = make_logger(name)
         self.args = None
         self.commands = commands or []
+        self._dry_run = False
+
+    @property
+    def dry_run(self):
+        """Global option dry_run."""
+        return self._dry_run
 
     def setup(self, command_line=None):
         """Setup this instance.
@@ -69,7 +75,15 @@ class AbstractTwitterManager(metaclass=ABCMeta):
             type=FileType(mode='r', encoding='utf-8'),
             metavar='FILE',
             help='path to config file')
+
+        pre_parser.add_argument(
+            '--dry_run',
+            dest='dry_run',
+            action='store_true',
+            help='perform a trial run with no changes made')
+
         args, remaining_argv = pre_parser.parse_known_args(command_line)
+        self._dry_run = args.dry_run
 
         defaults = {}
         config = ConfigParser()
