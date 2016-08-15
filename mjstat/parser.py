@@ -30,7 +30,7 @@ class MJScoreParser(object):
             debug=settings.debug and settings.verbose)
         self.state_machine.config = settings
 
-        input_lines = [i.strip() for i in input_string.split('\n')]
+        input_lines = tuple(i.strip() for i in input_string.split('\n'))
 
         self.state_machine.run(input_lines, context=game_data)
         self.state_machine.unlink()

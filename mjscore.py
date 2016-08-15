@@ -4,7 +4,7 @@
 
 Usage:
   mjscore.py [--help] [--version]
-  mjscore.py [--today] [--verbose] [--input <FILE>]
+  mjscore.py [--today] [--verbose] [--input <FILE> ...]
     [-l | --language <langspec>]
     [-T | --target <playerspec>]
     [-c | --config <FILE>]
@@ -18,7 +18,7 @@ from docutils.io import (StringInput, FileInput, FileOutput)
 from mjstat.reader import MJScoreReader
 from mjstat.parser import MJScoreParser
 from mjstat.writer import MJScoreWriter
-from mjstat.model import apply_transforms
+from mjstat.model import (apply_transforms, merge_games)
 
 __version__ = '0.0.0'
 
@@ -56,6 +56,7 @@ def configure():
     # This parameter should not be optional.
     parser.add_argument(
         '--input',
+        nargs='+',
         type=FileType(mode='r', encoding='sjis'),
         metavar='FILE',
         help='path to mjscore.txt')
@@ -116,18 +117,23 @@ def main():
     """The main function."""
 
     settings = configure()
+    sources = []
 
-    # pylint: disable=redefined-variable-type
     if settings.debug:
         from mjstat.testdata import TEST_INPUT
-        source = StringInput(source=TEST_INPUT)
+        sources.append(StringInput(source=TEST_INPUT))
     else:
-        source = FileInput(source=settings.input)
+        # XXX
+        if isinstance(settings.input, (list, tuple)):
+            sources.extend(FileInput(source=i) for i in settings.input)
+        else:
+            sources.append(FileInput(source=settings.input))
 
     parser = MJScoreParser()
     reader = MJScoreReader()
-    game_data = reader.read(source, parser, settings)
 
+    game_data_list = tuple(reader.read(i, parser, settings) for i in sources)
+    game_data = merge_games(game_data_list)
     apply_transforms(game_data)
 
     writer = MJScoreWriter()

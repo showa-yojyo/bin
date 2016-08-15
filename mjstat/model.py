@@ -12,7 +12,7 @@ functions for construction of score data.
 from collections import namedtuple
 from enum import Enum
 import datetime
-from itertools import product
+from itertools import (chain, product)
 
 import dateutil.parser
 
@@ -92,9 +92,8 @@ def create_score_records(settings):
 
     The structure of `game_data` is like as follows::
 
-        game_data ::= settings, description, game*, since?, until?;
+        game_data ::= settings, game*, since?, until?;
           settings ::= APPLICATION-DEPENDENT;
-          description ::= text;
           game ::= result, hand+, player+, started_at, finished_at;
             result ::= (player->points){4};
               points ::= integer;
@@ -128,7 +127,6 @@ def create_score_records(settings):
     """
 
     game_data = dict(
-        description='Game score recorded in mjscore.txt',
         games=[],
         settings=settings,)
 
@@ -306,3 +304,23 @@ def apply_transforms(game_data):
     for i in game_data['games']:
         for transform, hand in product(transforms, i['hands']):
             transform(hand)
+
+def merge_games(game_data_list):
+    """Merge games of a collection of `game_data` to an instance of
+    `game_data`.
+
+    Args:
+        game_data_list: A non-empty list or tuple of `game_data`.
+    """
+
+    assert game_data_list
+
+    game_data_sorted = sorted(
+        game_data_list,
+        key=lambda game_data: game_data['games'][0]['started_at'])
+
+    game_data = game_data_sorted[0].copy()
+    game_data['games'] = tuple(chain.from_iterable(
+        i['games'] for i in game_data_sorted))
+
+    return game_data
