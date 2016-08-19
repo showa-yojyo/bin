@@ -3,6 +3,9 @@ _attic/
 tmp*
 *.txt
 
+# dotfiles
+fontList.py3k.cache
+
 # General rules
 
 *.exe
@@ -63,8 +66,12 @@ coverage.xml
 *.log
 local_settings.py
 
-# Flask instance folder
+# Flask stuff:
 instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
 
 # Sphinx documentation
 docs/_build/
@@ -77,3 +84,19 @@ target/
 
 # pyenv
 .python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# dotenv
+.env
+
+# virtualenv
+venv/
+ENV/
+
+# Spyder project settings
+.spyderproject
+
+# Rope project settings
+.ropeproject
