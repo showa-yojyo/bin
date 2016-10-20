@@ -315,6 +315,9 @@ def merge_games(game_data_list):
 
     assert game_data_list
 
+    if not game_data_list[0]['games']:
+        return game_data_list[0]
+
     game_data_sorted = sorted(
         game_data_list,
         key=lambda game_data: game_data['games'][0]['started_at'])
