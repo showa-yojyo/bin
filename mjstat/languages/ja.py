@@ -76,7 +76,7 @@ tmpl_fundamental = \
 立直データ
   平均使用率       {% for p in data %}{{p.riichi_rate|format_percentage}}  {% endfor %}
 鳴きデータ
-  平均鳴き回数     {% for p in data %}{{p.melding_rate|format_percentage}}  {% endfor %}
+  鳴き使用率       {% for p in data %}{{p.melding_rate|format_percentage}}  {% endfor %}
 
 '''
 
