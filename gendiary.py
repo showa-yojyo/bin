@@ -44,7 +44,7 @@ Args:
 {%- set monthnames = ("","jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec") -%}
 {%- set monname = monthnames[month] -%}
 {%- set mymail = "showa_yojyo@hotmail.com" -%}
-{%- set myurl = "http://www.geocities.jp/showa_yojyo/" -%}
+{%- set myurl = "../index.html" -%}
 
 {#- Macro diary_link
 
