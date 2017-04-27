@@ -2,9 +2,9 @@
 """MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
 from argparse import ArgumentParser
+from functools import wraps
 from secret import twitter_instance
-from twmods import EPILOG
-from twmods import output
+from twmods import (EPILOG, output)
 
 DESCRIPTION = "Demonstrate Twitter's GET help/xxx endpoints."
 
@@ -64,6 +64,8 @@ def configure():
 
 def request_decorator(request):
     """Decorate a function that returns an endpoint."""
+
+    @wraps(request)
     def request_wrapper():
         """Output the response received from Twitter."""
         output(request(twitter_instance())())

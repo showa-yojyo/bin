@@ -2,6 +2,7 @@
 """
 
 from argparse import (ArgumentParser, FileType, Namespace)
+from functools import wraps
 from itertools import chain
 
 def filter_args(args, key0, *keys):
@@ -34,6 +35,8 @@ def cache(func):
     """Implement GoF Singleton pattern."""
 
     instance = None
+
+    @wraps(func)
     def inner():
         """Singleton"""
 

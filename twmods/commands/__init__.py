@@ -2,6 +2,7 @@
 """
 
 from abc import (ABCMeta, abstractmethod)
+from functools import wraps
 from itertools import (count, islice)
 import time
 
@@ -183,6 +184,8 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
 
 def call_decorator(operation):
     """Decorate a request operation."""
+
+    @wraps(operation)
     def inner(cmd):
         """Invoke cmd.operation and execute it."""
         kwargs, request = operation(cmd)
