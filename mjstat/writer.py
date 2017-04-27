@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """writer.py: Define class MJScoreWriter.
 """
 

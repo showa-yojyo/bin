@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """users.py: Implementation of class AbstractTwitterUsersCommand
 and its subclasses.
 """

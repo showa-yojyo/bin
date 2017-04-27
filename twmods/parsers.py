@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """parsers.py: This module contains functions for arguments of the program.
 """
 

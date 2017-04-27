@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """gendiary.py: Generate a blank diary for a month.
 
 Usage:

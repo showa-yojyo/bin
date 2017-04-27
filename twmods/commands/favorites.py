@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """favorites.py: Implementation of class AbstractTwitterFavoriteCommand
 and its subclasses.
 """

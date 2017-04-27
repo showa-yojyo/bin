@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """mutes.py: Implementation of class AbstractTwitterMuteCommand
 and its subclasses.
 """

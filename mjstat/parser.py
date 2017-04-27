@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """parser.py: Define class MJScoreParser.
 """
 from docutils.statemachine import StateMachine

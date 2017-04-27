@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """saved_searches.py: Implementation of class AbstractTwitterSavedSearchCommand
 and its subclasses.
 """

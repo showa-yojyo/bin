@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
 from argparse import (ArgumentParser, FileType)

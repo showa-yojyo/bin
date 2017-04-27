@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """gentwscript.py A temporary script to generate skeleton.
 """
 from argparse import (ArgumentParser, FileType)

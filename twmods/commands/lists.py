@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """lists.py: Implementation of class AbstractTwitterListsCommand
 and its subclasses.
 """

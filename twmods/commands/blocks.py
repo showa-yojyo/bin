@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """blocks.py: Implementation of class AbstractTwitterBlockCommand
 and its subclasses.
 """

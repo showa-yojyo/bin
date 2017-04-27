@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """trends.py: Implementation of class AbstractTwitterTrendCommand
 and its subclasses.
 """

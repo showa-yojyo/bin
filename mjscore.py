@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """mjscore.py: Parse mjstat.txt and produce some statistics.
 
 Usage:

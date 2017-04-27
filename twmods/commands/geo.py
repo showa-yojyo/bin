@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """geo.py: Implementation of class AbstractTwitterGeoCommand
 and its subclasses.
 """

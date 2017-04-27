@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """stat.py: The module for mahjong statistics.
 
 This module contains function `create_player_data` and several

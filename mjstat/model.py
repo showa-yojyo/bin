@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """model.py: Define various data types used in Riichi Mahjong.
 
 This module contains: class `Yaku`, the structure for Mahjong yaku;

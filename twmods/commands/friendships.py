@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """friendships.py: Implementation of class AbstractTwitterFriendshipCommand
 and its subclasses.
 """

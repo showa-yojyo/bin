@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """direct_messages.py: Implementation of class
 AbstractTwitterDirectMessageCommand and its subclasses.
 """

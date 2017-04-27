@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """account.py: Implementation of class AbstractTwitterAccountCommand
 and its subclasses.
 """

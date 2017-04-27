@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """statuses.py: Implementation of class AbstractTwitterStatusesCommand
 and its subclasses.
 """

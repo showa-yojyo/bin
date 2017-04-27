@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """states.py: Define state classes for parsing mjscore.txt.
 
 Summary of the transitions::

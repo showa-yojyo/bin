@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """en.py: English language mappings for language-dependent features.
 """
 

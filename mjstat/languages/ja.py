@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ja.py: Japanese language mappings for language-dependent features.
 """
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """reader.py: Define class MJScoreReader.
 """
 from docutils.readers import Reader

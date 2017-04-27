@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """glshowenv.py: Show the current OpenGL connection strings.
 
 Usage:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """streaming.py: Implementation of class AbstractTwitterStreamingCommand
 and its subclasses.
 """
