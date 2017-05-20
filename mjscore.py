@@ -9,7 +9,7 @@ Usage:
     [-c | --config <FILE>]
 """
 
-from argparse import (ArgumentParser, FileType)
+from argparse import ArgumentParser
 from configparser import (ConfigParser, Error)
 from os.path import expanduser
 import sys
@@ -27,7 +27,6 @@ def configure():
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
         '-c', '--config',
-        type=FileType(mode='r', encoding='utf-8'),
         metavar='FILE',
         help='path to config file')
 
@@ -36,7 +35,7 @@ def configure():
     defaults = {}
     config = ConfigParser()
     if args.config:
-        config.read_file(args.config)
+        config.read(args.config)
     else:
         default_config_path = expanduser('~/.mjscore')
         config.read(default_config_path)
@@ -56,7 +55,6 @@ def configure():
     parser.add_argument(
         '--input',
         nargs='+',
-        type=FileType(mode='r', encoding='sjis'),
         metavar='FILE',
         help='path to mjscore.txt')
 
@@ -124,9 +122,15 @@ def main():
     else:
         # XXX
         if isinstance(settings.input, (list, tuple)):
-            sources.extend(FileInput(source=i) for i in settings.input)
+            sources.extend(FileInput(
+                source_path=i,
+                encoding='sjis',
+                mode='r') for i in settings.input)
         else:
-            sources.append(FileInput(source=settings.input))
+            sources.append(FileInput(
+                source_path=settings.input,
+                encoding='sjis',
+                mode='r'))
 
     parser = MJScoreParser()
     reader = MJScoreReader()
