@@ -14,18 +14,18 @@ USAGE = """
   twlist.py lists/statuses [-c | --count <n>]
     [--since-id <status_id>] [--max-id <status_id>]
     [-E | --include-entities] [--include-rts] <listspec>
-  twlist.py lists/members-create_all [<userspec>...]
+  twlist.py lists/members/create_all [<userspec>...]
     [-UF | --file-user-id <path>] [-SF | --file-screen-name <path>]
     <listspec>
-  twlist.py lists/members-destroy_all [<userspec>...]
+  twlist.py lists/members/destroy_all [<userspec>...]
     [-UF | --file-user-id <path>] [-SF | --file-screen-name <path>]
     <listspec>
   twlist.py lists/members [-c | --count <n>] [--cursor <n>]
     [-E | --include-entities] [--skip-status] <listspec>
   twlist.py lists/subscribers [-c | --count <n>] [--cursor <n>]
     [-E | --include-entities] [--skip-status] <listspec>
-  twlist.py lists/subscribers-create <listspec>
-  twlist.py lists/subscribers-destroy <listspec>
+  twlist.py lists/subscribers/create <listspec>
+  twlist.py lists/subscribers/destroy <listspec>
   twlist.py lists/memberships [-c | --count <n>] [--cursor <n>]
     [--filter-to-owned-lists] <userspec>
   twlist.py lists/ownerships [-c | --count <n>] [--cursor <n>]
@@ -36,7 +36,7 @@ USAGE = """
     [-d | --description <DESC>] <name>
   twlist.py lists/show <listspec>
   twlist.py lists/update [-m | --mode <public | private>]
-    [-d | --desccription <DESC>] [--name <NAME>] <listspec>
+    [-d | --description <DESC>] [--name <NAME>] <listspec>
   twlist.py lists/destroy <listspec>
 
 where
@@ -50,7 +50,7 @@ where
 
 # pylint: disable=redefined-builtin
 __doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
-__version__ = '1.9.10'
+__version__ = '1.9.11'
 
 class TwitterListManager(AbstractTwitterManager):
     """This class handles commands about a Twitter list."""
