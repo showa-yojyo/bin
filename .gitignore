@@ -1,10 +1,12 @@
 # Local rules
 _attic/
 tmp*
+*.cache
 *.txt
+*.bak
 
-# dotfiles
-fontList.py3k.cache
+.ipython
+.jupyter/migrated
 
 # General rules
 
