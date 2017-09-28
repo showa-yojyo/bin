@@ -3,11 +3,12 @@
 
 from argparse import ArgumentParser
 from pprint import pprint
+import sys
 from twitter import TwitterHTTPError
 from twitter.stream import (Timeout, HeartbeatTimeout, Hangup)
 from secret import twitter_stream
 
-from twmods import (AbstractTwitterManager, EPILOG)
+from twmods import (AbstractTwitterManager, EPILOG, make_logger)
 from twmods.commands.streaming import make_commands
 
 DESCRIPTION = "Twitter Streaming API Utility"
@@ -31,7 +32,7 @@ where
 
 # pylint: disable=redefined-builtin
 __doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
-__version__ = '1.1.6'
+__version__ = '1.1.7'
 
 class TwitterStreamManager(AbstractTwitterManager):
     """Twitter Streaming API Utility"""
@@ -233,7 +234,7 @@ def _output_statuses(gen):
 
         print("Unknown {}".format(tweet))
 
-mgr = TwitterStreamManager()
+MANAGER = TwitterStreamManager()
 
 if __name__ == '__main__':
-    mgr.main()
+    MANAGER.main()

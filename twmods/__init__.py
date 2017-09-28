@@ -15,7 +15,7 @@ from secret import twitter_instance
 
 EPILOG = "GitHub repository: https://github.com/showa-yojyo/bin"
 
-__version__ = '1.13.0'
+__version__ = '1.14.0'
 
 def make_logger(name=None, stdlog=sys.stderr):
     """Set up a logger with the specified name.
@@ -134,6 +134,36 @@ class AbstractTwitterManager(metaclass=ABCMeta):
 
     def main(self, args=sys.argv[1:]):
         sys.exit(self.execute(self.parse_args(args)))
+
+def make_manager(make_commands, params):
+    """Return a subclass of class AbstractTwitterManager."""
+
+    class BasicTwitterManager(AbstractTwitterManager):
+        """This class handles commands about a Twitter list."""
+
+        DESCRIPTION = params['DESCRIPTION']
+        EPILOG = params['EPILOG']
+        USAGE = params['USAGE']
+        VERSION = params['__version__']
+
+        def __init__(self, name):
+            super().__init__(name, make_commands(self))
+
+        def make_parser(self, pre_parser):
+            """Create the command line parser."""
+
+            parser = ArgumentParser(
+                parents=[pre_parser],
+                description=self.DESCRIPTION,
+                epilog=self.EPILOG,
+                usage=self.USAGE)
+            parser.add_argument(
+                '--version',
+                action='version',
+                version=self.VERSION)
+            return parser
+
+    return BasicTwitterManager
 
 def output(data, fp=sys.stdout):
     """Output statuses, users, etc. to fp as JSON formatted data."""

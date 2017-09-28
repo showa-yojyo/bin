@@ -17,12 +17,15 @@ Template example
 {%- endmacro -%}
 
 {%- set basename = 'tw' + basename -%}
-{%- set manager_class_name = 'Twitter' + category_title_form  + 'Manager' -%}
 #!/usr/bin/env python
+"""MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
-description = "A utility script to call {{ command_module }}/xxx of Twitter API."
+from twmods import (make_manager, EPILOG)
+from twmods.commands.{{ command_module }} import make_commands
 
-usage = """
+DESCRIPTION = "A utility script to call {{ command_module }}/xxx of Twitter API."
+
+USAGE = """
   {{ basename }}.py [--version] [--help]
 {%- for i in endpoints %}
 {%- set name = i.split(' ')[1] %}
@@ -30,50 +33,11 @@ usage = """
 {%- endfor %}
 """
 
-from twmods import AbstractTwitterManager
-from twmods import (epilog, output, request_decorator)
-from twmods.commands.{{ command_module }} import make_commands
-from argparse import ArgumentParser
-
+# pylint: disable=redefined-builtin
 __doc__ = '\n'.join((description, usage, epilog))
 __version__ = '1.0.0'
 
-class {{ manager_class_name }}(AbstractTwitterManager):
-    """This class handles {{ command_module }}/xxx endpoints of Twitter API."""
-
-    def __init__(self):
-        super().__init__('{{ basename }}', make_commands(self))
-
-    def make_parser(self):
-        """Create the command line parser.
-
-        Returns:
-            An instance of argparse.ArgumentParser that will store the command line
-            parameters.
-        """
-
-        parser = ArgumentParser(
-            description=description, epilog=epilog, usage=usage)
-        parser.add_argument(
-            '--version',
-            action='version',
-            version=__version__)
-        return parser
-{% for i in endpoints %}
-{%- set name = i.split(' ')[1] -%}
-{%- set name_sanitized = sanitize(remove_category(name)) -%}
-{%- set mgr_method_name = 'request_' + sanitize(name) %}
-    @request_decorator
-    def {{ mgr_method_name }}(self):
-        """Request {{ i }} for Twitter."""
-
-        request, args = self.tw.{{ name|replace('/', '.')|replace(':', '_') }}, vars(self.args)
-        #kwargs = {k:args[k] for k in (
-        #    'param1', 'param2',)
-        #        if (k in args) and (args[k] is not None)}
-        return kwargs, request
-{% endfor %}
-mgr = {{ manager_class_name }}()
+MANAGER = make_manager(make_commands, globals())(__file__)
 
 if __name__ == '__main__':
-    mgr.main()
+    MANAGER.main()

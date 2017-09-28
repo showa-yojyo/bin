@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 """MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
-from argparse import ArgumentParser
-
-from twmods import (AbstractTwitterManager, EPILOG)
+from twmods import (make_manager, EPILOG)
 from twmods.commands.lists import make_commands
 
 DESCRIPTION = "A utility script to manage a Twitter list."
@@ -49,32 +47,9 @@ where
 
 # pylint: disable=redefined-builtin
 __doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
-__version__ = '1.9.12'
+__version__ = '1.10.0'
 
-class TwitterListManager(AbstractTwitterManager):
-    """This class handles commands about a Twitter list."""
-
-    def __init__(self):
-        super().__init__('twlist', make_commands(self))
-
-    def make_parser(self, pre_parser):
-        """Create the command line parser.
-
-        Returns:
-            An instance of argparse.ArgumentParser that will store the
-            command line parameters.
-        """
-
-        parser = ArgumentParser(
-            parents=[pre_parser],
-            description=DESCRIPTION, epilog=EPILOG, usage=USAGE)
-        parser.add_argument(
-            '--version',
-            action='version',
-            version=__version__)
-        return parser
-
-mgr = TwitterListManager()
+MANAGER = make_manager(make_commands, globals())(__file__)
 
 if __name__ == '__main__':
-    mgr.main()
+    MANAGER.main()
