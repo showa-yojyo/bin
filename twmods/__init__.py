@@ -17,18 +17,19 @@ EPILOG = "GitHub repository: https://github.com/showa-yojyo/bin"
 
 __version__ = '1.13.0'
 
-def make_logger(name=None):
+def make_logger(name=None, stdlog=sys.stderr):
     """Set up a logger with the specified name.
 
     Args:
         name: The logger object's name.
+        stdlog: stream for logging output.
 
     Returns:
         A logger object.
     """
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
-    handler = logging.StreamHandler(sys.stderr)
+    handler = logging.StreamHandler(stdlog)
     formatter = logging.Formatter(
         '%(asctime)s:%(name)s:%(levelname)s:%(message)s')
     handler.setFormatter(formatter)
@@ -51,7 +52,8 @@ class AbstractTwitterManager(metaclass=ABCMeta):
         """
 
         self.twhandler = None
-        self.logger = make_logger(name)
+        self.logger = None
+        self.name = name
         self.args = None
         self.commands = commands or []
         self._dry_run = False
@@ -61,12 +63,8 @@ class AbstractTwitterManager(metaclass=ABCMeta):
         """Global option dry_run."""
         return self._dry_run
 
-    def setup(self, command_line=None):
-        """Setup this instance.
-
-        Args:
-            command_line: Raw command line arguments.
-        """
+    def parse_args(self, args):
+        """Parse the command line parameters."""
 
         pre_parser = ArgumentParser(add_help=False)
         pre_parser.add_argument(
@@ -81,7 +79,7 @@ class AbstractTwitterManager(metaclass=ABCMeta):
             action='store_true',
             help='perform a trial run with no changes made')
 
-        args, remaining_argv = pre_parser.parse_known_args(command_line)
+        args, remaining_argv = pre_parser.parse_known_args(args)
         self._dry_run = args.dry_run
 
         defaults = {}
@@ -107,10 +105,8 @@ class AbstractTwitterManager(metaclass=ABCMeta):
             cmd_parser.set_defaults(func=cmd, **defaults)
 
         #root_parser.set_defaults(**defaults)
-        self.args = root_parser.parse_args(remaining_argv)
-
-        if not 'func' in self.args:
-            self.args.func = root_parser.print_help
+        self.args = root_parser.parse_args(args=remaining_argv or ('--help',))
+        return self.args
 
     @abstractmethod
     def make_parser(self, pre_parser):
@@ -122,8 +118,10 @@ class AbstractTwitterManager(metaclass=ABCMeta):
         """
         pass
 
-    def execute(self):
+    def execute(self, args, stdout=sys.stdout, stderr=sys.stderr):
         """Execute the specified command."""
+
+        self.logger = make_logger(self.name, stderr)
 
         if not self.twhandler:
             self.twhandler = twitter_instance()
@@ -133,6 +131,9 @@ class AbstractTwitterManager(metaclass=ABCMeta):
         except TwitterHTTPError as ex:
             self.logger.error('{}'.format(ex))
             raise
+
+    def main(self, args=sys.argv[1:]):
+        sys.exit(self.execute(self.parse_args(args)))
 
 def output(data, fp=sys.stdout):
     """Output statuses, users, etc. to fp as JSON formatted data."""

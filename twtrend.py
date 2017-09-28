@@ -3,8 +3,7 @@
 
 from argparse import ArgumentParser
 
-from twmods import AbstractTwitterManager
-from twmods import EPILOG
+from twmods import (AbstractTwitterManager, EPILOG)
 from twmods.commands.trends import make_commands
 
 DESCRIPTION = "A utility script to call trends/xxx of Twitter API."
@@ -18,7 +17,7 @@ USAGE = """
 
 # pylint: disable=redefined-builtin
 __doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 class TwitterTrendManager(AbstractTwitterManager):
     """This class handles trends/xxx endpoints of Twitter API."""
@@ -43,16 +42,7 @@ class TwitterTrendManager(AbstractTwitterManager):
             version=__version__)
         return parser
 
-def main(command_line=None):
-    """The main function.
-
-    Args:
-        command_line: Raw command line arguments.
-    """
-
-    mgr = TwitterTrendManager()
-    mgr.setup(command_line)
-    mgr.execute()
+mgr = TwitterTrendManager()
 
 if __name__ == '__main__':
-    main()
+    mgr.main()

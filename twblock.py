@@ -3,8 +3,7 @@
 
 from argparse import ArgumentParser
 
-from twmods import AbstractTwitterManager
-from twmods import EPILOG
+from twmods import (AbstractTwitterManager, EPILOG)
 from twmods.commands.blocks import make_commands
 
 DESCRIPTION = "A utility script to call blocks/xxx of Twitter API."
@@ -27,7 +26,7 @@ where
 
 # pylint: disable=redefined-builtin
 __doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
-__version__ = '1.0.3'
+__version__ = '1.0.4'
 
 class TwitterBlockManager(AbstractTwitterManager):
     """This class handles blocks/xxx endpoints of Twitter API."""
@@ -52,16 +51,7 @@ class TwitterBlockManager(AbstractTwitterManager):
             version=__version__)
         return parser
 
-def main(command_line=None):
-    """The main function.
-
-    Args:
-        command_line: Raw command line arguments.
-    """
-
-    mgr = TwitterBlockManager()
-    mgr.setup(command_line)
-    mgr.execute()
+mgr = TwitterBlockManager()
 
 if __name__ == '__main__':
-    main()
+    mgr.main()

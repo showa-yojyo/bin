@@ -3,8 +3,7 @@
 
 from argparse import ArgumentParser
 
-from twmods import AbstractTwitterManager
-from twmods import EPILOG
+from twmods import (AbstractTwitterManager, EPILOG)
 from twmods.commands.saved_searches import make_commands
 
 DESCRIPTION = "A utility script to call saved_searches/xxx of Twitter API."
@@ -19,7 +18,7 @@ USAGE = """
 
 # pylint: disable=redefined-builtin
 __doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 class TwitterSavedSearchManager(AbstractTwitterManager):
     """This class handles saved_searches/xxx endpoints of Twitter API."""
@@ -44,16 +43,7 @@ class TwitterSavedSearchManager(AbstractTwitterManager):
             version=__version__)
         return parser
 
-def main(command_line=None):
-    """The main function.
-
-    Args:
-        command_line: Raw command line arguments.
-    """
-
-    mgr = TwitterSavedSearchManager()
-    mgr.setup(command_line)
-    mgr.execute()
+mgr = TwitterSavedSearchManager()
 
 if __name__ == '__main__':
-    main()
+    mgr.main()

@@ -12,8 +12,8 @@ import sys
 
 __version__ = '0.0.0'
 
-def make_parser():
-    """TBW"""
+def parse_args(args):
+    """Parse the command line parameters."""
 
     parser = ArgumentParser(description=__doc__)
     parser.add_argument('--version', action='version', version=__version__)
@@ -28,7 +28,7 @@ def make_parser():
         action='store_true',
         help='enable log mode')
 
-    return parser
+    return parser.parse_args(args=args or ('--help',))
 
 # users/search
 # lists/members
@@ -52,7 +52,7 @@ CSV_HEADER_LOG = (
     'created_at',
     'text',)
 
-def format_json(args):
+def run(args):
     """TBW"""
 
     if args.logmode:
@@ -71,12 +71,8 @@ def format_json(args):
                     fmt = csv_format_w
             print(fmt.format(**i).replace('\r', '').replace('\n', '\\n'))
 
-def main(params=sys.argv[1:]):
-    """TBW"""
-
-    parser = make_parser()
-    args = parser.parse_args(params)
-    format_json(args)
+def main(args=sys.argv[1:]):
+    sys.exit(run(parse_args(args)))
 
 if __name__ == '__main__':
     main()

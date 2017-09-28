@@ -3,6 +3,7 @@
 
 from argparse import ArgumentParser
 from functools import wraps
+import sys
 from secret import twitter_instance
 from twmods import (EPILOG, output)
 
@@ -15,15 +16,10 @@ USAGE = """
 
 # pylint: disable=redefined-builtin
 __doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
-def configure():
-    """Parse the command line parameters.
-
-    Returns:
-        An instance of argparse.ArgumentParser that stores the command line
-        parameters.
-    """
+def parse_args(args):
+    """Parse the command line parameters."""
 
     root_parser = ArgumentParser(
         description=DESCRIPTION,
@@ -60,15 +56,15 @@ def configure():
             help=cmd['help'])
         parser.set_defaults(func=cmd['func'])
 
-    return root_parser
+    return root_parser.parse_args(args=args or ('--help',))
 
 def request_decorator(request):
     """Decorate a function that returns an endpoint."""
 
     @wraps(request)
-    def request_wrapper():
+    def request_wrapper(stdout, stderr):
         """Output the response received from Twitter."""
-        output(request(twitter_instance())())
+        output(request(twitter_instance())(), stdout)
     return request_wrapper
 
 @request_decorator
@@ -91,17 +87,11 @@ def request_help_tos(twhandler):
     """Return the handler for GET help/tos."""
     return twhandler.help.tos
 
-def main(args=None):
-    """The main function."""
+def run(args, stdout=sys.stdout, stderr=sys.stderr):
+    args.func(stdout, stderr)
 
-    parser = configure()
-    args = parser.parse_args(args)
-
-    if not 'func' in args:
-        parser.print_help()
-        return
-
-    args.func()
+def main(args=sys.argv[1:]):
+    sys.exit(run(parse_args(args)))
 
 if __name__ == '__main__':
     main()

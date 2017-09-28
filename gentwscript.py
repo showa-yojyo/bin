@@ -3,12 +3,13 @@
 """
 from argparse import (ArgumentParser, FileType)
 from json import load
+import sys
 from jinja2 import (Environment, FileSystemLoader)
 
-__version__ = '0.0.0'
+__version__ = '0.0.1'
 
-def setup_parser():
-    """Setup an object of class ArgumentParser and return it."""
+def parse_args(args):
+    """Parse the command line parameters."""
 
     root_parser = ArgumentParser()
     root_parser.add_argument(
@@ -37,7 +38,7 @@ def setup_parser():
         help='generate scripts for PTT demonstration')
     parser.set_defaults(func=pttdemo)
 
-    return root_parser
+    return root_parser.parse_args(args=args or ('--help',))
 
 def twmods(env, json_data):
     """Generate skeleton for twmods/commands modules and their driver
@@ -86,15 +87,11 @@ def pttdemo(env, json_data):
                 fout.write(tmpl_script.render(endpoint=i))
                 fout.write('\n')
 
-def main():
+def main(args=sys.argv[1:]):
+    sys.exit(run(parse_args(args=args)))
+
+def run(args):
     """The main function."""
-
-    root_parser = setup_parser()
-    args = root_parser.parse_args()
-
-    if not 'func' in args:
-        root_parser.print_help()
-        return
 
     args.func(
         Environment(

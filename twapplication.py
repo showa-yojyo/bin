@@ -2,6 +2,7 @@
 """MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
 from argparse import ArgumentParser
+import sys
 from twmods import (EPILOG, output)
 from secret import twitter_instance
 
@@ -15,15 +16,10 @@ USAGE = """
 
 # pylint: disable=redefined-builtin
 __doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
-def configure():
-    """Parse the command line parameters.
-
-    Returns:
-        An instance of argparse.ArgumentParser that stores the command line
-        parameters.
-    """
+def parse_args(args):
+    """Parse the command line parameters."""
 
     root_parser = ArgumentParser(
         description=DESCRIPTION,
@@ -37,17 +33,10 @@ def configure():
         'resources',
         help='A comma-separated list of resource families')
 
-    return root_parser
+    return root_parser.parse_args(args=args or ('--help',))
 
-def main(command_line=None):
-    """The main function.
-
-    Args:
-        command_line: Raw command line arguments.
-    """
-
-    parser = configure()
-    args = parser.parse_args(command_line)
+def run(args, stdout=sys.stdout, stderr=sys.stderr):
+    """The main function."""
 
     twhandler = twitter_instance()
 
@@ -55,7 +44,10 @@ def main(command_line=None):
     # specified resource families.
     response = twhandler.application.rate_limit_status(
         resources=args.resources)
-    output(response)
+    output(response, stdout)
+
+def main(args=sys.argv[1:]):
+    sys.exit(run(parse_args(args)))
 
 if __name__ == '__main__':
     main()

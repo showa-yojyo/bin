@@ -18,7 +18,7 @@ Examples:
 
   With --output option, the result will be written to specified file.
 
-    $ gendiary.py --year=2015 --month=12 --output=~/diary/12.html
+    $ gendiary.py --year=2015 --month=12 --output=~/diary/2015/12.html
 
 """
 
@@ -28,7 +28,7 @@ from calendar import Calendar
 from argparse import ArgumentParser, FileType
 from jinja2 import Environment
 
-__version__ = '1.2.1'
+__version__ = '1.2.2'
 
 DIARY_TEMPLATE = """\
 {#-
@@ -111,13 +111,8 @@ class MyFileType(FileType):
         finally:
             pass
 
-def configure():
-    """Parse the command line parameters.
-
-    Returns:
-        An instance of argparse.ArgumentParser that stores the command line
-        parameters.
-    """
+def parse_args(args):
+    """Parse the command line parameters."""
 
     parser = ArgumentParser(description='Diary Template Generator')
     parser.add_argument('--version', action='version', version=__version__)
@@ -144,12 +139,13 @@ def configure():
         metavar='FILE',
         help='write result to FILE instead of standard output')
 
-    return parser
+    return parser.parse_args(args)
 
-def main():
+def main(args=sys.argv[1:]):
+    sys.exit(run(parse_args(args)))
+
+def run(args):
     """The main function."""
-
-    args = configure().parse_args()
 
     year = args.year
     month = args.month

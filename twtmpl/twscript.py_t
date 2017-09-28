@@ -19,7 +19,6 @@ Template example
 {%- set basename = 'tw' + basename -%}
 {%- set manager_class_name = 'Twitter' + category_title_form  + 'Manager' -%}
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 description = "A utility script to call {{ command_module }}/xxx of Twitter API."
 
@@ -74,16 +73,7 @@ class {{ manager_class_name }}(AbstractTwitterManager):
         #        if (k in args) and (args[k] is not None)}
         return kwargs, request
 {% endfor %}
-def main(command_line=None):
-    """The main function.
-
-    Args:
-        command_line: Raw command line arguments.
-    """
-
-    mgr = {{ manager_class_name }}()
-    mgr.setup(command_line)
-    mgr.execute()
+mgr = {{ manager_class_name }}()
 
 if __name__ == '__main__':
-    main()
+    mgr.main()

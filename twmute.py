@@ -3,8 +3,7 @@
 
 from argparse import ArgumentParser
 
-from twmods import AbstractTwitterManager
-from twmods import EPILOG
+from twmods import (AbstractTwitterManager, EPILOG)
 from twmods.commands.mutes import make_commands
 
 DESCRIPTION = "A utility script to call mutes/xxx of Twitter API."
@@ -24,7 +23,7 @@ where
 
 # pylint: disable=redefined-builtin
 __doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 class TwitterMuteManager(AbstractTwitterManager):
     """This class handles mutes/xxx endpoints of Twitter API."""
@@ -49,16 +48,7 @@ class TwitterMuteManager(AbstractTwitterManager):
             version=__version__)
         return parser
 
-def main(command_line=None):
-    """The main function.
-
-    Args:
-        command_line: Raw command line arguments.
-    """
-
-    mgr = TwitterMuteManager()
-    mgr.setup(command_line)
-    mgr.execute()
+mgr = TwitterMuteManager()
 
 if __name__ == '__main__':
-    main()
+    mgr.main()

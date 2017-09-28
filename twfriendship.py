@@ -3,8 +3,7 @@
 
 from argparse import ArgumentParser
 
-from twmods import AbstractTwitterManager
-from twmods import EPILOG
+from twmods import (AbstractTwitterManager, EPILOG)
 from twmods.commands.friendships import make_commands
 
 DESCRIPTION = "A utility script to call friendships/xxx of Twitter API."
@@ -30,7 +29,7 @@ where
 
 # pylint: disable=redefined-builtin
 __doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
-__version__ = '1.10.2'
+__version__ = '1.10.3'
 
 class TwitterFriendshipManager(AbstractTwitterManager):
     """This class handles friendships/xxx endpoints of Twitter API."""
@@ -55,16 +54,7 @@ class TwitterFriendshipManager(AbstractTwitterManager):
             version=__version__)
         return parser
 
-def main(command_line=None):
-    """The main function.
-
-    Args:
-        command_line: Raw command line arguments.
-    """
-
-    mgr = TwitterFriendshipManager()
-    mgr.setup(command_line)
-    mgr.execute()
+mgr = TwitterFriendshipManager()
 
 if __name__ == '__main__':
-    main()
+    mgr.main()

@@ -2,6 +2,7 @@
 """MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
 from argparse import (ArgumentParser, FileType)
+import sys
 from secret import twitter_instance
 from twmods import (EPILOG, output)
 
@@ -14,15 +15,10 @@ USAGE = """
 
 # pylint: disable=redefined-builtin
 __doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
-def configure():
-    """Parse the command line parameters.
-
-    Returns:
-        An instance of argparse.ArgumentParser that stores the command line
-        parameters.
-    """
+def parse_args(args):
+    """Parse the command line parameters."""
 
     root_parser = ArgumentParser(
         description=DESCRIPTION,
@@ -42,13 +38,10 @@ def configure():
         type=FileType('rb'),
         help='a PNG, JPEG, BMP, WEBP, or GIF file')
 
-    return root_parser
+    return root_parser.parse_args(args=args or ('--help',))
 
-def main(args=None):
+def run(args, stdout=sys.stdout, stderr=sys.stderr):
     """The main function."""
-
-    parser = configure()
-    args = parser.parse_args(args)
 
     raw_data = args.file.read()
     print('file size = {} MB'.format(len(raw_data) >> 20))
@@ -72,7 +65,10 @@ def main(args=None):
 
     twhandler = twitter_instance(domain='upload.twitter.com')
     response = twhandler.media.upload(**kwargs)
-    output(response)
+    output(response, stdout)
+
+def main(args=sys.argv[1:]):
+    sys.exit(run(parse_args(args)))
 
 if __name__ == '__main__':
     main()

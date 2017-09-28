@@ -2,6 +2,7 @@
 """MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
 from argparse import ArgumentParser
+import sys
 from twmods import AbstractTwitterManager
 from twmods import EPILOG
 from twmods.commands.account import make_commands
@@ -65,16 +66,7 @@ class TwitterAccountManager(AbstractTwitterManager):
             version=__version__)
         return parser
 
-def main(command_line=None):
-    """The main function.
-
-    Args:
-        command_line: Raw command line arguments.
-    """
-
-    mgr = TwitterAccountManager()
-    mgr.setup(command_line)
-    mgr.execute()
+mgr = TwitterAccountManager()
 
 if __name__ == '__main__':
-    main()
+    mgr.main()

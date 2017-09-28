@@ -2,13 +2,12 @@
 """MODULE DOCSTRING WILL BE DYNAMICALLY OVERRIDED."""
 
 from argparse import ArgumentParser
+import sys
 import time
 
 from twitter import TwitterHTTPError
 
-from twmods import EPILOG
-from twmods import make_logger
-from twmods import output
+from twmods import (EPILOG, make_logger, output)
 from twmods.parsers import (parser_full,
                             parser_since_max_ids,
                             parser_include_entities)
@@ -30,17 +29,12 @@ USAGE = """
 
 # pylint: disable=redefined-builtin
 __doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
-__version__ = '1.3.3'
+__version__ = '1.3.4'
 
 COUNT_MAX = 100
 
-def configure():
-    """Parse the command line parameters.
-
-    Returns:
-        An instance of argparse.ArgumentParser that stores the command line
-        parameters.
-    """
+def parse_args(args):
+    """Parse the command line parameters."""
 
     parser = ArgumentParser(
         description=DESCRIPTION,
@@ -89,19 +83,12 @@ def configure():
         metavar='YYYY-MM-DD',
         help='before the given date')
 
-    return parser
+    return vars(parser.parse_args(args=args or ('--help',)))
 
-def main():
-    """The main function.
+def run(args, stdout=sys.stdout, stderr=sys.stderr):
+    """The main function."""
 
-    Returns:
-        None.
-    """
-
-    parser = configure()
-    args = vars(parser.parse_args())
-
-    logger = make_logger('twsearch')
+    logger = make_logger('twsearch', stderr)
     twhandler = twitter_instance()
     request = twhandler.search.tweets
 
@@ -148,7 +135,10 @@ def main():
         logger.info('search.tweets params={}'.format(kwargs))
         results = request(**kwargs)
 
-    output(results)
+    output(results, stdout)
+
+def main(args=sys.argv[1:]):
+    sys.exit(run(parse_args(args)))
 
 if __name__ == '__main__':
     main()

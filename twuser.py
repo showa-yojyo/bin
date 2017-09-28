@@ -3,8 +3,7 @@
 
 from argparse import ArgumentParser
 
-from twmods import AbstractTwitterManager
-from twmods import EPILOG
+from twmods import (AbstractTwitterManager, EPILOG)
 from twmods.commands.users import make_commands
 
 DESCRIPTION = "A utility script to manage Twitter users."
@@ -28,7 +27,7 @@ where
 
 # pylint: disable=redefined-builtin
 __doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
-__version__ = '1.1.4'
+__version__ = '1.1.5'
 
 class TwitterUserManager(AbstractTwitterManager):
     """This class handles commands about a Twitter users."""
@@ -53,16 +52,7 @@ class TwitterUserManager(AbstractTwitterManager):
             version=__version__)
         return parser
 
-def main(command_line=None):
-    """The main function.
-
-    Args:
-        command_line: Raw command line arguments.
-    """
-
-    mgr = TwitterUserManager()
-    mgr.setup(command_line)
-    mgr.execute()
+mgr = TwitterUserManager()
 
 if __name__ == '__main__':
-    main()
+    mgr.main()

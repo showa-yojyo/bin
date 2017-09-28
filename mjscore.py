@@ -21,8 +21,8 @@ from mjstat.model import (apply_transforms, merge_games)
 
 __version__ = '0.0.0'
 
-def configure():
-    """Configuration of this application."""
+def parse_args(args):
+    """Convert argument strings to objects."""
 
     parser = ArgumentParser(add_help=False)
     parser.add_argument(
@@ -108,39 +108,40 @@ def configure():
 
     parser.set_defaults(**defaults)
 
-    return parser.parse_args(remaining_argv)
+    return parser.parse_args(args=remaining_argv or ('--help',))
 
-def main():
+def run(args):
     """The main function."""
 
-    settings = configure()
     sources = []
-
-    if settings.debug:
+    if args.debug:
         from mjstat.testdata import TEST_INPUT
         sources.append(StringInput(source=TEST_INPUT))
     else:
         # XXX
-        if isinstance(settings.input, (list, tuple)):
+        if isinstance(args.input, (list, tuple)):
             sources.extend(FileInput(
                 source_path=i,
                 encoding='sjis',
-                mode='r') for i in settings.input)
+                mode='r') for i in args.input)
         else:
             sources.append(FileInput(
-                source_path=settings.input,
+                source_path=args.input,
                 encoding='sjis',
                 mode='r'))
 
     parser = MJScoreParser()
     reader = MJScoreReader()
 
-    game_data_list = tuple(reader.read(i, parser, settings) for i in sources)
+    game_data_list = tuple(reader.read(i, parser, args) for i in sources)
     game_data = merge_games(game_data_list)
     apply_transforms(game_data)
 
     writer = MJScoreWriter()
     writer.write(game_data, FileOutput(None))
+
+def main(args=sys.argv[1:]):
+    sys.exit(run(parse_args(args=args)))
 
 if __name__ == '__main__':
     main()

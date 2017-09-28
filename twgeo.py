@@ -3,8 +3,7 @@
 
 from argparse import ArgumentParser
 
-from twmods import AbstractTwitterManager
-from twmods import EPILOG
+from twmods import (AbstractTwitterManager, EPILOG)
 from twmods.commands.geo import make_commands
 
 DESCRIPTION = "Demonstrate Twitter's GET geo/xxx endpoints."
@@ -24,7 +23,7 @@ USAGE = """
 
 # pylint: disable=redefined-builtin
 __doc__ = '\n'.join((DESCRIPTION, USAGE, EPILOG))
-__version__ = '1.0.3'
+__version__ = '1.0.4'
 
 class TwitterGeoManager(AbstractTwitterManager):
     "Demonstrate Twitter's GET geo/xxx endpoints."
@@ -52,16 +51,7 @@ class TwitterGeoManager(AbstractTwitterManager):
 
         return parser
 
-def main(command_line=None):
-    """The main function.
-
-    Args:
-        command_line: Raw command line arguments.
-    """
-
-    mgr = TwitterGeoManager()
-    mgr.setup(command_line)
-    mgr.execute()
+mgr = TwitterGeoManager()
 
 if __name__ == '__main__':
-    main()
+    mgr.main()
