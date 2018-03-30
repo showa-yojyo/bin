@@ -1,12 +1,8 @@
 # Local rules
-_attic/
 tmp*
 *.cache
 *.txt
 *.bak
-
-.ipython
-.jupyter/migrated
 
 # General rules
 
