@@ -8,7 +8,7 @@ What is this?
 ======================================================================
 
 This repository contains various script files just for me.
-Script files are mainly written in Python.
+Most script files are written in Python.
 
 Installation
 ======================================================================
