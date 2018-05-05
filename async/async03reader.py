@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """async03reader.py: Use a reader
+cf. async13sockets.py and async16sockets.py
 
 Usage:
   async03reader.py
