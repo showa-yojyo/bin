@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """async15httpheader.py: Get HTTP header
+cf. async20syntax.py
 
 Usage:
   async15httpheader.py http://example.com/path/page.html
@@ -25,7 +26,7 @@ async def print_http_headers(url):
         line = await reader.readline()
         if not line:
             break
-        line = line.decode('utf-8').rstrip()
+        line = line.decode().rstrip()
         if line:
             print(f'HTTP header> {line}')
 
@@ -34,7 +35,7 @@ async def print_http_headers(url):
 
 def main(url):
     loop = asyncio.get_event_loop()
-    task = asyncio.ensure_future(print_http_headers(url))
+    task = print_http_headers(url)
     try:
         loop.run_until_complete(task)
     finally:
