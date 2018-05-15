@@ -44,7 +44,7 @@ def run(args, stdout=sys.stdout, stderr=sys.stderr):
     """The main function."""
 
     raw_data = args.file.read()
-    print('file size = {} MB'.format(len(raw_data) >> 20))
+    print(f'file size = {len(raw_data) >> 20} MB')
 
     # Media uploads for images are limited to 5MB in file size,
     # and for videos are limited to 15MB. For chunked uploads,

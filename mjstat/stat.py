@@ -181,7 +181,7 @@ def evaluate_winning(player_data):
     for i in player_data['games']:
         # pattern must be 1G, 2G, 3G or 4G.
         index = i['players'].index(name)
-        pattern = '{:d}G'.format(index + 1)
+        pattern = f'{index + 1:d}G'
 
         for hand in i['hands']:
             if name != hand.get('winner', None):
@@ -217,7 +217,7 @@ def evaluate_winning(player_data):
                     elif index == 0:
                         han = 13
                     else:
-                        raise ValueError('unknown winning: {}'.format(value))
+                        raise ValueError(f'unknown winning: {value}')
 
             total_han += han
 
@@ -298,23 +298,22 @@ def evaluate_riichi(player_data):
     name = player_data['name']
     for i in player_data['games']:
         player_index = i['players'].index(name) + 1
-        riichi_mark = '{}R'.format(player_index)
+        riichi_mark = f'{player_index}R'
         for hand in i['hands']:
             actions = hand['action_table']
-            #num_action = len(actions)
+
             try:
                 i = actions.index(riichi_mark)
-                rest_actions = actions[i + 1:]
-                if len(rest_actions) == 1 or len(rest_actions) > 2:
-                    # the 4th riichi in a 四家立直
-                    # or rest_actions[0] does not deal in another
-                    # player.
-                    num_riichi += 1
-                elif rest_actions[1].endswith('A'):
-                    # A deal-in.
-                    pass
             except ValueError:
-                pass
+                continue
+
+            rest_actions = actions[i + 1:]
+            if len(rest_actions) == 1 or len(rest_actions) > 2:
+                # the 4th riichi in a 四家立直
+                # or rest_actions[0] does not deal in another
+                # player.
+                num_riichi += 1
+                # otherwise, a deal-in.
 
     if num_riichi:
         player_data.update(

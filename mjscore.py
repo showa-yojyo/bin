@@ -11,7 +11,7 @@ Usage:
 
 from argparse import ArgumentParser
 from configparser import (ConfigParser, Error)
-from os.path import expanduser
+from pathlib import Path
 import sys
 from docutils.io import (StringInput, FileInput, FileOutput)
 from mjstat.reader import MJScoreReader
@@ -34,16 +34,12 @@ def parse_args(args):
 
     defaults = {}
     config = ConfigParser()
-    if args.config:
-        config.read(args.config)
-    else:
-        default_config_path = expanduser('~/.mjscore')
-        config.read(default_config_path)
+    config.read(args.config if args.config else Path.home() / '.mjscore')
 
     try:
         defaults = dict(config.items("General"))
-    except Error as ex:
-        print('Warning: {}'.format(ex), file=sys.stderr)
+    except Exception as ex:
+        print(f'Warning: {ex}', file=sys.stderr)
 
     parser = ArgumentParser(
         parents=[parser],

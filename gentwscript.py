@@ -50,14 +50,14 @@ def twmods(env, json_data):
 
     for kwargs in json_data:
         # Generate a script file.
-        with open('tw{}.py'.format(kwargs['basename']),
+        with open(f'''tw{kwargs['basename']}.py''',
                   mode='w', newline='') as fout:
             fout.write(tmpl_script.render(**kwargs))
             fout.write('\n')
 
         # Generate a module file.
-        with open('twmods/commands/{}.py'.format(
-            kwargs['command_module']), mode='w', newline='') as fout:
+        with open(f'''twmods/commands/{kwargs['command_module']}.py''',
+                  mode='w', newline='') as fout:
             fout.write(tmpl_command_module.render(**kwargs))
             fout.write('\n')
 
@@ -73,7 +73,7 @@ def pttdemo(env, json_data):
 
         # file name e.g. GET direct_messages/show -> rest-direct-messages.rst
         one_name = endpoints[0].split(' ')[-1].replace('_', '-')
-        rst_name = 'rest-{}.rst'.format(one_name.partition('/')[0])
+        rst_name = f'''rest-{one_name.partition('/')[0]}.rst'''
 
         with open(rst_name, mode='w', encoding='utf-8', newline='') as fout:
             fout.write(tmpl_rst.render(**kwargs))
@@ -83,7 +83,7 @@ def pttdemo(env, json_data):
             # file name e.g. POST lists/memberships/create
             # -> lists-memberships-create.py
             file_name = i.split(' ')[1].replace('/', '-').replace(':', '')
-            with open(file_name + '.py', mode='w', newline='') as fout:
+            with open(f'{file_name}.py', mode='w', newline='') as fout:
                 fout.write(tmpl_script.render(endpoint=i))
                 fout.write('\n')
 

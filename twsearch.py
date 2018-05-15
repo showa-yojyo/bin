@@ -119,7 +119,7 @@ def run(args, stdout=sys.stdout, stderr=sys.stderr):
                     logger.info("finished")
                     break
 
-                logger.info('search.tweets params={}'.format(kwargs))
+                logger.info(f'search.tweets params={kwargs}')
                 results.append(response)
 
                 if len(statuses) < kwargs['count']:
@@ -129,10 +129,10 @@ def run(args, stdout=sys.stdout, stderr=sys.stderr):
                 kwargs['max_id'] = since_id - 1
                 time.sleep(2)
         except TwitterHTTPError as ex:
-            logger.info('{}'.format(ex))
+            logger.info('exception', exc_info=ex)
             #raise
     else:
-        logger.info('search.tweets params={}'.format(kwargs))
+        logger.info(f'search.tweets params={kwargs}')
         results = request(**kwargs)
 
     output(results, stdout)

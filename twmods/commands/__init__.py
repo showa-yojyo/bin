@@ -11,7 +11,7 @@ from twitter import TwitterHTTPError
 from .. import output
 from ..parsers import filter_args
 
-__version__ = '1.9.0'
+__version__ = '1.10.0'
 
 class AbstractTwitterCommand(metaclass=ABCMeta):
     """Prototype"""
@@ -64,7 +64,7 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
                                   'screen_name',
                                   'count',
                                   'cursor'))
-        logger.info('args={}'.format(kwargs))
+        logger.info(f'args={kwargs}')
         if self.manager.dry_run:
             def request_dry_run(**kwargs):
                 """Dummy."""
@@ -77,10 +77,10 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
                 response = request(**kwargs)
                 results.extend(response['ids'])
                 next_cursor = response['next_cursor']
-                logger.info('next_cursor: {}'.format(next_cursor))
+                logger.info(f'next_cursor: {next_cursor}')
                 kwargs['cursor'] = next_cursor
         except TwitterHTTPError as ex:
-            logger.info('{}'.format(ex))
+            logger.info('exception', exc_info=ex)
             #raise
 
         print('\n'.join(results))
@@ -99,7 +99,7 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
         kwargs.update(filter_args(
             'user_id', 'screen_name',
             'count', 'cursor', 'include_user_entities'))
-        logger.info('args={}'.format(kwargs))
+        logger.info(f'args={kwargs}')
         if self.manager.dry_run:
             def request_dry_run(**kwargs):
                 """Dummy."""
@@ -112,10 +112,10 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
                 response = request(**kwargs)
                 results.extend(response['users'])
                 next_cursor = response['next_cursor']
-                logger.info('next_cursor: {}'.format(next_cursor))
+                logger.info(f'next_cursor: {next_cursor}')
                 kwargs['cursor'] = next_cursor
         except TwitterHTTPError as ex:
-            logger.info('{}'.format(ex))
+            logger.info('exception', exc_info=ex)
             #raise
 
         output(results)
@@ -131,7 +131,7 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
         """
 
         logger, args = self.logger, self.args
-        logger.info('{} args: {}'.format(request.__name__, args))
+        logger.info(f'{request.__name__} args: {args}')
         if self.manager.dry_run:
             def request_dry_run(**kwargs):
                 """Dummy."""
@@ -149,12 +149,10 @@ class AbstractTwitterCommand(metaclass=ABCMeta):
                 if not csv:
                     break
 
-                logger.info("[{:04d}]-[{:04d}] Waiting...".format(
-                    i, i + up_to))
+                logger.info(f"[{i:04d}]-[{i + up_to:04d}] Waiting...")
                 response = request(**{user_spec_name:csv}, **kwargs)
                 results.extend(response)
-                logger.info("[{:04d}]-[{:04d}] Processed: {}".format(
-                    i, i + up_to, csv))
+                logger.info(f"[{i:04d}]-[{i + up_to:04d}] Processed: {csv}")
                 time.sleep(2)
 
         # TODO: lists/xxx never get results.
@@ -191,7 +189,7 @@ def call_decorator(operation):
         kwargs, request = operation(cmd)
 
         logger = cmd.manager.logger
-        logger.info('args={}'.format(kwargs))
+        logger.info(f'args={kwags}')
         if not cmd.manager.dry_run:
             output(request(**kwargs))
 

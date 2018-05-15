@@ -25,7 +25,7 @@ def main():
     if GL.glCreateShader:
         aspects['GLSL'] = GL.GL_SHADING_LANGUAGE_VERSION
 
-    print('\n'.join('{}: {}'.format(key, GL.glGetString(val).decode())
+    print('\n'.join(f'{key}: {GL.glGetString(val).decode()}'
                     for key, val in aspects.items()))
 
     GLUT.glutDestroyWindow(win)

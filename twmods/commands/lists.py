@@ -81,7 +81,7 @@ class AbstractTwitterListsCommand(AbstractTwitterCommand):
             'owner_id', 'owner_screen_name',
             'count', 'include_entities', 'skip_status',
             'cursor'))
-        logger.info('args={}'.format(kwargs))
+        logger.info(f'args={kwargs}')
 
         results = []
         try:
@@ -89,10 +89,10 @@ class AbstractTwitterListsCommand(AbstractTwitterCommand):
                 response = request(**kwargs)
                 results.extend(response['users'])
                 next_cursor = response['next_cursor']
-                logger.info('next_cursor: {}'.format(next_cursor))
+                logger.info(f'next_cursor: {next_cursor}')
                 kwargs['cursor'] = next_cursor
         except TwitterHTTPError as ex:
-            logger.info('{}'.format(ex))
+            logger.info('exception', exc_info=ex)
             #raise
 
         output(results)
@@ -113,7 +113,7 @@ class AbstractTwitterListsCommand(AbstractTwitterCommand):
             'user_id', 'screen_name',
             'count', 'cursor',
             'filter_to_owned_lists'))
-        logger.info('args={}'.format(kwargs))
+        logger.info(f'args={kwargs}')
 
         results = []
         try:
@@ -121,10 +121,10 @@ class AbstractTwitterListsCommand(AbstractTwitterCommand):
                 response = request(**kwargs)
                 results.extend(response['lists'])
                 next_cursor = response['next_cursor']
-                logger.info('next_cursor: {}'.format(next_cursor))
+                logger.info(f'next_cursor: {next_cursor}')
                 kwargs['cursor'] = next_cursor
         except TwitterHTTPError as ex:
-            logger.info('{}'.format(ex))
+            logger.info('exception', exc_info=ex)
             #raise
 
         output(results)

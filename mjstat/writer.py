@@ -86,11 +86,11 @@ class MJScoreWriter(object):
 
 def format_float(val):
     """Set a floating point number into a specific format."""
-    return '{:.2f}'.format(val)
+    return f'{val:.2f}'
 
 def format_percentage(val):
     """Set a percentile into a specific format."""
-    return '{:.2%}'.format(val)
+    return f'{val:.2%}'
 
 def fill_template(player_data, lang, fundamental, yaku):
     """Build long text which shows the statistics of the target

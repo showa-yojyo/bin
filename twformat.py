@@ -56,10 +56,10 @@ def run(args):
     """TBW"""
 
     if args.logmode:
-        fmt = '\t'.join(('{' + i + '}' for i in CSV_HEADER_LOG))
+        fmt = '\t'.join((f'{{{i}}}' for i in CSV_HEADER_LOG))
     else:
-        csv_format = '\t'.join(('{' + i + '}' for i in CSV_HEADER))
-        csv_format_w = '\t'.join(('{' + i + '}' for i in CSV_HEADER[:-2]))
+        csv_format = '\t'.join((f'{{{i}}}' for i in CSV_HEADER))
+        csv_format_w = '\t'.join((f'{{{i}}}' for i in CSV_HEADER[:-2]))
 
     for fp in args.files:
         json_obj = load(fp)

@@ -118,7 +118,7 @@ class Search(AbstractTwitterUsersCommand):
             try:
                 for i in range(MAX_PAGE):
                     kwargs['page'] = i + 1
-                    logger.info('args={}'.format(kwargs))
+                    logger.info(f'args={kwargs}')
                     response = request(**kwargs)
                     if not response:
                         break
@@ -129,7 +129,7 @@ class Search(AbstractTwitterUsersCommand):
 
                     time.sleep(2)
             except TwitterHTTPError as ex:
-                logger.error('{}'.format(ex))
+                logger.error('exception', exc_info=ex)
                 #raise
         else:
             kwargs = filter_args(
@@ -139,7 +139,7 @@ class Search(AbstractTwitterUsersCommand):
                 'count',
                 'include_entities')
 
-            logger.info('args={}'.format(kwargs))
+            logger.info(f'args={kwargs}')
             results = request(**kwargs)
         output(results)
         logger.info('finished')

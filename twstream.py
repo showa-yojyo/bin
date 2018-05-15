@@ -101,7 +101,7 @@ class TwitterStreamManager(AbstractTwitterManager):
         try:
             self.args.func()
         except TwitterHTTPError as ex:
-            self.logger.error('{}'.format(ex))
+            self.logger.error('exception', exc_info=ex)
             raise
 
     def request_statuses_sample(self):
@@ -143,7 +143,7 @@ class TwitterStreamManager(AbstractTwitterManager):
                 continue
 
             if msg in (Timeout, HeartbeatTimeout, Hangup):
-                print("{}".format(msg))
+                print(msg)
                 break
 
             # Friends lists.
@@ -167,7 +167,7 @@ class TwitterStreamManager(AbstractTwitterManager):
                 continue
 
             # Unknown
-            print("Unknown {}".format(msg))
+            print(f"Unknown {msg}")
 
     def request_site(self):
         """Request GET site for Twitter."""
@@ -223,7 +223,7 @@ def _output_statuses(gen):
             continue
 
         if tweet in (Timeout, HeartbeatTimeout, Hangup):
-            print("{}".format(tweet))
+            print(tweet)
             break
 
         if 'text' in tweet:
@@ -232,7 +232,7 @@ def _output_statuses(gen):
             print(line.replace('\r', '').replace('\n', '\\n'))
             continue
 
-        print("Unknown {}".format(tweet))
+        print(f"Unknown {tweet}")
 
 MANAGER = TwitterStreamManager()
 

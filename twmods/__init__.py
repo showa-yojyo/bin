@@ -6,7 +6,7 @@ from argparse import (ArgumentParser, FileType)
 from configparser import (ConfigParser, Error)
 from json import dump
 import logging
-from os.path import expanduser
+from pathlib import Path
 import sys
 
 from twitter import TwitterHTTPError
@@ -15,7 +15,7 @@ from secret import twitter_instance
 
 EPILOG = "GitHub repository: https://github.com/showa-yojyo/bin"
 
-__version__ = '1.14.0'
+__version__ = '1.15.0'
 
 def make_logger(name=None, stdlog=sys.stderr):
     """Set up a logger with the specified name.
@@ -30,9 +30,8 @@ def make_logger(name=None, stdlog=sys.stderr):
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
     handler = logging.StreamHandler(stdlog)
-    formatter = logging.Formatter(
-        '%(asctime)s:%(name)s:%(levelname)s:%(message)s')
-    handler.setFormatter(formatter)
+    handler.setFormatter(logging.Formatter(
+        '{asctime}:{name}:{levelname}:{message}', style='{'))
     logger.addHandler(handler)
     return logger
 
@@ -84,16 +83,12 @@ class AbstractTwitterManager(metaclass=ABCMeta):
 
         defaults = {}
         config = ConfigParser()
-        if args.config:
-            config.read_file(args.config)
-        else:
-            default_config_path = expanduser('~/.twmanagerrc')
-            config.read(default_config_path)
+        config.read(args.config if args.config else Path.home() / '.twmanagerrc')
 
         try:
             defaults = dict(config.items("General"))
-        except Error as ex:
-            print('Warning: {}'.format(ex), file=sys.stderr)
+        except Exception as ex:
+            print(f'Warning: {ex}', file=sys.stderr)
 
         root_parser = self.make_parser(pre_parser)
 
@@ -129,7 +124,7 @@ class AbstractTwitterManager(metaclass=ABCMeta):
         try:
             self.args.func()
         except TwitterHTTPError as ex:
-            self.logger.error('{}'.format(ex))
+            self.logger.error('exception', exc_info=ex)
             raise
 
     def main(self, args=sys.argv[1:]):
