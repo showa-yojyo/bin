@@ -28,7 +28,7 @@ from calendar import Calendar
 from argparse import ArgumentParser, FileType
 from jinja2 import Environment
 
-__version__ = '1.2.3'
+__version__ = '2.0.0'
 
 DIARY_TEMPLATE = """\
 {#-
@@ -50,47 +50,52 @@ Args:
     Use for header, footer and crumbs.
 -#}
 {%- macro diary_link() -%}
-<a href="../index.html" title="index">日記</a> &gt;
-{{ year }} 年 &gt;
-{{ "%02d"|format(month) }} 月
+  <nav>
+    <a href="../index.html" title="index">日記</a> &gt;
+    {{ year }} 年 &gt;
+    {{ "%02d"|format(month) }} 月
+  </nav>
 {%- endmacro -%}
 
 {#- Here is the template body. -#}
 
-<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="ja">
+<!DOCTYPE html>
+<html lang="ja">
 <head>
-  <title>日記 {{ year }}/{{ "%02d"|format(month) }}</title>
-  <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-  <meta http-equiv="Content-style-type" content="text/css" />
+  <meta charset="utf-8" />
   <meta name="author" content="{{ mymail }}" />
-  <link rel="index" type="text/html" href="{{ myurl }}" />
-  <link rel="stylesheet" href="../diary.css" type="text/css" />
-  <link rel="stylesheet" href="../buf2html.css" type="text/css" />
+  <title>日記 {{ year }}/{{ "%02d"|format(month) }}</title>
+  <link rel="index" href="{{ myurl }}" />
+  <link rel="stylesheet" href="../diary-html5.css" />
 </head>
 <body>
-<p>
-{{ diary_link() }}
-</p>
-<hr />
-{{ '<h3 id="diary.%d.%s">%d 年 %02d 月</h3>'|format(year, monname, year, month) }}
+  <header>
+    {{ diary_link() }}
+    {{ '<h1 id="diary.%d.%s">%d 年 %02d 月</h3>'|format(year, monname, year, month) }}
+  </header>
+
+  <section>
 {%- for date in dates %}
 {%- if date[0] %}
-{%- set sectid = 'diary.%d.%s.%d'|format(year, monname, date[0]) %}
-{%- set secttitle = '%d/%02d/%02d (%s)'|format(year, month, date[0], dows[date[1]]) %}
-<div title="{{ sectid }}">
-<h4 id="{{ sectid }}" class="Date">{{ secttitle }}</h4>
-<pre class="Diary">
+{%- set article_id = 'diary.%d.%s.%d'|format(year, monname, date[0]) %}
+{%- set datetime_repr = '%d-%02d-%02d'|format(year, month, date[0]) %}
+{%- set article_time = '%d/%02d/%02d (%s)'|format(year, month, date[0], dows[date[1]]) %}
+    <article id="{{ article_id }}">
+      <header>
+        <time datetime="{{ datetime_repr }}">{{ article_time }}</time>
+      </header>
+      <pre class="Diary">
 
-</pre>
-</div> <!-- {{ sectid }} -->
+      </pre>
+    </article> <!-- {{ article_id }} -->
 {% endif %}
 {%- endfor %}
-<hr />
-{{ diary_link() }}
-<br />
-<address>プレハブ小屋管理人<a href="mailto:{{ mymail }}?subject=diary.{{ year }}.{{ "%02d"|format(month) }}">{{ mymail }}</a></address>
+  </section>
+
+  <footer>
+    {{ diary_link() }}
+    <address>プレハブ小屋管理人<a href="mailto:{{ mymail }}?subject=diary.{{ year }}.{{ "%02d"|format(month) }}">{{ mymail }}</a></address>
+  </footer>
 </body>
 </html>
 """
@@ -105,11 +110,8 @@ class MyFileType(FileType):
         if path == ':':
             return super.__call__(self, path)
 
-        try:
-            return open(path, self._mode, self._bufsize,
-                        self._encoding, self._errors, newline='\n')
-        finally:
-            pass
+        return open(path, self._mode, self._bufsize,
+                    self._encoding, self._errors, newline='\n')
 
 def parse_args(args):
     """Parse the command line parameters."""
