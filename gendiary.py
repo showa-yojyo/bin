@@ -28,7 +28,7 @@ from calendar import Calendar
 from argparse import ArgumentParser, FileType
 from jinja2 import Environment
 
-__version__ = '1.2.2'
+__version__ = '1.2.3'
 
 DIARY_TEMPLATE = """\
 {#-
@@ -42,7 +42,7 @@ Args:
 {%- set dows = ("Mon","Tue","Wed","Thu","Fri","Sat","Sun") -%}
 {%- set monthnames = ("","jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec") -%}
 {%- set monname = monthnames[month] -%}
-{%- set mymail = "showa_yojyo@hotmail.com" -%}
+{%- set mymail = "yojyo@hotmail.com" -%}
 {%- set myurl = "../index.html" -%}
 
 {#- Macro diary_link
