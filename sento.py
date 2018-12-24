@@ -8,7 +8,7 @@ from urllib import parse, request
 
 from bs4 import BeautifulSoup
 
-__version__ = '1.1'
+__version__ = '1.2'
 
 URL = 'http://www.1010.or.jp/map/archives/area/{ku}/page/{page:d}'
 
@@ -39,12 +39,23 @@ def parse_args(args):
 
 def parse_item(item):
     """Return name, location, holiday and office hours"""
-    info = item.find('div', attrs={'class': 'info'})
-    name = info.h2.a.text
-    location, holidays, office_hours = [
-        x.text.strip() for x in info.findAll('td')]
 
-    return [name, " ".join(location.split()), holidays, office_hours]
+    def get_column_value(item, propname):
+        return item.find(string=propname).find_next('td').text.strip()
+
+    def has_laundry(item):
+        return bool(item.find(string='コインランドリー'))
+
+    info = item.find('div', class_='info')
+
+    name = info.h2.a.text
+    location = 'TODO'
+    access = get_column_value(item, 'アクセス')
+    holidays = get_column_value(item, '休日')
+    laundry = '1' if has_laundry(item) else '0'
+    office_hours = get_column_value(item, '営業時間')
+
+    return [name, location, access, holidays, laundry, office_hours]
 
 async def fetch(ku, page):
     """Fetch all the data"""
@@ -63,7 +74,7 @@ async def scrape(url):
 def run(args):
     """The main function"""
 
-    print('|'.join(('名前', '位置', '定休日', '営業時間')))
+    print('|'.join(('名前', '位置', 'アクセス', '定休日', 'コインランドリー', '営業時間')))
 
     try:
         loop = asyncio.get_event_loop()
