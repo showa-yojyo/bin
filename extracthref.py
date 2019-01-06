@@ -2,9 +2,8 @@
 
 from argparse import ArgumentParser
 from urllib import request
-from pprint import pprint
 import sys
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, SoupStrainer
 
 __version__ = '1.0.0'
 
@@ -48,12 +47,12 @@ def run(args):
         data = fin.read()
 
     # create an instance of bs
-    bs = BeautifulSoup(data, 'html.parser')
-    links = bs.find_all('a')
-    processed = [(i.get('href'), i.text) for i in links]
+    links = BeautifulSoup(data, 'html.parser', parse_only=SoupStrainer("a"))
+    processed = [(i.get('href'), ''.join(i.stripped_strings)) for i in links]
 
     if args.format == 'pprint':
-        pprint(processed)
+        print(links.prettify())
+
     elif args.format == 'csv':
         print('URL\ttext')
         for i in processed:
