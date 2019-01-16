@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup, SoupStrainer
 __version__ = '1.0.0'
 
 def parse_args(args):
-    """Parse the command line parameters."
+    """Parse the command line parameters.
 
     Returns:
         An instance of argparse.ArgumentParser that stores the command line
