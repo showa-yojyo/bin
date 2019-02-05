@@ -1,69 +1,37 @@
 #!/usr/bin/env python
+"""
+Usage:
+$ sentoscraper.py ID1 ID2 ...
+
+In Cygwin, run this script as follows:
+$ getclip
+590
+591
+592
+593
+594
+595
+596
+597
+598
+$ getclip | dos2unix | xargs sentoscraper.py --cache-dir D:/home/yojyo/data/sento
+"""
 
 import asyncio
 import re
+import os.path
 import sys
 from argparse import ArgumentParser
 from collections import namedtuple
-from urllib import request
-
+from urllib.request import urlopen
+from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
-__version__ = '1.1'
+__version__ = '2'
 
-TOP = 'http://www.1010.or.jp/map/item/'
-URLS = (
-    # 'item-cnt-344', # 改良湯
-    # 'item-cnt-345', # 宝来湯
-    # 'item-cnt-346', # 広尾湯
-    # 'item-cnt-347', # さかえ湯
-    # 'item-cnt-350', # 渋谷笹塚温泉 栄湯
-    # 'item-cnt-351', # 観音湯
-    # 'item-cnt-353', # 第二かねき湯
-    # 'item-cnt-354', # 羽衣湯
-    # 'item-cnt-355', # 八幡湯
-    # 'item-cnt-356', # 仙石湯
-    # 'item-cnt-358', # 天神湯
-    # 'item-cnt-359', # 健康浴泉
-    # 'item-cnt-360', # アクア東中野
-    # 'item-cnt-361', # 松本湯
-    # 'item-cnt-362', # 千代の湯
-    # 'item-cnt-363', # 照の湯
-    # 'item-cnt-364', # 高砂湯
-    # 'item-cnt-365', # 昭和浴場
-    # 'item-cnt-366', # クラブ湯
-    # 'item-cnt-367', # 大黒湯
-    # 'item-cnt-369', # 清春湯
-    # 'item-cnt-370', # 月の湯
-    # 'item-cnt-371', # たからゆ
-    # 'item-cnt-372', # 昭和湯
-    # 'item-cnt-373', # 上越泉
-    # 'item-cnt-374', # 大和湯
-    # 'item-cnt-375', # 中野寿湯温泉
-    # 'item-cnt-376', # 新越泉
-    # 'item-cnt-378', # 一の湯
-    # 'item-cnt-379', # 江古田湯
-    'item-cnt-380', # 弁天湯
-    'item-cnt-381', # 香藤湯
-    'item-cnt-382', # なみのゆ
-    'item-cnt-383', # 小杉湯
-    'item-cnt-384', # 玉の湯
-    'item-cnt-385', # 天徳泉
-    'item-cnt-387', # 杉並湯
-    'item-cnt-388', # ゆ家和ごころ 吉の湯
-    'item-cnt-390', # 桜湯
-    'item-cnt-391', # 藤乃湯
-    'item-cnt-392', # 第二宝湯
-    'item-cnt-393', # 井草湯
-    'item-cnt-394', # 亀の湯
-    'item-cnt-395', # 秀の湯
-    'item-cnt-396', # 文化湯
-    'item-cnt-398', # 天狗湯
-    'item-cnt-399', # ＧＯＫＵＲＡＫＵＹＡ
-    'item-cnt-400', # 湯の楽代田橋
-    'item-cnt-401', # 大黒湯
-    'item-cnt-402', # 大和湯
-    )
+URL_PATTERN = 'http://www.1010.or.jp/map/item/item-cnt-{id}'
+
+CACHE_DIR = None
 
 class Sento(namedtuple('Sento',
     ['id', 'name', 'address', 'access', 'holidays', 'has_laundry', 'office_hours'])):
@@ -84,11 +52,19 @@ def parse_args(args):
     parser.add_argument('--version', action='version', version=__version__)
 
     parser.add_argument(
+        'id',
+        nargs='+',
+        help='numeric ID')
+
+    parser.add_argument(
         '-s', '--semaphore',
         type=int,
         default=3,
-        help='the count of the semaphore'
-    )
+        help='the count of the semaphore')
+
+    parser.add_argument(
+        '-c', '--cache-dir',
+        help='directory in which cache files to be stored')
 
     return parser.parse_args(args)
 
@@ -96,22 +72,40 @@ async def fetch(args):
     """TODO: docstring"""
     semaphore = asyncio.Semaphore(args.semaphore)
 
-    async def scrape_with_semaphore(url, localpath):
+    global CACHE_DIR
+    CACHE_DIR = args.cache_dir
+
+    async def scrape_with_semaphore(id):
         with await semaphore:
-            return await scrape(url, localpath)
+            return await scrape(id)
 
     return await asyncio.wait(
-        [scrape_with_semaphore(TOP + url, f'{url}.html') for url in URLS])
+        [scrape_with_semaphore(i) for i in args.id])
+
+
+def make_url(id):
+    return URL_PATTERN.format(id=id)
+
+def make_local_path(url):
+    return os.path.basename(url) + '.html'
 
 TABLE = str.maketrans('０１２３４５６７８９：−', '0123456789:-')
 
-async def scrape(url, localpath):
+async def scrape(id):
     """TODO: docstring"""
+
+    url = make_url(id)
+    localpath = make_local_path(url)
+
+    global CACHE_DIR
+    if CACHE_DIR:
+        localpath = os.path.normpath(os.path.join(CACHE_DIR, localpath))
+
     try:
         with open(localpath, mode='rb') as fin:
             data = fin.read()
     except (IOError, FileNotFoundError):
-        with request.urlopen(url) as fin:
+        with urlopen(url) as fin:
             data = fin.read()
         with open(localpath, mode='wb') as fout:
             fout.write(data)
