@@ -6,6 +6,7 @@ tmp*
 
 # General rules
 
+*.dll
 *.exe
 *.vshost.exe.manifest
 
