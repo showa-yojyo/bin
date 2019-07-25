@@ -9,7 +9,9 @@ $ mp3.py --save https://www.youtube.com/watch?v=xxxxxxxxxx
 """
 
 from argparse import ArgumentParser
+from concurrent.futures import ThreadPoolExecutor
 import sys
+import time
 from pytube import YouTube
 
 __version__ = '1.0.0'
@@ -30,6 +32,11 @@ def parse_args(args):
         default='.',
         help='dirctory in which files are saved')
     parser.add_argument(
+        '-M', '--max-workers',
+        type=int,
+        default=3,
+        help='the upper bound of the number of pools')
+    parser.add_argument(
         '-s', '--save',
         action='store_true',
         help='write downloaded media to disk')
@@ -38,49 +45,48 @@ def parse_args(args):
         action='store_true',
         help='explain what is being done')
     parser.add_argument(
-        'url',
+        'watch_urls',
+        metavar='URL',
         nargs='*',
         help='URL from which to extract mp3 files')
 
     parser.add_argument('--version', action='version', version=__version__)
     return parser.parse_args(args or [])
 
-def download(url):
-    """Download a video file from YouTube
+def timing_val(func):
+    """DEBUG"""
 
-    Without writing any media to disk.
+    def wrapper(*arg, **kw):
+        '''source: http://www.daniweb.com/code/snippet368.html'''
+        t1 = time.time()
+        res = func(*arg, **kw)
+        t2 = time.time()
+        return (t2 - t1), res, func.__name__
+    return wrapper
 
-    :param str url:
-        A YouTube watch URL.
-    :returns:
-        A stream of mp4?
-    """
-    tube = YouTube(url)
-    return tube.streams.filter(only_audio=True, file_extension='mp4').first()
-
-def save(media, dest_dir):
-    """Save media to disk
-
-    :param Stream media:
-        Media stream to be saved.
-    :param str dest_dir:
-        Output path for writing media file.
-    :rtype str:
-    :returns:
-        Output file path.
-    """
-
-    return media.download(output_path=dest_dir)
-
+@timing_val
 def run(args):
-    """main function"""
+    """main function
 
-    for i in args.url:
-        media = download(i)
-        if args.verbose:
+    :param args:
+        Command line parameters.
+    """
+
+    save = args.save
+    if save:
+        dest_dir = args.dest_dir
+    verbose = args.verbose
+
+    def run_core(watch_url):
+        tube = YouTube(watch_url)
+        media = tube.streams.filter(only_audio=True, file_extension='mp4').first()
+        if verbose:
             print(media.default_filename)
-        if args.save:
-            save(media, args.dest_dir)
+        if save:
+            media.download(output_path=dest_dir)
+
+    with ThreadPoolExecutor(max_workers=args.max_workers) as pool:
+        pool.map(run_core, args.watch_urls)
 
 def main(args=sys.argv[1:]):
     """main function"""
