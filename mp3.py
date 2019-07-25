@@ -9,7 +9,7 @@ $ mp3.py --save https://www.youtube.com/watch?v=xxxxxxxxxx
 """
 
 from argparse import ArgumentParser
-from concurrent.futures import ThreadPoolExecutor
+import asyncio
 import sys
 import time
 from pytube import YouTube
@@ -77,16 +77,30 @@ def run(args):
         dest_dir = args.dest_dir
     verbose = args.verbose
 
-    def run_core(watch_url):
-        tube = YouTube(watch_url)
-        media = tube.streams.filter(only_audio=True, file_extension='mp4').first()
+    semaphore = asyncio.Semaphore(args.max_workers)
+
+    async def run_core(args):
+        tasks = [asyncio.create_task(
+            download_media(watch_url)) for watch_url in args.watch_urls]
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+    async def download_media(watch_url):
+        async with semaphore:
+            tube = YouTube(watch_url)
+
+        media = tube.streams.filter(
+            only_audio=True, file_extension='mp4').first()
+
         if verbose:
             print(media.default_filename)
         if save:
-            media.download(output_path=dest_dir)
+            try:
+                media.download(output_path=dest_dir)
+            except Exception:
+                print(f'Error: {media.default_filename} is not downloaded')
+                raise
 
-    with ThreadPoolExecutor(max_workers=args.max_workers) as pool:
-        pool.map(run_core, args.watch_urls)
+    asyncio.get_event_loop().run_until_complete(run_core(args))
 
 def main(args=sys.argv[1:]):
     """main function"""
