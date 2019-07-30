@@ -100,7 +100,7 @@ def run(args):
                 print(f'Error: {media.default_filename} is not downloaded')
                 raise
 
-    asyncio.get_event_loop().run_until_complete(run_core(args))
+    asyncio.run(run_core(args))
 
 def main(args=sys.argv[1:]):
     """main function"""
