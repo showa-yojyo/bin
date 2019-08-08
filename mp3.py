@@ -10,9 +10,11 @@ $ mp3.py --save https://www.youtube.com/watch?v=xxxxxxxxxx
 
 from argparse import ArgumentParser
 import asyncio
+import logging
 import sys
 import time
 from pytube import YouTube
+from pytube import logger as pytube_logger
 
 __version__ = '1.0.0'
 
@@ -42,8 +44,9 @@ def parse_args(args):
         help='write downloaded media to disk')
     parser.add_argument(
         '-v', '--verbose',
-        action='store_true',
-        help='explain what is being done')
+        action='count',
+        default=0,
+        help='increase verbosity')
     parser.add_argument(
         'watch_urls',
         metavar='URL',
@@ -64,6 +67,26 @@ def timing_val(func):
         return (t2 - t1), res, func.__name__
     return wrapper
 
+def init_logger(args):
+    """Initialize local logger (and reset pytube logger)
+    """
+
+    verbose = args.verbose
+    formatter = pytube_logger.handlers[0].formatter
+
+    logger = logging.getLogger(__name__)
+    verbosity = verbose * 10
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    handler.setLevel(verbosity)
+
+    logger.setLevel(verbosity)
+    pytube_logger.setLevel(verbosity)
+
+    logger.addHandler(handler)
+
+    return logger
+
 @timing_val
 def run(args):
     """main function
@@ -72,35 +95,42 @@ def run(args):
         Command line parameters.
     """
 
+    logger = init_logger(args)
     save = args.save
     if save:
         dest_dir = args.dest_dir
-    verbose = args.verbose
+        logger.info('destination directory: %s', dest_dir)
 
     semaphore = asyncio.Semaphore(args.max_workers)
 
     async def run_core(args):
-        tasks = [asyncio.create_task(
-            download_media(watch_url)) for watch_url in args.watch_urls]
+        tasks = [
+            download_media(watch_url) for watch_url in args.watch_urls]
         await asyncio.gather(*tasks, return_exceptions=True)
 
     async def download_media(watch_url):
         async with semaphore:
             tube = YouTube(watch_url)
 
-        media = tube.streams.filter(
-            only_audio=True, file_extension='mp4').first()
+        logger.info('on download: %s', watch_url)
 
-        if verbose:
-            print(media.default_filename)
+        try:
+            media = tube.streams.filter(
+                only_audio=True, file_extension='mp4').first()
+            logger.info('download completed: from %s to %s', watch_url, media.default_filename)
+        except Exception:
+            logger.exception('cannot download %s', watch_url)
+            raise
+
         if save:
             try:
                 media.download(output_path=dest_dir)
             except Exception:
-                print(f'Error: {media.default_filename} is not downloaded')
+                logger.exception(
+                    '%s is not downloaded', media.default_filename)
                 raise
 
-    asyncio.run(run_core(args))
+    asyncio.run(run_core(args), debug=True)
 
 def main(args=sys.argv[1:]):
     """main function"""
