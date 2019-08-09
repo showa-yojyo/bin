@@ -10,6 +10,7 @@ $ mp3.py --save https://www.youtube.com/watch?v=xxxxxxxxxx
 
 from argparse import ArgumentParser
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import logging
 import sys
 import time
@@ -50,7 +51,7 @@ def parse_args(args):
     parser.add_argument(
         'watch_urls',
         metavar='URL',
-        nargs='*',
+        nargs='+',
         help='URL from which to extract mp3 files')
 
     parser.add_argument('--version', action='version', version=__version__)
@@ -101,22 +102,24 @@ def run(args):
         dest_dir = args.dest_dir
         logger.info('destination directory: %s', dest_dir)
 
-    semaphore = asyncio.Semaphore(args.max_workers)
+    async def run_core(args, pool=None):
+        """Concurrently execute `download_media`
+        """
+        loop = asyncio.get_running_loop()
+        futures = [loop.run_in_executor(
+            pool, download_media, watch_url) for watch_url in args.watch_urls]
+        done, pending = await asyncio.wait(futures, return_when=asyncio.ALL_COMPLETED)
+        logger.debug('done: %s', done)
+        logger.debug('pending: %s', pending)
 
-    async def run_core(args):
-        tasks = [
-            download_media(watch_url) for watch_url in args.watch_urls]
-        await asyncio.gather(*tasks, return_exceptions=True)
-
-    async def download_media(watch_url):
-        async with semaphore:
-            tube = YouTube(watch_url)
-
+    def download_media(watch_url):
+        tube = YouTube(watch_url)
         logger.info('on download: %s', watch_url)
 
         try:
             media = tube.streams.filter(
                 only_audio=True, file_extension='mp4').first()
+            assert media.default_filename
             logger.info('download completed: from %s to %s', watch_url, media.default_filename)
         except Exception:
             logger.exception('cannot download %s', watch_url)
@@ -130,7 +133,8 @@ def run(args):
                     '%s is not downloaded', media.default_filename)
                 raise
 
-    asyncio.run(run_core(args), debug=True)
+    with ThreadPoolExecutor(max_workers=args.max_workers) as pool:
+        asyncio.run(run_core(args, pool), debug=True)
 
 def main(args=sys.argv[1:]):
     """main function"""
