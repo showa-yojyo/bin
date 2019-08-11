@@ -16,6 +16,7 @@ import sys
 import time
 from pytube import YouTube
 from pytube import logger as pytube_logger
+from pytube.helpers import safe_filename
 
 __version__ = '1.0.0'
 
@@ -119,22 +120,33 @@ def run(args):
         try:
             media = tube.streams.filter(
                 only_audio=True, file_extension='mp4').first()
-            assert media.default_filename
-            logger.info('download completed: from %s to %s', watch_url, media.default_filename)
+            filename = default_filename(media)
+            logger.info('download completed: from %s to %s', watch_url, filename)
         except Exception:
             logger.exception('cannot download %s', watch_url)
             raise
 
         if save:
             try:
-                media.download(output_path=dest_dir)
+                media.download(output_path=dest_dir, filename=filename)
             except Exception:
                 logger.exception(
-                    '%s is not downloaded', media.default_filename)
+                    '%s is not downloaded', filename)
                 raise
 
     with ThreadPoolExecutor(max_workers=args.max_workers) as pool:
         asyncio.run(run_core(args, pool), debug=True)
+
+def default_filename(media):
+    """Generate filename based on the video title.
+    :rtype: str
+    :returns:
+        An os file system compatible filename.
+    """
+
+    title = media.player_config_args['player_response']['videoDetails']['title']
+    filename = safe_filename(title)
+    return f'{filename}.{media.subtype}'
 
 def main(args=sys.argv[1:]):
     """main function"""
