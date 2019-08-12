@@ -13,7 +13,6 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import logging
 import sys
-import time
 from pytube import YouTube
 from pytube import logger as pytube_logger
 from pytube.helpers import safe_filename
@@ -58,17 +57,6 @@ def parse_args(args):
     parser.add_argument('--version', action='version', version=__version__)
     return parser.parse_args(args or [])
 
-def timing_val(func):
-    """DEBUG"""
-
-    def wrapper(*arg, **kw):
-        '''source: http://www.daniweb.com/code/snippet368.html'''
-        t1 = time.time()
-        res = func(*arg, **kw)
-        t2 = time.time()
-        return (t2 - t1), res, func.__name__
-    return wrapper
-
 def init_logger(args):
     """Initialize local logger (and reset pytube logger)
     """
@@ -89,7 +77,6 @@ def init_logger(args):
 
     return logger
 
-@timing_val
 def run(args):
     """main function
 
