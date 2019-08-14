@@ -15,7 +15,6 @@ import logging
 import sys
 from pytube import YouTube
 from pytube import logger as pytube_logger
-from pytube.helpers import safe_filename
 
 __version__ = '1.0.0'
 
@@ -41,16 +40,24 @@ def parse_args(args):
         action='help',
         help='print this help')
 
+    source = parser.add_argument_group('Logging and input file')
+    source.add_argument(
+        '-v', '--verbose',
+        action='count',
+        default=0,
+        help='increase verbosity')
+    source.add_argument(
+        '-i', '--input-file',
+        metavar='FILE',
+        help='download URLs found in local or external FILE')
+
     parser.add_argument(
         '-d', '--destination',
         dest='dest_dir',
         metavar='DEST',
         default='.',
         help='dirctory in which files are saved')
-    parser.add_argument(
-        '-i', '--input-file',
-        metavar='FILE',
-        help='download URLs found in local or external FILE')
+
     parser.add_argument(
         '-M', '--max-workers',
         type=int,
@@ -60,11 +67,7 @@ def parse_args(args):
         '-s', '--save',
         action='store_true',
         help='write downloaded media to disk')
-    parser.add_argument(
-        '-v', '--verbose',
-        action='count',
-        default=0,
-        help='increase verbosity')
+
     parser.add_argument(
         'watch_urls',
         metavar='URL',
