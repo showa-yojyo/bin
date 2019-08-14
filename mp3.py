@@ -30,26 +30,45 @@ def parse_args(args):
         description='mp3 downloader protptype',
         add_help=False)
 
-    startup = parser.add_argument_group('Startup')
-    startup.add_argument(
+    # Startup:
+    startup_group = parser.add_argument_group('Startup')
+    startup_group.add_argument(
         '-V', '--version',
         action='version',
         version=__version__)
-    startup.add_argument(
+    startup_group.add_argument(
         '-h', '--help',
         action='help',
         help='print this help')
 
-    source = parser.add_argument_group('Logging and input file')
-    source.add_argument(
+    # Logging and input file
+    # TODO: -o, --output-file=FILE log messages to FILE
+    # TODO: -a, --append-output-file=FILE append messages to FILE
+    # TODO: -d, --debug
+    source_group = parser.add_argument_group('Logging and input file')
+    verbose_group = source_group.add_mutually_exclusive_group()
+    verbose_group.add_argument(
         '-v', '--verbose',
-        action='count',
-        default=0,
-        help='increase verbosity')
-    source.add_argument(
+        action='store_true',
+        default=False,
+        help='be verbose')
+    verbose_group.add_argument(
+        '-q', '--quiet',
+        action='store_true',
+        default=False,
+        help='quiet (no output)')
+    # TODO: -nv, --no-verbose
+    source_group.add_argument(
         '-i', '--input-file',
         metavar='FILE',
         help='download URLs found in local or external FILE')
+
+    download_group = parser.add_argument_group('Download')
+    download_group.add_argument(
+        '-M', '--max-workers',
+        type=int,
+        default=3,
+        help='the upper bound of the number of pools')
 
     parser.add_argument(
         '-d', '--destination',
@@ -57,17 +76,10 @@ def parse_args(args):
         metavar='DEST',
         default='.',
         help='dirctory in which files are saved')
-
-    parser.add_argument(
-        '-M', '--max-workers',
-        type=int,
-        default=3,
-        help='the upper bound of the number of pools')
     parser.add_argument(
         '-s', '--save',
         action='store_true',
         help='write downloaded media to disk')
-
     parser.add_argument(
         'watch_urls',
         metavar='URL',
@@ -84,7 +96,13 @@ def init_logger(args):
     formatter = pytube_logger.handlers[0].formatter
 
     logger = logging.getLogger(__name__)
-    verbosity = verbose * 10
+
+    if verbose:
+        verbosity = logging.INFO
+    elif args.quiet:
+        verbosity = logging.FATAL + 1
+    else:
+        verbosity = logging.WARNING
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
     handler.setLevel(verbosity)
