@@ -42,11 +42,15 @@ def parse_args(args):
         help='print this help')
 
     # Logging and input file
+    source_group = parser.add_argument_group('Logging and input file')
     # TODO: -o, --output-file=FILE log messages to FILE
     # TODO: -a, --append-output-file=FILE append messages to FILE
-    # TODO: -d, --debug
-    source_group = parser.add_argument_group('Logging and input file')
     verbose_group = source_group.add_mutually_exclusive_group()
+    verbose_group.add_argument(
+        '-d', '--debug',
+        action='store_true',
+        default=False,
+        help='print lots of debug information')
     verbose_group.add_argument(
         '-v', '--verbose',
         action='store_true',
@@ -71,7 +75,7 @@ def parse_args(args):
         help='the upper bound of the number of pools')
 
     parser.add_argument(
-        '-d', '--destination',
+        '-T', '--destination',
         dest='dest_dir',
         metavar='DEST',
         default='.',
@@ -97,12 +101,15 @@ def init_logger(args):
 
     logger = logging.getLogger(__name__)
 
-    if verbose:
+    if args.debug:
+        verbosity = logging.DEBUG
+    elif verbose:
         verbosity = logging.INFO
     elif args.quiet:
         verbosity = logging.FATAL + 1
     else:
         verbosity = logging.WARNING
+
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
     handler.setLevel(verbosity)
@@ -184,7 +191,7 @@ def run(args):
                 raise
 
     with ThreadPoolExecutor(max_workers=args.max_workers) as pool:
-        asyncio.run(run_core(watch_urls, pool), debug=True)
+        asyncio.run(run_core(watch_urls, pool), debug=args.debug)
 
 def get_title(media):
     """Return the the video title.
