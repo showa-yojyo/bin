@@ -29,16 +29,12 @@ def main(args=sys.argv):
     response = requests.get(url)
 
     b = BeautifulSoup(response.content, 'lxml')
-    img = b.select('section > img')
+    img = b.select('section > img, section > a > img')
 
     # list urls for wget
     for i in img:
         url = i["src"]
         print(url)
-
-    # download all files in img
-    # TODO: async version
-    #download_image(url)
 
 if __name__ == "__main__":
     main()
