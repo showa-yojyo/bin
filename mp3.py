@@ -27,7 +27,20 @@ def parse_args(args):
         parameters.
     """
 
-    parser = ArgumentParser(description='mp3 downloader protptype')
+    parser = ArgumentParser(
+        description='mp3 downloader protptype',
+        add_help=False)
+
+    startup = parser.add_argument_group('Startup')
+    startup.add_argument(
+        '-V', '--version',
+        action='version',
+        version=__version__)
+    startup.add_argument(
+        '-h', '--help',
+        action='help',
+        help='print this help')
+
     parser.add_argument(
         '-d', '--destination',
         dest='dest_dir',
@@ -58,7 +71,6 @@ def parse_args(args):
         nargs='*',
         help='URL from which to extract mp3 files')
 
-    parser.add_argument('--version', action='version', version=__version__)
     return parser.parse_args(args or [])
 
 def init_logger(args):
