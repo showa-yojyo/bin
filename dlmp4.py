@@ -31,6 +31,12 @@ def parse_args(args):
         description='mp4 downloader protptype',
         add_help=False)
 
+    parser.add_argument(
+        'watch_urls',
+        metavar='URL',
+        nargs='*',
+        help='URL from which to extract mp4 files')
+
     # Startup:
     startup_group = parser.add_argument_group('Startup')
     startup_group.add_argument(
@@ -87,12 +93,6 @@ def parse_args(args):
         metavar='PREFIX',
         default='.',
         help='save files to PREFIX/..')
-
-    parser.add_argument(
-        'watch_urls',
-        metavar='URL',
-        nargs='*',
-        help='URL from which to extract mp3 files')
 
     return parser.parse_args(args or [])
 
@@ -189,17 +189,18 @@ def run(args):
                 only_audio=True, file_extension='mp4').first()
             title = get_title(media)
             logger.info(
-                'download completed: from %s to %s',
+                'download completed from %s to <%s>',
                 watch_url, title)
         except Exception:
             logger.exception('cannot download %s', watch_url)
             raise
 
         try:
+            logger.info('saving <%s>...', title)
             media.download(
                 output_path=args.directory_prefix,
                 filename=title)
-            logger.info('successfully saved %s', title)
+            logger.info('successfully saved <%s>', title)
         except Exception:
             logger.exception(
                 '%s is not downloaded', title)
