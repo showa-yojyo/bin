@@ -81,12 +81,13 @@ def parse_args(args):
         default=3,
         help='the upper bound of the number of pools')
 
-    parser.add_argument(
-        '-T', '--destination',
-        dest='dest_dir',
-        metavar='DEST',
+    dir_group = parser.add_argument_group('Directories')
+    dir_group.add_argument(
+        '-P', '--directory-prefix',
+        metavar='PREFIX',
         default='.',
-        help='dirctory in which files are saved')
+        help='save files to PREFIX/..')
+
     parser.add_argument(
         'watch_urls',
         metavar='URL',
@@ -153,10 +154,6 @@ def run(args):
     """
 
     logger = init_logger(args)
-
-    dest_dir = args.dest_dir
-    logger.info('destination directory: %s', dest_dir)
-
     watch_urls = get_watch_urls(args)
     if not watch_urls:
         logger.error('No watch URLs')
@@ -195,7 +192,10 @@ def run(args):
             raise
 
         try:
-            media.download(output_path=dest_dir, filename=title)
+            media.download(
+                output_path=args.directory_prefix,
+                filename=title)
+            logger.info('successfully saved %s', title)
         except Exception:
             logger.exception(
                 '%s is not downloaded', title)
