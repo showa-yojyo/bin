@@ -5,7 +5,7 @@ mp3 downloader prototype
 Usage:
 $ mp3.py [OPTION] YOUTUBE_WATCH_URL...
 Example:
-$ mp3.py --save https://www.youtube.com/watch?v=xxxxxxxxxx
+$ mp3.py https://www.youtube.com/watch?v=xxxxxxxxxx
 """
 
 from argparse import ArgumentParser
@@ -81,10 +81,6 @@ def parse_args(args):
         default='.',
         help='dirctory in which files are saved')
     parser.add_argument(
-        '-s', '--save',
-        action='store_true',
-        help='write downloaded media to disk')
-    parser.add_argument(
         'watch_urls',
         metavar='URL',
         nargs='*',
@@ -143,10 +139,9 @@ def run(args):
     """
 
     logger = init_logger(args)
-    save = args.save
-    if save:
-        dest_dir = args.dest_dir
-        logger.info('destination directory: %s', dest_dir)
+
+    dest_dir = args.dest_dir
+    logger.info('destination directory: %s', dest_dir)
 
     watch_urls = get_watch_urls(args)
     if not watch_urls:
@@ -177,18 +172,18 @@ def run(args):
             media = tube.streams.filter(
                 only_audio=True, file_extension='mp4').first()
             title = get_title(media)
-            logger.info('download completed: from %s to %s', watch_url, title)
+            logger.info('download completed: from %s to %s',
+                watch_url, title)
         except Exception:
             logger.exception('cannot download %s', watch_url)
             raise
 
-        if save:
-            try:
-                media.download(output_path=dest_dir, filename=title)
-            except Exception:
-                logger.exception(
-                    '%s is not downloaded', title)
-                raise
+        try:
+            media.download(output_path=dest_dir, filename=title)
+        except Exception:
+            logger.exception(
+                '%s is not downloaded', title)
+            raise
 
     with ThreadPoolExecutor(max_workers=args.max_workers) as pool:
         asyncio.run(run_core(watch_urls, pool), debug=args.debug)
