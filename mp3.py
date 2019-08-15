@@ -43,8 +43,15 @@ def parse_args(args):
 
     # Logging and input file
     source_group = parser.add_argument_group('Logging and input file')
-    # TODO: -o, --output-file=FILE log messages to FILE
-    # TODO: -a, --append-output-file=FILE append messages to FILE
+    output_group = source_group.add_mutually_exclusive_group()
+    output_group.add_argument(
+        '-o', '--output-file',
+        metavar='FILE',
+        help='log messages to FILE')
+    output_group.add_argument(
+        '-a', '--append-output',
+        metavar='FILE',
+        help='append messages to FILE')
     verbose_group = source_group.add_mutually_exclusive_group()
     verbose_group.add_argument(
         '-d', '--debug',
@@ -92,21 +99,28 @@ def init_logger(args):
     """Initialize local logger (and reset pytube logger)
     """
 
-    verbose = args.verbose
     formatter = pytube_logger.handlers[0].formatter
 
     logger = logging.getLogger(__name__)
 
     if args.debug:
         verbosity = logging.DEBUG
-    elif verbose:
+    elif args.verbose:
         verbosity = logging.INFO
     elif args.quiet:
         verbosity = logging.FATAL + 1
     else:
         verbosity = logging.WARNING
 
-    handler = logging.StreamHandler()
+    if args.output_file:
+        handler = logging.FileHandler(
+            args.output_file, mode='w', encoding='utf-8', delay=True)
+    elif args.append_output:
+        handler = logging.FileHandler(
+            args.append_output, mode='a', encoding='utf-8', delay=True)
+    else:
+        handler = logging.StreamHandler()
+
     handler.setFormatter(formatter)
     handler.setLevel(verbosity)
 
@@ -160,7 +174,8 @@ def run(args):
         loop = asyncio.get_running_loop()
         futures = [loop.run_in_executor(
             pool, download_media, watch_url) for watch_url in watch_urls]
-        done, pending = await asyncio.wait(futures, return_when=asyncio.ALL_COMPLETED)
+        done, pending = await asyncio.wait(
+            futures, return_when=asyncio.ALL_COMPLETED)
         logger.debug('done: %s', done)
         logger.debug('pending: %s', pending)
 
@@ -172,7 +187,8 @@ def run(args):
             media = tube.streams.filter(
                 only_audio=True, file_extension='mp4').first()
             title = get_title(media)
-            logger.info('download completed: from %s to %s',
+            logger.info(
+                'download completed: from %s to %s',
                 watch_url, title)
         except Exception:
             logger.exception('cannot download %s', watch_url)
