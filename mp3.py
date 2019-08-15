@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
-mp3 downloader prototype
+mp4 downloader prototype
 
 Usage:
-$ mp3.py [OPTION] YOUTUBE_WATCH_URL...
+$ dlmp4.py [OPTION] YOUTUBE_WATCH_URL...
 Example:
-$ mp3.py https://www.youtube.com/watch?v=xxxxxxxxxx
+$ dlmp4.py https://www.youtube.com/watch?v=xxxxxxxxxx
 """
 
 from argparse import ArgumentParser
@@ -21,13 +21,14 @@ __version__ = '1.0.0'
 def parse_args(args):
     """Parse the command line parameters.
 
-    Returns:
-        An instance of argparse.ArgumentParser that stores the command line
-        parameters.
+    :param args:
+        Raw command line arguments.
+
+    :rtype: argparse.Namespace
     """
 
     parser = ArgumentParser(
-        description='mp3 downloader protptype',
+        description='mp4 downloader protptype',
         add_help=False)
 
     # Startup:
@@ -68,7 +69,6 @@ def parse_args(args):
         action='store_true',
         default=False,
         help='quiet (no output)')
-    # TODO: -nv, --no-verbose
     source_group.add_argument(
         '-i', '--input-file',
         metavar='FILE',
@@ -98,6 +98,11 @@ def parse_args(args):
 
 def init_logger(args):
     """Initialize local logger (and reset pytube logger)
+
+    Set message format, verbosity, and stream handler to the logger.
+
+    :param args:
+        Parsed command line options.
     """
 
     formatter = pytube_logger.handlers[0].formatter
@@ -124,11 +129,10 @@ def init_logger(args):
 
     handler.setFormatter(formatter)
     handler.setLevel(verbosity)
+    logger.addHandler(handler)
 
     logger.setLevel(verbosity)
     pytube_logger.setLevel(verbosity)
-
-    logger.addHandler(handler)
 
     return logger
 
