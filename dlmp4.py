@@ -21,6 +21,8 @@ __version__ = '1.0.0'
 def parse_args(args):
     """Parse the command line parameters.
 
+    Most options are taken from GNU wget.
+
     :param args:
         Raw command line arguments.
 
@@ -125,6 +127,7 @@ def init_logger(args):
         handler = logging.FileHandler(
             args.append_output, mode='a', encoding='utf-8', delay=True)
     else:
+        # By default, stream is sys.stderr.
         handler = logging.StreamHandler()
 
     handler.setFormatter(formatter)
@@ -138,6 +141,10 @@ def init_logger(args):
 
 def get_watch_urls(args):
     """Return watch URLs
+
+    Like GNU wget doing so, <if there are URLs both on the command line and in
+    an input file, those on the command lines will be the first ones to be
+    retrieved> (GNU wget manual).
 
     :param args:
         Command line parameters.
