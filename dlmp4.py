@@ -31,6 +31,7 @@ def parse_args(args):
 
     parser = ArgumentParser(
         description='mp4 downloader protptype',
+        epilog='Mail bug reports and suggestions to <yojyo@hotmail.com>',
         add_help=False)
 
     parser.add_argument(
