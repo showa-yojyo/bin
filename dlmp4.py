@@ -188,6 +188,12 @@ def run(args):
         logger.debug('done: %s', done)
         logger.debug('pending: %s', pending)
 
+        # TODO: List exit codes for exit status
+        if pending:
+            sys.exit(2)
+        if [i for i in done if i.exception()]:
+            sys.exit(3)
+
     def download_media(watch_url):
         tube = YouTube(watch_url)
         logger.info('on download: %s', watch_url)
