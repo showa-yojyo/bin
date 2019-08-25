@@ -14,21 +14,17 @@ Examples:
   With --year and --month options, you can generate diary templates of
   any months in any years, e.g.::
 
-    $ genduary.py --year=2014 --month=9
-
-  With --output option, the result will be written to specified file.
-
-    $ gendiary.py --year=2015 --month=12 --output=~/diary/2015/12.html
+    $ gendiary.py --year=2014 --month=9
 
 """
 
 import sys
 import datetime
 from calendar import Calendar
-from argparse import ArgumentParser, FileType
+from argparse import ArgumentParser
 from jinja2 import Environment
 
-__version__ = '2.0.0'
+__version__ = '2.1.0'
 
 DIARY_TEMPLATE = """\
 {#-
@@ -100,50 +96,43 @@ Args:
 </html>
 """
 
-# pylint: disable=too-few-public-methods
-class MyFileType(FileType):
-    """Unfortunately, argparse.FileType does not accept newline
-    parameter.
-    """
-
-    def __call__(self, path):
-        if path == ':':
-            return super.__call__(self, path)
-
-        return open(path, self._mode, self._bufsize,
-                    self._encoding, self._errors, newline='\n')
-
 def parse_args(args):
     """Parse the command line parameters."""
 
-    parser = ArgumentParser(description='Diary Template Generator')
-    parser.add_argument('--version', action='version', version=__version__)
+    parser = ArgumentParser(
+        description='Diary Template Generator',
+        epilog='Mail bug reports and suggestions to <yojyo@hotmail.com>',
+        add_help=False)
+    # Startup:
+    startup_group = parser.add_argument_group('Startup')
+    startup_group.add_argument(
+        '-V', '--version',
+        action='version',
+        version=__version__)
+    startup_group.add_argument(
+        '-h', '--help',
+        action='help',
+        help='print this help')
 
     today = datetime.date.today()
 
-    # Optional arguments.
-    parser.add_argument(
+    # Calendar:
+    calendar_group = parser.add_argument_group('Calendar')
+    calendar_group.add_argument(
         '-y', '--year',
         type=int,
         default=today.year,
-        help="specify the year of diary (default to today's year)")
-
-    parser.add_argument(
+        help="the year of diary (default to today's year)")
+    calendar_group.add_argument(
         '-m', '--month',
         type=int,
         default=today.month,
-        help="specify the month number of diary (default to today's month)")
-
-    parser.add_argument(
-        '-o', '--output',
-        type=MyFileType('w', encoding='utf-8'),
-        default=sys.stdout,
-        metavar='FILE',
-        help='write result to FILE instead of standard output')
+        help="the month number of diary (default to today's month)")
 
     return parser.parse_args(args)
 
 def main(args=sys.argv[1:]):
+    """The main function."""
     sys.exit(run(parse_args(args)))
 
 def run(args):
@@ -151,14 +140,11 @@ def run(args):
 
     year = args.year
     month = args.month
-    output = args.output
-
-    output.write(
+    print(
         Environment(autoescape=False).from_string(DIARY_TEMPLATE).render(
             year=year,
             month=month,
             dates=Calendar().itermonthdays2(year, month)))
-    output.write('\n')
 
 if __name__ == "__main__":
     main()
