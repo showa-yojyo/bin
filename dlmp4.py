@@ -152,10 +152,17 @@ def get_watch_urls(args):
     """
 
     watch_urls = args.watch_urls
-    if args.input_file:
-        with open(args.input_file, 'r') as fin:
-            watch_urls.extend(fin.read().splitlines())
+    input_file = args.input_file
+    if not input_file:
+        return watch_urls
 
+    if input_file == '-':
+        urls = sys.stdin.read().splitlines()
+    else:
+        with open(input_file, 'r') as fin:
+            urls = fin.read().splitlines()
+
+    watch_urls.extend(urls)
     return watch_urls
 
 def run(args):
