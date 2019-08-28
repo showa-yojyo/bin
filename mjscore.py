@@ -10,7 +10,7 @@ Usage:
 """
 
 from argparse import ArgumentParser
-from configparser import (ConfigParser, Error)
+from configparser import ConfigParser
 from pathlib import Path
 import sys
 from docutils.io import (StringInput, FileInput, FileOutput)

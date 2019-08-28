@@ -24,7 +24,6 @@ import sys
 from argparse import ArgumentParser
 from collections import namedtuple
 from urllib.request import urlopen
-from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
 __version__ = '2'

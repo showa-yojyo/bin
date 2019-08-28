@@ -157,12 +157,12 @@ def get_watch_urls(args):
         return watch_urls
 
     if input_file == '-':
-        urls = sys.stdin.read().splitlines()
+        lines = sys.stdin.read()
     else:
         with open(input_file, 'r') as fin:
-            urls = fin.read().splitlines()
+            lines = fin.read()
 
-    watch_urls.extend(urls)
+    watch_urls.extend(lines.splitlines())
     return watch_urls
 
 def run(args):
@@ -197,9 +197,9 @@ def run(args):
 
         # TODO: List exit codes for exit status
         if pending:
-            sys.exit(2)
-        if [i for i in done if i.exception()]:
             sys.exit(3)
+        if [i for i in done if i.exception()]:
+            sys.exit(4)
 
     def download_media(watch_url):
         tube = YouTube(watch_url)
