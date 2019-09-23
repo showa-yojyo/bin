@@ -11,7 +11,7 @@ import sys
 from bs4 import BeautifulSoup
 import requests
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 def parse_args(args):
     """Parse the command line parameters.
@@ -83,6 +83,11 @@ def parse_args(args):
         '-s', '--selector',
         default='a, img',
         help='CSS selector string')
+    parser.add_argument(
+        '-u', '--only-url',
+        action='store_true',
+        default=False,
+        help='Only print URLs')
 
     return parser.parse_args(args or [])
 
@@ -151,12 +156,12 @@ def run(args):
     """Perform scraping for specified URLs
 
     Examples:
-      $ wselect.py http://example.com
+      $ wselect.py -u http://example.com
       http://www.iana.org/domains/example
 
-      $ wselect.py --selector='section > img' http://some.porno.ero/page/
-      http://some.porno.ero/images/e/r/o/001.jpg
-      http://some.porno.ero/images/e/r/o/002.jpg
+      $ wselect.py -u -s 'section>img[src*="jpg"]' http://some.porno.com/page/
+      http://some.porno.com/uploads/2019/08/001.jpg
+      http://some.porno.com/uploads/2019/08/002.jpg
       ...
 
     :param args:
@@ -170,9 +175,32 @@ def run(args):
         logger.error('No arguments provided')
         return 1
 
-    # Perform scraping.
-    selector_string = args.selector
-    elements = []
+    elements_iterator = scrape_html(inputs, args.selector)
+
+    # Output
+    # TODO: More flexible
+    if args.only_url:
+        for i in elements_iterator:
+            if i.name == 'a':
+                print(i['href'])
+            elif i.name == 'img':
+                print(i['src'])
+    else:
+        # Print
+        print('\n'.join(str(i) for i in elements_iterator))
+
+    return 0
+
+def scrape_html(inputs, selector_string):
+    """Perform scraping
+
+    :param inputs:
+        A collection of paths to HTML files. Both local and remote files are
+        available.
+    :param selector_string:
+        A CSS selector string.
+    """
+
     for source in inputs:
         if re.match(r'^https?://', source):
             response = requests.get(source)
@@ -182,13 +210,7 @@ def run(args):
                 data = fin.read()
 
         soup = BeautifulSoup(data, 'lxml')
-        elements.extend(soup.select(selector_string))
-
-    # Output
-    # TODO: More flexible
-    print('\n'.join(str(i) for i in elements))
-
-    return 0
+        yield from soup.select(selector_string)
 
 def main(args=sys.argv[1:]):
     """main function"""
