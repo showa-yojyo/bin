@@ -37,8 +37,9 @@ def main():
         button = driver.find_element_by_name(PAGE_2_BUTTON_NAME)
         button.click() # submit
 
-        # TODO: wait for something
-
+        wait = WebDriverWait(driver, 60)
+        wait.until(expected_conditions.title_contains(
+            '大田区公式観光サイト'))
     finally:
         driver.close()
 
