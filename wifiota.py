@@ -8,7 +8,6 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
 
 FLETS_PORTAL_URL = 'http://www.e-flets.jp/'
-#FLETS_PORTAL_URL = 'http://www.e-flets.jp/disaster'
 
 PAGE_1_CSS_SELECTOR = 'a[checkID="2300"] > h2 > img'
 PAGE_2_BUTTON_NAME = 'loginBtn'
@@ -41,9 +40,7 @@ def main():
         wait.until(expected_conditions.title_contains(
             '大田区公式観光サイト'))
     finally:
-        driver.close()
+        driver.quit()
 
 if __name__ == '__main__':
     main()
-
-#FLETS_PORTAL_URL = "file://C:/cygwin64/tmp/portal1.html"
