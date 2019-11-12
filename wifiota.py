@@ -40,7 +40,7 @@ def main():
         wait.until(expected_conditions.title_contains(
             '大田区公式観光サイト'))
     finally:
-        driver.quit()
+        driver.close()
 
 if __name__ == '__main__':
     main()
