@@ -10,6 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 FLETS_PORTAL_URL = 'http://www.e-flets.jp/'
 
 PAGE_1_CSS_SELECTOR = 'a[checkID="2300"] > h2 > img'
+PAGE_2_RADIO_ID = 'radio-use'
 PAGE_2_BUTTON_NAME = 'loginBtn'
 
 def main():
@@ -18,23 +19,22 @@ def main():
     driver = webdriver.Edge()
     try:
         driver.get(FLETS_PORTAL_URL)
-        banner = driver.find_element_by_css_selector(
-            PAGE_1_CSS_SELECTOR)
-        # Click the banner "Wi-Fi"
-        banner.click()
 
-        wait = WebDriverWait(driver, 2)
-        wait.until(expected_conditions.presence_of_element_located(
+        # Click the banner "Wi-Fi"
+        driver.find_element_by_css_selector(
+            PAGE_1_CSS_SELECTOR).click()
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located(
             (By.NAME, PAGE_2_BUTTON_NAME)))
 
         # The checkbox "I agree with the terms of use"
-        agreed = driver.find_element_by_id('radio-use')
+        agreed = driver.find_element_by_id(PAGE_2_RADIO_ID)
         agreed.click()
         assert agreed.is_selected()
 
         # The button "To confirmation screen"
-        button = driver.find_element_by_name(PAGE_2_BUTTON_NAME)
-        button.click() # submit
+        driver.find_element_by_name(PAGE_2_BUTTON_NAME).click()
 
         wait = WebDriverWait(driver, 60)
         wait.until(expected_conditions.title_contains(
