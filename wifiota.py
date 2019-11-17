@@ -24,7 +24,7 @@ def main():
         driver.find_element_by_css_selector(
             PAGE_1_CSS_SELECTOR).click()
 
-        WebDriverWait(driver, 2).until(
+        WebDriverWait(driver, 20).until(
             expected_conditions.presence_of_element_located(
             (By.NAME, PAGE_2_BUTTON_NAME)))
 
