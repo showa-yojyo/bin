@@ -25,14 +25,19 @@ def main():
         sys.exit(2)
 
     driver = webdriver.Edge()
+    driver.implicitly_wait(20)
     sign_in(driver, sys.argv[1], sys.argv[2])
     try:
         go_to_top(driver)
         go_to_play_data(driver)
         go_to_tompu_pro(driver)
         go_to_daily_record(driver)
-        print(get_daily_record(driver))
+        print('*'*80)
+        print_current_contents(driver)
         sign_out(driver)
+    except Exception:
+        breakpoint()
+        raise
     finally:
         driver.close()
 
@@ -42,10 +47,10 @@ def pause(func):
         print(func.__name__)
 
         actions = ActionChains(driver)
+        actions.send_keys(Keys.HOME)
         actions.send_keys(Keys.END)
         actions.perform()
 
-        #breakpoint()
         return func(driver)
     return wrapper
 
@@ -74,6 +79,12 @@ def go_to_play_data(driver):
 @pause
 def go_to_tompu_pro(driver):
     """Move to プロ卓東風戦"""
+
+    wait = WebDriverWait(driver, 60)
+    wait.until(
+        expected_conditions.visibility_of_all_elements_located(
+            (By.LINK_TEXT, '東風戦')))
+
     links = driver.find_elements_by_link_text('東風戦')
     assert len(links) >= 2
     links[1].click()
@@ -82,15 +93,12 @@ def go_to_tompu_pro(driver):
 def go_to_daily_record(driver):
     """Move to デイリー戦績"""
 
-    WebDriverWait(driver, 60).until(
-        expected_conditions.presence_of_element_located(
-            (By.LINK_TEXT, 'デイリー戦績')))
-    driver.find_element_by_link_text('デイリー戦績').click()
+    elem = driver.find_element_by_link_text('デイリー戦績')
+    driver.get(elem.get_attribute('href'))
 
-@pause
-def get_daily_record(driver):
-    """Return the daily record"""
-    return driver.find_element_by_css_selector('div.common-wrap').text
+def print_current_contents(driver):
+    """Output an innerText"""
+    print(driver.find_element_by_css_selector('div.common-wrap').text)
 
 if __name__ == "__main__":
     main()
