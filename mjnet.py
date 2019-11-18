@@ -87,7 +87,8 @@ def go_to_tompu_pro(driver):
 
     links = driver.find_elements_by_link_text('東風戦')
     assert len(links) >= 2
-    links[1].click()
+    driver.get(links[1].get_attribute('href'))
+
 
 @pause
 def go_to_daily_record(driver):
