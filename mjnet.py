@@ -44,7 +44,7 @@ def main():
 def pause(func):
     """debugging"""
     def wrapper(driver):
-        print(func.__name__)
+        #print(func.__name__)
 
         actions = ActionChains(driver)
         actions.send_keys(Keys.HOME)
