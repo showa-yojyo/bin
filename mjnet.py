@@ -99,7 +99,10 @@ def go_to_daily_record(driver):
 
 def print_current_contents(driver):
     """Output an innerText"""
-    print(driver.find_element_by_css_selector('div.common-wrap').text)
+
+    # trim the first lines and the last lines
+    print('\n'.join(driver.find_element_by_css_selector(
+        'div.common-wrap').text.splitlines()[3:-3]))
 
 if __name__ == "__main__":
     main()
