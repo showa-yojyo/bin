@@ -20,7 +20,7 @@ def main():
 
         # Connect to Internet
         driver.get(driver.find_element_by_css_selector(
-            ).get_attribute('href'))
+            PAGE1_CSS_SELECTOR).get_attribute('href'))
 
         # Agree
         driver.find_element_by_name(PAGE2_NAME).submit()
