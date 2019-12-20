@@ -66,7 +66,7 @@ def run(args):
         go_to_play_data(driver)
         go_to_tompu_pro(driver)
         go_to_daily_record(driver)
-        print('*'*80)
+
         print_current_contents(driver)
         if pause:
             input('Pause. Press any key to continue:')
