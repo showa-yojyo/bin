@@ -1,6 +1,8 @@
 #!/bin/bash
 
-for domain in "$@" ; do
-    status=$(wget --spider -S $domain 2>&1 | grep HTTP/ | awk '{print $2}')
-    printf '%-40s: %s\n' $domain $status
+for url in "$@" ; do
+    if [[ "$url" = http://* ]]; then
+        status=$(wget --spider -S $url 2>&1 | grep HTTP/ | tail -1 | awk '{print $2}')
+        printf '%-40s: %s\n' $url $status
+    fi
 done
