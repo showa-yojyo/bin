@@ -1,5 +1,6 @@
 """wifistrategies.py"""
 
+from functools import partial
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -32,18 +33,6 @@ PORTAL_URL = 'http://www.wifi-cloud.jp/'
 PAGE1_CSS_SELECTOR = 'p#btn_connect > a'
 PAGE2_NAME = 'form1'
 
-@register('koto')
-def connect_koto(driver):
-    """Connect Free Wi-Fi for 江東区"""
-
-    connect_free_wifi(driver, '江東区')
-
-@register('shinagawa')
-def connect_shinagawa(driver):
-    """Connect Free Wi-Fi for 品川区"""
-
-    connect_free_wifi(driver, '品川区')
-
 def connect_free_wifi(driver, title):
     """Common process to Wi-Fi cloud"""
 
@@ -58,6 +47,9 @@ def connect_free_wifi(driver, title):
 
     wait = WebDriverWait(driver, 60)
     wait.until(expected_conditions.title_contains(title))
+
+register('koto')(partial(connect_free_wifi, title='江東区'))
+register('shinagawa')(partial(connect_free_wifi, title='品川区'))
 
 FLETS_PORTAL_URL = 'http://www.e-flets.jp/'
 
