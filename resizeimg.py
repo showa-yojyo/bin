@@ -15,7 +15,8 @@ def _determine_portrait_size():
     """Determine the dimension of portrait"""
 
     user32 = ctypes.windll.user32
-    screen_width, screen_height = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+    screen_width, screen_height = (
+        user32.GetSystemMetrics(i) for i in range(2))
     if screen_width <= screen_height:
         return (screen_width, screen_height)
 
@@ -94,6 +95,7 @@ async def main(filenames):
     # Producer/consumer pattern
     queue = asyncio.Queue()
 
+    # XXX: the number of consumers shuold be variable
     consumers = [asyncio.create_task(process_images(queue)) for _ in range(3)]
     await generate_images(queue, filenames)
     await queue.join()
