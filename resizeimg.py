@@ -1,21 +1,41 @@
 #!/usr/bin/env python
 
+"""
+Make landscape image files portrait.
+"""
+
 import asyncio
 import math
 import sys
+import ctypes
 from PIL import Image
 
-SCREEN_SIZE_PORTRAIT = (768, 1366)
+
+def _determine_portrait_size():
+    """Determine the dimension of portrait"""
+
+    user32 = ctypes.windll.user32
+    screen_width, screen_height = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+    if screen_width <= screen_height:
+        return (screen_width, screen_height)
+
+    return (screen_height, screen_width)
+
+# XXX: Windows only...
+SIZE_PORTRAIT = _determine_portrait_size()
 
 def round_aspect(number, key):
+    """(code taken from PIL)"""
     return max(min(math.floor(number), math.ceil(number), key=key), 1)
 
 
-def desired_size(width, height):
+def fit_to_screen(width, height):
+    """(code taken from PIL)"""
+
     if width < height:
-        x, y = SCREEN_SIZE_PORTRAIT
+        x, y = SIZE_PORTRAIT
     else:
-        y, x = SCREEN_SIZE_PORTRAIT
+        y, x = SIZE_PORTRAIT
 
     # preserve aspect ratio
     aspect = width / height
@@ -35,15 +55,15 @@ async def generate_images(queue, filenames):
 
 def process_image(image):
     width_old, height_old = image.width, image.height
-    size_new = desired_size(width_old, height_old)
+    size_new = fit_to_screen(width_old, height_old)
 
     use_resize = False
     if width_old > height_old:
         # case of landscape
-        use_resize = width_old < SCREEN_SIZE_PORTRAIT[1]
+        use_resize = width_old < SIZE_PORTRAIT[1]
     else:
         # case of portrait
-        use_resize = height_old < SCREEN_SIZE_PORTRAIT[1]
+        use_resize = height_old < SIZE_PORTRAIT[1]
 
     if use_resize:
         image = image.resize(size_new, resample=Image.LANCZOS)
