@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Make landscape images portrait by using PIL
+Make landscape images portrait by using PIL (asyncio version)
 """
 
 import asyncio
@@ -13,14 +13,18 @@ async def generate_images(queue, filenames):
     """Producer coroutine"""
 
     for filename in filenames:
-        await queue.put((filename, Image.open(filename)))
+        await queue.put(filename)
+
+    print('All task requests sent')
 
 async def rotate_images(queue):
     """Consumer coroutine"""
 
     while True:
-        filename, image = await queue.get()
+        filename = await queue.get()
+        print(f'Working on {filename}')
         try:
+            image = Image.open(filename)
             if image.width <= image.height:
                 # already portrait
                 print(f'Skip {filename}')
@@ -46,9 +50,14 @@ async def main(filenames):
     # Producer/consumer pattern
     queue = asyncio.Queue()
 
+    # turn on the rotate_images thread
     consumers = [asyncio.create_task(rotate_images(queue)) for _ in range(3)]
     await generate_images(queue, filenames)
+
+    # block until all tasks are done
     await queue.join()
+    print('All work completed')
+
     await terminate_consumers(consumers)
 
 if __name__ == '__main__':
