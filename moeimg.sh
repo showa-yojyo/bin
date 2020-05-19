@@ -14,8 +14,7 @@ function check_hxutils
 # Extract blog post URLs from given HTML file
 function list_post_urls
 {
-    hxselect -s '\n' 'h2>a' < "$1" \
-        | grep -oP "(?<=href=\").+html(?=\")"
+    hxclean | hxselect -c -s '\n' 'h2>a::attr(href)'
 }
 
 # Extract image URLs from all posts
@@ -23,8 +22,7 @@ function list_image_urls
 {
     for post in "$@" ;
     do
-        hxextract img.thumbnail_image "$post" \
-            | hxnormalize | grep -oP "(?<=src=\").+jpg(?=\")"
+        hxwls "$post" | awk '/archives/ && /jpg/'
     done
 }
 
@@ -53,8 +51,7 @@ function main
     fi
 
     # List URLs of blog posts
-    list_post_urls "$local_toc_path" \
-        > "$post_list_path" 2>/dev/null
+    list_post_urls < "$local_toc_path" > "$post_list_path" 2>/dev/null
 
     # Download HTML files
     $wget --input-file "$post_list_path" -P "$output_dir"
