@@ -14,9 +14,9 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 import sys
 from pytube import YouTube
-from pytube import logger as pytube_logger
+from pytube.__main__ import logger as pytube_logger
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 def parse_args(args):
     """Parse the command line parameters.
@@ -195,7 +195,7 @@ def run(args):
         logger.debug('done: %s', done)
         logger.debug('pending: %s', pending)
 
-        # TODO: List exit codes for exit status
+        # TODO: List exit status
         if pending:
             sys.exit(3)
         if [i for i in done if i.exception()]:
@@ -208,7 +208,7 @@ def run(args):
         try:
             media = tube.streams.filter(
                 only_audio=True, file_extension='mp4').first()
-            title = get_title(media)
+            title = tube.title
             logger.info(
                 'download completed from %s to <%s>',
                 watch_url, title)
@@ -230,19 +230,11 @@ def run(args):
     with ThreadPoolExecutor(max_workers=args.max_workers) as pool:
         asyncio.run(run_core(watch_urls, pool), debug=args.debug)
 
-def get_title(media):
-    """Return the the video title.
-
-    :rtype: str
-    :returns:
-        The title of the video
-    """
-
-    return media.player_config_args['player_response']['videoDetails']['title']
 
 def main(args=sys.argv[1:]):
     """main function"""
     sys.exit(run(parse_args(args)))
+
 
 if __name__ == "__main__":
     main()
