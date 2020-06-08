@@ -108,7 +108,10 @@ def init_logger(args):
         Parsed command line options.
     """
 
-    formatter = pytube_logger.handlers[0].formatter
+    if pytube_logger.handlers:
+        formatter = pytube_logger.handlers[0].formatter
+    else:
+        formatter = None
 
     logger = logging.getLogger(__name__)
 
@@ -131,7 +134,8 @@ def init_logger(args):
         # By default, stream is sys.stderr.
         handler = logging.StreamHandler()
 
-    handler.setFormatter(formatter)
+    if formatter:
+        handler.setFormatter(formatter)
     handler.setLevel(verbosity)
     logger.addHandler(handler)
 
