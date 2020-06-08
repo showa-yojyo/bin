@@ -37,7 +37,7 @@ function main
     local post_list_path="$output_dir/posts.txt"
     local image_list_path="$output_dir/images.txt"
 
-    if [[ -z "$remote_url_toc" ]] ; then
+    if [[ -z "$remote_url_toc" ]]; then
         echo 'Error: No URL provided.' >&2
         return 2
     fi
