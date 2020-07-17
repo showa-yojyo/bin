@@ -57,7 +57,7 @@ function main
     $wget --input-file "$post_list_path" -P "$output_dir"
 
     # List URLs of remote images
-    list_image_urls $output_dir/*.html \
+    list_image_urls $output_dir/*.html | sort | uniq \
         > "$image_list_path" 2>/dev/null
 
     # TODO: Warn if so many image files will be downloaded
