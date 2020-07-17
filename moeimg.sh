@@ -30,7 +30,7 @@ function list_image_urls
 function main
 {
     local remote_url_toc=$1
-    local wget="wget --continue --wait=1 --random-wait --limit-rate=200k --quiet --show-progress"
+    local wget="wget --continue --wait=1 --random-wait --limit-rate=200k --quiet --show-progress --no-clobber"
 
     local output_dir="${remote_url_toc##*/}"
     local local_toc_path="$output_dir/toc.html"
