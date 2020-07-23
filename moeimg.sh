@@ -23,7 +23,7 @@ function list_image_urls
     for post in "$@" ;
     do
         hxwls "$post" | awk '/archives/ && /jpg/'
-    done
+    done | sort | uniq
 }
 
 # Main entry point
@@ -57,8 +57,7 @@ function main
     $wget --input-file "$post_list_path" -P "$output_dir"
 
     # List URLs of remote images
-    list_image_urls $output_dir/*.html | sort | uniq \
-        > "$image_list_path" 2>/dev/null
+    list_image_urls $output_dir/*.html > "$image_list_path" 2>/dev/null
 
     # TODO: Warn if so many image files will be downloaded
     $wget --input-file "$image_list_path" -P "$output_dir"
