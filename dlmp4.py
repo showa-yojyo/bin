@@ -231,8 +231,11 @@ def run(args):
                 '%s is not downloaded', title)
             raise
 
-    with ThreadPoolExecutor(max_workers=args.max_workers) as pool:
-        asyncio.run(run_core(watch_urls, pool), debug=args.debug)
+    if len(watch_urls) == 1:
+        download_media(watch_urls[0])
+    else:
+        with ThreadPoolExecutor(max_workers=args.max_workers) as pool:
+            asyncio.run(run_core(watch_urls, pool), debug=args.debug)
 
 
 def main(args=sys.argv[1:]):
