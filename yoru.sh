@@ -1,8 +1,8 @@
 #!/bin/bash
 # An experimental scraper (NOT TESTED YET)
 
-# --wait option can be dropped
-wget="wget --continue --wait=1 --random-wait --limit-rate=400k --quiet --show-progress --no-clobber"
+# Include common features for web scraping
+. scrapingtool.sh
 
 function _visit_result_pages
 {
@@ -28,10 +28,10 @@ function _visit_result_pages
         return 0
     fi
 
-    $wget -O - "$first_search_result_url" | hxclean > "$local_search_result_tmp"
+    $WGET -O - "$first_search_result_url" | hxclean > "$local_search_result_tmp"
     local next_result_url=$(_get_next_page "$local_search_result_tmp")
     while [[ -n "$next_result_url" ]]; do
-        $wget -O - "$next_result_url" | hxclean > "$local_search_result_tmp"
+        $WGET -O - "$next_result_url" | hxclean > "$local_search_result_tmp"
         # Append post URLs to a file
         _list_post_urls < "$local_search_result" >> "$post_list_file" 2>/dev/null
         next_result_url=$(_get_next_page "$next_result_url")
@@ -58,26 +58,16 @@ function _process_all_posts
         mkdir -p "$subdir"
 
         local post_local="${subdir}/post.html"
-        $wget -O - "$post_url" | hxclean > "$post_local"
+        $WGET -O - "$post_url" | hxclean > "$post_local"
 
         local image_list_file="${subdir}/images.txt"
         _list_images < "$post_local" > "$image_list_file" 2>/dev/null
-        $wget --input-file "$image_list_file" -P "$subdir"
+        $WGET --input-file "$image_list_file" -P "$subdir"
     done
 }
 
 function main
 {
-    function _check_hx
-    {
-        local hxselect=$(command -v hxselect)
-        if [[ ! -x "$hxselect" ]]; then
-            echo 'Error: $hxselect is not installed.' >&2
-            echo 'Visit https://www.w3.org/Tools/HTML-XML-utils/README for installation'
-            exit 1
-        fi
-    }
-
     local search_result_url=$1
     if [[ -z "$search_result_url" ]]; then
         echo 'Error: No URL provided.' >&2
@@ -87,12 +77,12 @@ function main
     # tag name
     local output_dir="${search_result_url##*/}"
 
-    _check_hx
+    check_hx
     mkdir -p "$output_dir"
 
-    local local_search_result="$output_dir/posts.txt"
+    local local_search_result="$output_dir"/posts.txt
     _visit_result_pages "$search_result_url" "$output_dir" "$local_search_result"
     _process_all_posts "$output_dir" "$local_search_result"
 }
 
-#main "$@"
+main "$@"
