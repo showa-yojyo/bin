@@ -16,7 +16,7 @@ import sys
 from pytube import YouTube
 from pytube.__main__ import logger as pytube_logger
 
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 def parse_args(args):
     """Parse the command line parameters.
@@ -30,7 +30,7 @@ def parse_args(args):
     """
 
     parser = ArgumentParser(
-        description='mp4 downloader protptype',
+        description='mp4 downloader prototype',
         epilog='Mail bug reports and suggestions to <yojyo@hotmail.com>',
         add_help=False)
 
