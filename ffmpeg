@@ -1,0 +1,12 @@
+#!/bin/bash
+# A wrapper script for ffmpeg
+
+FFMPEG=/bin/ffmpeg
+
+if [[ -x $FFMPEG ]]; then
+    # Linux (and WSL2)
+    $FFMPEG $@
+elif [[ -z $WSL_DISTRO_NAME ]]; then
+    # Cygwin, Bash for Git, MSYS32
+    wsl -e $FFMPEG $@
+fi
