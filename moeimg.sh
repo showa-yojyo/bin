@@ -73,7 +73,7 @@ function main
     fi
 
     local post_list_path="$output_dir"/posts.txt
-    for name in "$output_search_results"/*.html;
+    for name in "$output_search_results"/*; # html
     do
         # List URLs of blog posts
         _list_post_urls < "$name" >> "$post_list_path" 2>/dev/null
@@ -85,7 +85,8 @@ function main
     $WGET --input-file "$post_list_path" -P "$output_entries_dir"
 
     # List URLs of remote images
-    _list_image_urls $output_entries_dir/*.html 2>/dev/null
+    local image_list_path="$output_dir"/images.txt
+    _list_image_urls $output_entries_dir/*.html > "$image_list_path" 2>/dev/null
 }
 
 main "$@"
