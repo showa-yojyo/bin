@@ -21,8 +21,8 @@ class MoeImgNetCrawler(CrawlSpider):
     }
 
     rules = (
-        Rule(LinkExtractor(restrict_css='h2 > a'), callback='parse_entry'),
-        Rule(LinkExtractor(restrict_css='li.next > a')),
+        Rule(LinkExtractor(restrict_xpaths='//h2/a'), callback='parse_entry'),
+        Rule(LinkExtractor(restrict_xpaths='//li[@class="next"]/a')),
     )
 
     def start_requests(self):
@@ -33,11 +33,12 @@ class MoeImgNetCrawler(CrawlSpider):
 
     def parse_entry(self, response):
         """No descrition"""
-        images = response.css('a > img[src*="/wp-content/uploads/archives"]::attr(src)')
+        #images = response.css('a > img[src*="/wp-content/uploads/archives"]::attr(src)')
+        images = response.xpath('//a/img[contains(@src, "/wp-content/uploads/archives")/@src')
 
         # Recommend -O images.csv
         for image in images:
-            yield {'image': image.get()}
+            yield {'image': image.get() for image in images}
 
 
 if __name__ == '__main__':

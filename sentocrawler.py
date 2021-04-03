@@ -21,8 +21,8 @@ class SentoListSpider(CrawlSpider):
     }
 
     rules = (
-        Rule(LinkExtractor(restrict_css='#items > div.item > a:nth-child(1)'), callback='parse_entry'),
-        Rule(LinkExtractor(restrict_css='#items > div.wp-pagenavi a')),
+        Rule(LinkExtractor(restrict_xpaths='//h2/a[1]'), callback='parse_entry'),
+        Rule(LinkExtractor(restrict_xpaths='//div[@class="wp-pagenavi"]/a')),
     )
 
     def parse_entry(self, response):
@@ -30,7 +30,7 @@ class SentoListSpider(CrawlSpider):
 
         yield {
             'id': response.xpath('string(//tr[1]/td)').get().strip(),
-            'name': response.css('h2::text').get().strip(),
+            'name': response.xpath('//h2/text()').get().strip(),
             'address': response.xpath('string(//tr[2]/td)').get().strip(),
             'holidays': response.xpath('string(//tr[6]/td)').get().strip(),
             'office_hours': response.xpath('string(//tr[7]/td)').get().strip(),

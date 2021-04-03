@@ -18,11 +18,7 @@ MJ_NET_URL_TOP_PAGE = f'{MJ_NET_URL}/FwdPage?page=top'
 MJ_NET_URL_PLAYER_DATA_PAGE = f'{MJ_NET_URL}/FwdPage?page=playdata&i=0'
 
 # TODO: When XPath upgrades to 2.0, use the function matches() instead of contains().
-XPATH_BEST_MAHJONG = """
-//a[contains(text(), '倍満')
- or contains(text(), '三倍満')
- or contains(text(), '役満')]
-"""
+XPATH_BEST_MAHJONG = "//a[text()[contains(., '倍満') or contains(., '三倍満') or contains(., '役満')]]"
 
 class MjscoreSpider(Spider):
     """MJ.NET"""
@@ -79,12 +75,12 @@ class MjscoreSpider(Spider):
     def parse_daily_score(self, response):
         """Scraping method"""
 
-        scraped_data = format_data(response.css(
-            'body > div > div.contents-wrap > div.common-wrap *::text'))
+        scraped_data = format_data(response.xpath(
+            '//div[@class="contents-wrap"]/div[@class="common-wrap"]/descendant-or-self::*/text()'))
         print(scraped_data)
 
-        if links := response.xpath(XPATH_BEST_MAHJONG):
-            yield response.follow(links[0].url, self.parse_best_mahjong)
+        if link := response.xpath(XPATH_BEST_MAHJONG).get():
+            yield response.follow(link, self.parse_best_mahjong)
         else:
             self.logger.debug('倍満以上なし終了')
 
