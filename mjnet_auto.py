@@ -75,9 +75,16 @@ class MjscoreSpider(Spider):
     def parse_daily_score(self, response):
         """Scraping method"""
 
-        scraped_data = format_data(response.xpath(
-            '//div[@class="contents-wrap"]/div[@class="common-wrap"]/descendant-or-self::*/text()'))
-        print(scraped_data)
+        item = {}
+        selector = response.selector
+        parse_score(selector, item)
+        parse_recent_level(selector, item)
+        parse_history(selector, item)
+        parse_ranks(selector, item)
+        parse_stats(selector, item)
+        parse_best(selector, item)
+
+        yield item
 
         if link := response.xpath(XPATH_BEST_MAHJONG).get():
             yield response.follow(link, self.parse_best_mahjong)
@@ -92,88 +99,95 @@ class MjscoreSpider(Spider):
         #import webbrowser
         #webbrowser.open(response.url)
 
-# 00
-# ...
-# 14 【SCORE】
-# 15 合計SCORE:-197.0
-# 16
-# 17
-# 18 【最終段位】
-# 19 四人打ち段位:魔神 幻球:7
-# 20
-# 21
-# 22 【3/9の最新8試合の履歴】
-# 23
-# 24 1st|--------
-# 25 2nd|--*-*---
-# 26 3rd|**---*--
-# 27 4th|---*--**
-# 28 old         new
-# 29
-# 30
-# 31
-# 32 【順位】
-# 33 1位回数:0(0.00%)
-# 34 2位回数:2(25.00%)
-# 35 3位回数:3(37.50%)
-# 36 4位回数:3(37.50%)
-# 37 平均順位:3.13
-# 38
-# 39 プレイ局数:40局
-# 40
-# 41
-# 42 【打ち筋】
-# 43 アガリ率:10.00%(4/40)
-# 44 平均アガリ翻:3.25翻
-# 45 平均アガリ巡目:12.75巡
-# 46 振込み率:20.00%(8/40)
-# 47
-# 48
-# 49 【3/9の最高役】
-# 50 最高役のデータがありません。最高役は、跳満以上のアガリが対象となります。
-# ...
-def format_data(selector_list):
-    contents = [s.get().strip() for s in selector_list[:50]]
-    bests = [s.get().strip() for s in selector_list[50:] if s.re(r'役満|三倍満|倍満|跳満')]
+# 【SCORE】
+# 合計SCORE:-197.0
+def parse_score(selector, item):
+    """Parse 【SCORE】"""
 
-    if bests:
-        last = '\n'.join(f'・{name}' for name in bests)
-    else:
-        last = '最高役のデータがありません。最高役は、跳満以上のアガリが対象となります。'
+    value = selector.xpath('//font[text() = "【SCORE】"]/following::text()').get()
+    item['score'] = value.strip()
 
-    return f'''
-{contents[14]}
-{contents[15]}
+    print("【SCORE】")
+    print(item['score'])
+    print()
 
-{contents[18]}
-{contents[19]}
+# 【最終段位】
+# 四人打ち段位:魔神 幻球:7
+def parse_recent_level(selector, item):
+    """Parse 【最終段位】"""
 
-{contents[22]}
+    value = selector.xpath('//font[text() = "【最終段位】"]/following::text()').get()
+    item['recent_level'] = value.strip()
 
-{contents[24]}
-{contents[25]}
-{contents[26]}
-{contents[27]}
-{contents[28].replace(chr(0xa0), " ")}
+    print("【最終段位】")
+    print(item['recent_level'])
+    print()
 
-{contents[32]}
-{contents[33]}
-{contents[34]}
-{contents[35]}
-{contents[36]}
-{contents[37]}
+# 【3/9の最新8試合の履歴】
+#
+# 1st|--------
+# 2nd|--*-*---
+# 3rd|**---*--
+# 4th|---*--**
+# old         new
+def parse_history(selector, item):
+    """Parse 【m/dの最新8試合の履歴】"""
 
-{contents[39]}
+    title = selector.xpath('//font[contains(.,"履歴")]/text()').get().strip()
 
-{contents[42]}
-{contents[43]}
-{contents[44]}
-{contents[45]}
-{contents[46]}
+    values = selector.xpath('//text()[preceding::font[contains(.,"履歴")]][following::font[text()="【順位】"]]').getall()
+    item['history'] = '\n'.join(istripped for i in values if (istripped := i.strip())).replace('\nE', 'E')
 
-{contents[49]}
-{last}
-'''
+    print(title)
+    print(item['history'])
+    print()
+
+# 【順位】
+# 1位回数:0(0.00%)
+# 2位回数:2(25.00%)
+# 3位回数:3(37.50%)
+# 4位回数:3(37.50%)
+# 平均順位:3.13
+#
+# プレイ局数:40局
+def parse_ranks(selector, item):
+    """Parse 【順位】"""
+
+    values = selector.xpath('//font[contains(.,"順位")]/following::text()[position() < 8]').getall()
+    item['rank'] = '\n'.join(i.strip() for i in values)
+
+    print("【順位】")
+    print(item['rank'])
+    print()
+
+# 【打ち筋】
+# アガリ率:10.00%(4/40)
+# 平均アガリ翻:3.25翻
+# 平均アガリ巡目:12.75巡
+# 振込み率:20.00%(8/40)
+def parse_stats(selector, item):
+    """Parse 【打ち筋】"""
+
+    values = selector.xpath('//font[text() = "【打ち筋】"]/following::text()[position() < 5]').getall()
+    item['stats'] = '\n'.join(istripped for i in values if (istripped := i.strip()))
+
+    print("【打ち筋】")
+    print(item['stats'])
+    print()
+
+# 【3/9の最高役】--> //font[contains(.,"最高役")]/following-sibling::text()
+# 最高役のデータがありません。最高役は、跳満以上のアガリが対象となります。
+def parse_best(selector, item):
+    """Parse 【m/dの最高役】"""
+
+    title = selector.xpath('//font[contains(.,"最高役")]/text()').get().strip()
+
+    values = selector.xpath('//font[contains(.,"最高役")]/following-sibling::text()').getall()
+    item['best'] = '\n'.join(istripped for i in values if (istripped := i.strip()))
+
+    print(title)
+    print(item['best'])
+    print()
 
 def main():
     """Receive account information and run spider"""
