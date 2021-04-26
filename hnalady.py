@@ -33,12 +33,12 @@ class HNaLadyCrawler(CrawlSpider):
 
     def parse_entry(self, response):
         """No descrition"""
-        images = response.xpath('//div[@id="more"]/a/img/@src')
 
-        # Recommend -O images.csv
-        for image in images:
-            yield {'image': image.get() for image in images}
-
+        if images := response.xpath('//div[@id="more"]/a/img/@src').getall():
+            yield {
+                'title': response.xpath('//title/text()').get(),
+                'url': response.url,
+                'images': images }
 
 if __name__ == '__main__':
     #cmdline.execute(f"scrapy runspider {sys.argv[0]} -a tag={sys.argv[1]} -O images.csv".split())
