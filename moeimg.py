@@ -33,12 +33,12 @@ class MoeImgNetCrawler(CrawlSpider):
 
     def parse_entry(self, response):
         """No descrition"""
-        #images = response.css('a > img[src*="/wp-content/uploads/archives"]::attr(src)')
-        images = response.xpath('//a/img[contains(@src, "/wp-content/uploads/archives")/@src')
 
-        # Recommend -O images.csv
-        for image in images:
-            yield {'image': image.get() for image in images}
+        if images := response.xpath('//a/img[contains(@src, "/wp-content/uploads/archives")]/@src').getall():
+            yield {
+                'title': response.xpath('//title/text()').get(),
+                'url': response.url,
+                'images': images}
 
 
 if __name__ == '__main__':
