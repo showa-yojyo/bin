@@ -14,9 +14,10 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 import sys
 from pytube import YouTube
+from pytube.exceptions import PytubeError
 from pytube.__main__ import logger as pytube_logger
 
-__version__ = '1.0.2'
+__version__ = '1.1'
 
 def parse_args(args):
     """Parse the command line parameters.
@@ -169,6 +170,25 @@ def get_watch_urls(args):
     watch_urls.extend(lines.splitlines())
     return watch_urls
 
+class ProgressBar:
+    """A progress bar for console"""
+
+    fill = '█'
+    length = 100
+
+    def __init__(self):
+        self.previousprogress = 0
+
+    def __call__(self, chunk, _, bytes_remaining):
+        total_size = chunk.filesize
+        bytes_downloaded = total_size - bytes_remaining
+        liveprogress = bytes_downloaded / total_size
+        if liveprogress > self.previousprogress:
+            self.previousprogress = liveprogress
+            filledLength = int(self.length * liveprogress)
+            bar = self.fill * filledLength + '-' * (self.length - filledLength)
+            print(f'\r|{bar}| {liveprogress:.1%}', end='\r', file=sys.stderr, flush=True)
+
 def run(args):
     """main function
 
@@ -196,8 +216,8 @@ def run(args):
             pool, download_media, watch_url) for watch_url in watch_urls]
         done, pending = await asyncio.wait(
             futures, return_when=asyncio.ALL_COMPLETED)
-        logger.debug('done: %s', done)
-        logger.debug('pending: %s', pending)
+        logger.debug(f'done: {done}')
+        logger.debug(f'pending: {pending}')
 
         # TODO: List exit status
         if pending:
@@ -205,34 +225,27 @@ def run(args):
         if [i for i in done if i.exception()]:
             sys.exit(4)
 
-    def download_media(watch_url):
-        tube = YouTube(watch_url)
-        logger.info('on download: %s', watch_url)
+    def download_media(watch_url, on_progress_callback=None):
+        tube = YouTube(watch_url, on_progress_callback)
+        logger.info(f'on download: {watch_url}', )
 
         try:
             media = tube.streams.filter(
-                only_audio=True, file_extension='mp4').first()
+                only_audio=True, file_extension='mp4', adaptive=True).first()
             title = tube.title
-            logger.info(
-                'download completed from %s to <%s>',
-                watch_url, title)
-        except Exception:
-            logger.exception('cannot download %s', watch_url)
-            raise
-
-        try:
-            logger.info('saving <%s>...', title)
+            logger.info(f'complete filtering: {title}')
+            logger.info(f'downloading {title}...')
             media.download(
                 output_path=args.directory_prefix,
                 filename=title)
-            logger.info('successfully saved <%s>', title)
-        except Exception:
-            logger.exception(
-                '%s is not downloaded', title)
-            raise
+            logger.info(f'successfully saved {title}')
+        except PytubeError as e:
+            logger.exception(e)
+            if len(watch_url) == 1:
+                raise
 
     if len(watch_urls) == 1:
-        download_media(watch_urls[0])
+        download_media(watch_urls[0], ProgressBar())
     else:
         with ThreadPoolExecutor(max_workers=args.max_workers) as pool:
             asyncio.run(run_core(watch_urls, pool), debug=args.debug)
