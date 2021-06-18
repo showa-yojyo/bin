@@ -7,13 +7,13 @@ My ``$HOME/bin`` Contents
 What is this?
 ======================================================================
 
-This repository contains various script files just for me.
-Most script files are written in Python.
+This repository contains various script files for my use.
+Most of the script files are written in Python.
 
 Installation
 ======================================================================
 
-First, clone this repository to your ``$HOME`` directory.
+First, clone this repository to your home directory or something.
 
 .. code:: bash
 
@@ -26,10 +26,12 @@ Requirements
 ----------------------------------------------------------------------
 
 * Python_ 3.x; I use Windows x86-64 executable.
-  Some scripts need third party's packages, e.g.:
+  Some scripts require third party packages. e.g.:
 
   * Jinja2_,
   * `Python Twitter Tools`_,
+  * Pytube_,
+  * Scrapy_,
   * Docutils_,
   * dateutil_,
   * etc.
@@ -37,7 +39,7 @@ Requirements
 Bug Reporting
 ======================================================================
 
-Please do not report to me if you find any issues.
+Please do not report any issues you find to me.
 
 Licensing
 ======================================================================
@@ -46,6 +48,8 @@ See the file LICENSE.
 
 .. _Python: http://www.python.org/
 .. _Python Twitter Tools: http://mike.verdone.ca/twitter/
+.. _Pytube: https://pytube.io/en/latest/
+.. _Scrapy: https://scrapy.org/
 .. _Jinja2: http://jinja.pocoo.org/
 .. _Docutils: http://docutils.sourceforge.net/
 .. _Dateutil: https://dateutil.readthedocs.org/
