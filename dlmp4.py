@@ -187,7 +187,8 @@ class ProgressBar:
             self.previousprogress = liveprogress
             filledLength = int(self.length * liveprogress)
             bar = self.fill * filledLength + '-' * (self.length - filledLength)
-            print(f'\r|{bar}| {liveprogress:.1%}', end='\r', file=sys.stderr, flush=True)
+            sys.stderr.write(f' |{bar}| {liveprogress:.1%}\r')
+            sys.stderr.flush()
 
 def run(args):
     """main function
