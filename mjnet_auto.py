@@ -20,6 +20,11 @@ MJ_NET_URL_PLAYER_DATA_PAGE = f'{MJ_NET_URL}/FwdPage?page=playdata&i=0'
 # TODO: When XPath upgrades to 2.0, use the function matches() instead of contains().
 XPATH_BEST_MAHJONG = "//a[text()[contains(., '倍満') or contains(., '三倍満') or contains(., '役満')]]"
 
+# 一般卓東風戦
+GAME_MODE_STANDARD = 'standard'
+# プロ卓東風戦
+GAME_MODE_PROFESSIONAL = 'professional'
+
 class MjscoreSpider(Spider):
     """MJ.NET"""
 
@@ -54,7 +59,7 @@ class MjscoreSpider(Spider):
         yield response.follow(MJ_NET_URL_PLAYER_DATA_PAGE, self._play_data)
 
     def _play_data(self, response):
-        """Navigate to the page 東風戦プロ卓"""
+        """Navigate to the page 一般卓東風戦 or プロ卓東風戦"""
 
         ext = LinkExtractor(restrict_text='東風戦')
         links = ext.extract_links(response)
@@ -63,9 +68,14 @@ class MjscoreSpider(Spider):
             inspect_response(response, self)
             return
 
-        yield response.follow(links[-1].url, self._tompu_pro)
+        game_mode = getattr(self, 'game_mode'),
+        if game_mode == GAME_MODE_PROFESSIONAL:
+            link_index = -1
+        else:
+            link_index = 0
+        yield response.follow(links[link_index].url, self._tompu_games)
 
-    def _tompu_pro(self, response):
+    def _tompu_games(self, response):
         """Navigate to the daily record page"""
 
         ext = LinkExtractor(restrict_text='デイリー戦績')
@@ -194,9 +204,13 @@ def parse_best(selector, item):
 def main():
     """Receive account information and run spider"""
 
+    game_mode = GAME_MODE_PROFESSIONAL
+    if len(sys.argv) == 2 and sys.argv[1] == '--standard':
+        game_mode = GAME_MODE_STANDARD
+
     user_id = input('Enter user id for MJ.NET: ')
     password = getpass('Enter password: ')
-    cmdline.execute(f"scrapy runspider {sys.argv[0]} -a uid={user_id} -a password={password}".split())
+    cmdline.execute(f"scrapy runspider {sys.argv[0]} -a uid={user_id} -a password={password} -a game_mode={game_mode}".split())
 
 if __name__ == '__main__':
     main()
