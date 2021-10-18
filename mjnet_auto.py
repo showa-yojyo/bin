@@ -68,7 +68,7 @@ class MjscoreSpider(Spider):
             inspect_response(response, self)
             return
 
-        game_mode = getattr(self, 'game_mode'),
+        game_mode = getattr(self, 'game_mode')
         if game_mode == GAME_MODE_PROFESSIONAL:
             link_index = -1
         else:
