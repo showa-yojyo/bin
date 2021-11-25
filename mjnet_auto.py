@@ -195,7 +195,7 @@ def parse_best(selector, item):
     # TODO: まだよくわからない
     #values = selector.xpath('//font[contains(.,"最高役")]/following-sibling::text()').getall()
     values = selector.xpath('//text()[preceding::font[contains(.,"最高役")]][following::hr]').getall()
-    item['best'] = '\n'.join(istripped for i in values if (istripped := i.strip()))
+    item['best'] = '\n'.join(istripped for i in values if (istripped := i.strip())).replace('・\n', '・')
 
     print(title)
     print(item['best'])
