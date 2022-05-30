@@ -10,6 +10,8 @@ from scrapy import cmdline, Spider, FormRequest
 from scrapy.linkextractors import LinkExtractor
 from scrapy.shell import inspect_response
 
+DEFAULT_CREDENTIALS_PATH = '~/mjnet_auto.yaml'
+
 MJ_NET_URL = 'https://www.sega-mj.net/mjac_p'
 MJ_NET_URL_SIGN_IN = f'{MJ_NET_URL}/mjlogin/login.jsp'
 MJ_NET_URL_SIGN_IN_DO = f'{MJ_NET_URL}/login.do'
@@ -104,7 +106,8 @@ class MjscoreSpider(Spider):
     def parse_best_mahjong(self, response):
         """TODO: 跳満以上のアガリがある場合にはリンク先のスクリーンショットを保存する (very hard)
         """
-        inspect_response(response, self)
+        pass
+        #inspect_response(response, self)
         # 不正なアクセスを検知しました
         #import webbrowser
         #webbrowser.open(response.url)
@@ -201,6 +204,21 @@ def parse_best(selector, item):
     print(item['best'])
     print()
 
+def read_credentials():
+    """Try to read the ID and password from $HOME/mjauto_net.yaml.
+
+    When PyYAML is not available, this function siliently exits and returns none.
+    """
+
+    import os.path
+    try:
+        import yaml
+        path = os.path.expanduser(DEFAULT_CREDENTIALS_PATH)
+        with open(path, mode='r') as fin:
+            return yaml.safe_load(fin)
+    except:
+        pass
+
 def main():
     """Receive account information and run spider"""
 
@@ -208,9 +226,21 @@ def main():
     if len(sys.argv) == 2 and sys.argv[1] == '--standard':
         game_mode = GAME_MODE_STANDARD
 
-    user_id = input('Enter user id for MJ.NET: ')
-    password = getpass('Enter password: ')
-    cmdline.execute(f"scrapy runspider {sys.argv[0]} -a uid={user_id} -a password={password} -a game_mode={game_mode}".split())
+    if credentials := read_credentials():
+        user_id = credentials['uid']
+        password = credentials['password']
+    else:
+        user_id = input('Enter user id for MJ.NET: ')
+        password = getpass('Enter password: ')
+
+    command = [
+        "scrapy", "runspider", sys.argv[0],
+        "-a", f"uid={user_id}",
+        "-a", f"password={password}",
+        "-a", f"game_mode={game_mode}",]
+
+    # To suppress log text from scrapy, use 2>/dev/null redirection
+    cmdline.execute(command)
 
 if __name__ == '__main__':
     main()
