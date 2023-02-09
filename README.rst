@@ -29,7 +29,6 @@ Requirements
   Some scripts require third party packages. e.g.:
 
   * Jinja2_,
-  * `Python Twitter Tools`_,
   * Scrapy_,
   * Docutils_,
   * dateutil_,
@@ -46,7 +45,6 @@ Licensing
 See the file LICENSE.
 
 .. _Python: http://www.python.org/
-.. _Python Twitter Tools: http://mike.verdone.ca/twitter/
 .. _Scrapy: https://scrapy.org/
 .. _Jinja2: http://jinja.pocoo.org/
 .. _Docutils: http://docutils.sourceforge.net/
