@@ -5,12 +5,18 @@ Sign in MJ.NET and scrape today's result.
 """
 
 from getpass import getpass
+import os.path
 import sys
 from scrapy import cmdline, Spider, FormRequest
 from scrapy.linkextractors import LinkExtractor
 from scrapy.shell import inspect_response
+import yaml
 
-DEFAULT_CREDENTIALS_PATH = '~/mjnet_auto.yaml'
+DEFAULT_CREDENTIALS_PATH = (
+    '$XDG_CONFIG_HOME/mjnet_auto/mjnet_auto.yaml',
+    '$HOME/.config/mjnet_auto/mjnet_auto.yaml',
+    '$HOME/.mjnet_auto/mjnet_auto.yaml',
+    '$HOME/mjnet_auto.yaml')
 
 MJ_NET_URL = 'https://www.sega-mj.net/mjac_p'
 MJ_NET_URL_SIGN_IN = f'{MJ_NET_URL}/mjlogin/login.jsp'
@@ -205,19 +211,24 @@ def parse_best(selector, item):
     print()
 
 def read_credentials():
-    """Try to read the ID and password from $HOME/mjauto_net.yaml.
+    """Try to read the ID and password from
 
-    When PyYAML is not available, this function siliently exits and returns none.
+    #. `$XDG_CONFIG_HOME/mjnet_auto/mjnet_auto.yaml`,
+    #. `$HOME/.config/mjnet_auto/mjnet_auto.yaml`,
+    #. `$HOME/.mjnet_auto/mjnet_auto.yaml` or
+    #. `$HOME/mjnet_auto.yaml`.
+
+    When PyYAML is not available, this function siliently exits and returns
+    none.
     """
 
-    import os.path
-    try:
-        import yaml
-        path = os.path.expanduser(DEFAULT_CREDENTIALS_PATH)
-        with open(path, mode='r') as fin:
-            return yaml.safe_load(fin)
-    except:
-        pass
+    for path in DEFAULT_CREDENTIALS_PATH:
+        try:
+            path = os.path.expandvars(path)
+            with open(path, mode='r') as fin:
+                return yaml.safe_load(fin)
+        except OSError:
+            pass
 
 def main():
     """Receive account information and run spider"""
