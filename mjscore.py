@@ -11,7 +11,7 @@ Usage:
 
 from argparse import ArgumentParser
 from configparser import ConfigParser
-from pathlib import Path
+from os.path import expandvars
 import sys
 from docutils.io import (StringInput, FileInput, FileOutput)
 from mjstat.reader import MJScoreReader
@@ -19,7 +19,27 @@ from mjstat.parser import MJScoreParser
 from mjstat.writer import MJScoreWriter
 from mjstat.model import (apply_transforms, merge_games)
 
-__version__ = '0.0.0'
+__version__ = '1.0.0'
+
+SEARCH_PATH = (
+    '$XDG_CONFIG_HOME/mjscore/mjscore.conf',
+    '$HOME/.config/mjscore/mjscore.conf',
+    '$HOME/.mjscore/mjscore.conf',
+    '$HOME/.mjscore.conf')
+
+def read_settings(args):
+    """Read settings from a dotfile"""
+
+    config = ConfigParser()
+    if args.config:
+        config.read(args.config)
+        return config
+
+    #config.read([expandvars(p) for p in SEARCH_PATH])
+    for p in SEARCH_PATH:
+        config.read(expandvars(p))
+
+    return config
 
 def parse_args(args):
     """Convert argument strings to objects."""
@@ -33,8 +53,7 @@ def parse_args(args):
     args, remaining_argv = parser.parse_known_args()
 
     defaults = {}
-    config = ConfigParser()
-    config.read(args.config if args.config else Path.home() / '.mjscore')
+    config = read_settings(args)
 
     try:
         defaults = dict(config.items("General"))
