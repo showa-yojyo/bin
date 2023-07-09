@@ -10,7 +10,7 @@ import subprocess
 import sys
 import itertools
 
-__version__ = '1.0'
+__version__ = '1.0.1'
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -153,7 +153,7 @@ def run(args):
 
     command = [
         FFMPEG_PATH, '-i', OUTPUT_VIDEO_PATH,
-        '-i', OUTPUT_VIDEO_PATH,
+        '-i', OUTPUT_AUDIO_PATH,
         '-map', '0:v', '-map', '1:a',
         '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-strict', '-2',
         '-c:a', 'aac',
