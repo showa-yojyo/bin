@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# ImageMagick – Command-line Options
+# <https://imagemagick.org/script/command-line-options.php#grayscale>
+
+usage="Usage: ${0##*/} INPUT_IMAGE_PATH OUTPUT_IMAGE_PATH"
+input="${1:?${usage}}"
+output="${2:?${usage}}"
+
+magick "$input" -colorspace Gray "$output"
