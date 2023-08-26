@@ -1,6 +1,4 @@
----
-title: `$HOME/bin`
----
+# README
 
 ## What is this?
 
@@ -13,11 +11,11 @@ First, clone this repository to your `$HOME/.local/bin` directory (recommended).
 
 ```console
 $ mkdir -p ~/.local/bin && cd $_ # optional
-$ git clone https://github.com/showa-yojyo/bin.git
+$ git clone https://github.com/showa-yojyo/bin.git .
 ```
 
-And make sure the `PATH` environment variable includes this directory. For example,
-in `.bash_profile`, set it as below:
+And make sure the `PATH` environment variable includes this directory. For
+example, in `.bash_profile`, set it as below:
 
 ```shell
 # in .bash_profile or .profile
@@ -40,6 +38,7 @@ done
   * [Docutils]
   * [Scrapy]
   * [PyYaml]
+* [ImageMagick]
 * [FFmpeg]
 
 ## Bug Reporting
@@ -53,3 +52,4 @@ Please do not report any issues you find to me.
 [Scrapy]: https://scrapy.org/
 [PyYAML]: https://pyyaml.org/
 [FFmpeg]: https://ffmpeg.org/
+[ImageMagick]: https://imagemagick.org/
