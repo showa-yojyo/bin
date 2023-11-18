@@ -10,7 +10,7 @@ import subprocess
 import sys
 import itertools
 
-__version__ = '1.1'
+__version__ = '1.2'
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -127,8 +127,11 @@ def run(args):
         FFMPEG_PATH,
         '-y',
         *itertools.chain(*files_input),
-        '-filter_complex', '"' + audio_normalizer + audio_fades + '"',
+        '-filter_complex', f'"{audio_normalizer}{audio_fades}"',
         '-vn',
+        '-c:a', 'aac',
+        '-ar', '44100',
+        '-ac', '2',
         OUTPUT_AUDIO_PATH,]
 
     print(" ".join(command))
@@ -142,8 +145,14 @@ def run(args):
         '-y',
         *itertools.chain(*files_input),
         '-i', OVERLAY_IMAGE_PATH,
-        '-filter_complex', '"' + video_normalizer + video_fades + '"',
-        '-pix_fmt', 'yuv420p', '-an',
+        '-filter_complex', f'"{video_normalizer}{video_fades}"',
+        '-c:v', 'libx264',
+        '-pix_fmt', 'yuv420p',
+        '-b:v', '1M',
+        '-minrate', '1M',
+        '-maxrate', '1M',
+        '-bufsize', '1M',
+        '-an',
         OUTPUT_VIDEO_PATH,]
 
     print(" ".join(command))
@@ -156,16 +165,10 @@ def run(args):
     command = [
         FFMPEG_PATH, '-i', OUTPUT_VIDEO_PATH,
         '-i', OUTPUT_AUDIO_PATH,
-        '-map', '0:v', '-map', '1:a',
-        '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-strict', '-2',
+        '-c:v', 'copy',
         '-c:a', 'aac',
-        '-vb', '1024k',
-        '-minrate', '1024k',
-        '-maxrate', '1024k',
-        '-bufsize', '1024k',
-        '-ar', '44100',
-        '-ac', '2',
-        '-r', '30',
+        '-map', '0:v:0',
+        '-map', '1:a:0',
         args.output_filename,]
     print(" ".join(command))
 
