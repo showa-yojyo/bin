@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+
+# Synopsys:
+#   Print the last business days in one year.
+#
+# Example:
+#   $ last-business-days 2024
+#   2024-01-31
+#   2024-02-29
+#   2024-03-29
+#   2024-04-30
+#   2024-05-31
+#   2024-06-28
+#   2024-07-31
+#   2024-08-30
+#   2024-09-30
+#   2024-10-31
+#   2024-11-29
+#   2024-12-27
+#
+# References:
+#   * Generate last business day of the month variable in Python for US Calendar - Stack Overflow
+#     <https://stackoverflow.com/questions/62557373/generate-last-business-day-of-the-month-variable-in-python-for-us-calendar>
+#   * Get the last day of the month - Stack Overflow
+#     <https://stackoverflow.com/questions/42950/get-the-last-day-of-the-month>
+#   * Lalcs/jpholiday: 日本の祝日を取得するライブラリ
+#     <https://github.com/Lalcs/jpholiday>
+
+import calendar
+import datetime
+import sys
+
+# pip install jpholiday
+import jpholiday
+
+ONEDAY = datetime.timedelta(days=1)
+
+def is_weekend(d):
+    return d.weekday() >= 5
+
+def last_business_day(year):
+    for m in range(1, 13):
+        _, last = calendar.monthrange(year, m)
+        d = datetime.datetime(year, m, last)
+        while is_weekend(d) or is_holiday(d):
+            d -= ONEDAY
+        yield d
+
+class TestHoliday(jpholiday.OriginalHoliday):
+    def _is_holiday(self, d):
+        match d.month:
+            case 1:
+                return d.day in (2, 3)
+            case 12:
+                return d.day in (29, 30, 31)
+            case _:
+                return False
+
+def is_holiday(d):
+    return jpholiday.is_holiday(d)
+
+def main(args=sys.argv[1:]):
+    year = int(args[0])
+    for d in last_business_day(year):
+        print(d.isoformat().split('T')[0])
+
+if __name__ == '__main__':
+    main()
