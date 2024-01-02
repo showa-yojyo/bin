@@ -38,6 +38,7 @@ done
   * [Docutils]
   * [Scrapy]
   * [PyYaml]
+  * [JPHoliday]
 * [ImageMagick]
 * [FFmpeg]
 
@@ -53,3 +54,4 @@ Please do not report any issues you find to me.
 [PyYAML]: https://pyyaml.org/
 [FFmpeg]: https://ffmpeg.org/
 [ImageMagick]: https://imagemagick.org/
+[JPHoliday]: https://github.com/Lalcs/jpholiday
