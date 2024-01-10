@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# Extract a frame to a JPEG file by specifying its frame index
+
+declare -r usage="${0##*/} INPUT_VIDEO_PATH FRAME_INDEX"
+declare -r input="${1:?Usage: $usage}"
+declare -r frame_index="${2:?Usage: $usage}"
+
+declare -r output="${input%.*}-${frame_index}.jpg"
+declare -r ffmpeg_global_options="-loglevel error -y"
+declare -r ffmpeg_output_options="-vf select=eq(n\,$frame_index) -vframes 1"
+
+ffmpeg $ffmpeg_global_options -i "$input" $ffmpeg_output_options "$output"
+touch -r "$input" "$output"
