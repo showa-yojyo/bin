@@ -10,7 +10,7 @@ import subprocess
 import sys
 import itertools
 
-__version__ = '1.2'
+__version__ = '1.3'
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -103,6 +103,9 @@ def run(args):
     for i, _ in enumerate(segments):
         video_normalizer += f"[{i}:v]setpts=PTS,settb=AVTB,fps=30[v{i}];\n"
 
+    i_overlay = len(segments)
+    video_normalizer += f"[{i_overlay}:v]setpts=PTS-STARTPTS[v{i_overlay}];\n"
+
     video_fades = ""
     last_fade_output = "v0"
     video_length = 0
@@ -118,7 +121,8 @@ def run(args):
     video_length += file_lengths[-1] - XFADE_DURATION
 
     # overlay a still image (e.g. -i title.png)
-    video_fades += f"[{last_fade_output}]fade=t=out:st={video_length}:d={XFADE_DURATION}[vv];\n[vv][{len(segments)}:v]overlay"
+    video_fades += f"[{last_fade_output}]fade=t=out:st={video_length}:d={XFADE_DURATION}[vv];\n"
+    video_fades += f"[vv][v{i_overlay}]overlay=enable='between(t,0,3)'"
 
     # Assemble the FFMPEG command arguments
 
@@ -163,7 +167,8 @@ def run(args):
     # Final command
 
     command = [
-        FFMPEG_PATH, '-i', OUTPUT_VIDEO_PATH,
+        FFMPEG_PATH, '-y',
+        '-i', OUTPUT_VIDEO_PATH,
         '-i', OUTPUT_AUDIO_PATH,
         '-c:v', 'copy',
         '-c:a', 'aac',
