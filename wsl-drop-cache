@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# wsl-drop-cache: WIP
+
+grep -q 'swap=0' /mnt/c/Users/$USER/.wslconfig
+if [ $? -eq 0 ] ; then
+    echo sudo sh -c "echo 3 >'/proc/sys/vm/drop_caches'"
+else
+    echo sudo sh -c "echo 3 >'/proc/sys/vm/drop_caches' && swapoff -a && swapon -a"
+fi
