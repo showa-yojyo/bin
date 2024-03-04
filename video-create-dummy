@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Create a dummy video file.
+#
+# Reference:
+# * How can I generate a video file directly from an FFmpeg filter with no
+#   actual input file?
+#   <https://stackoverflow.com/questions/11640458/how-can-i-generate-a-video-file-directly-from-an-ffmpeg-filter-with-no-actual-in>
+# * FFmpeg Creating test video
+#   <https://www.bogotobogo.com/FFMpeg/ffmpeg_video_test_patterns_src.php>
+
+declare -r input="color=color=black:duration=10:r=30:size=640x480"
+declare -r output="${1:?Usage: ${0##*/} OUTPUT_VIDEO_PATH}"
+
+declare -r ffmpeg_global_options="-loglevel error -y"
+declare -r ffmpeg_input_options="-f lavfi"
+declare -r ffmpeg_output_options="-pix_fmt yuv420p"
+
+ffmpeg $ffmpeg_global_options $ffmpeg_input_options -i \
+  "$input" $ffmpeg_output_options "$output"
