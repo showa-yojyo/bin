@@ -10,7 +10,7 @@ import subprocess
 import sys
 import itertools
 
-__version__ = '1.3'
+__version__ = '1.4'
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -23,7 +23,7 @@ OVERLAY_IMAGE_PATH = './title.png'
 OUTPUT_AUDIO_PATH = './audio-only.m4a'
 OUTPUT_VIDEO_PATH = './video-only.mp4'
 
-ACROSSFADE_DURATION = 0.75
+ACROSSFADE_DURATION = 1.0
 XFADE_DURATION = 1.0
 
 def parse_args(args):
