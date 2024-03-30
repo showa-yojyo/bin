@@ -10,7 +10,7 @@ import subprocess
 import sys
 import itertools
 
-__version__ = '1.4'
+__version__ = '1.5'
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -23,8 +23,8 @@ OVERLAY_IMAGE_PATH = './title.png'
 OUTPUT_AUDIO_PATH = './audio-only.m4a'
 OUTPUT_VIDEO_PATH = './video-only.mp4'
 
-ACROSSFADE_DURATION = 1.0
 XFADE_DURATION = 1.0
+ACROSSFADE_DURATION = XFADE_DURATION * .5
 
 def parse_args(args):
     """Parse the command line parameters.
@@ -95,9 +95,6 @@ def run(args):
         audio_fades += f"[{last_audio_output}][a{i + 1}]acrossfade=d={ACROSSFADE_DURATION}:o=1:c1=tri:c2=tri[{next_audio_output}];\n"
         last_audio_output = next_audio_output
 
-    # Add anull filter to adjust stream specifier.
-    audio_fades += f"[{last_audio_output}]anull"
-
     # Video normalizer
     video_normalizer = "\n"
     for i, _ in enumerate(segments):
@@ -121,12 +118,14 @@ def run(args):
     video_length += file_lengths[-1] - XFADE_DURATION
 
     # overlay a still image (e.g. -i title.png)
-    video_fades += f"[{last_fade_output}]fade=t=out:st={video_length}:d={XFADE_DURATION}[vv];\n"
+    video_fades += f"[{last_fade_output}]fade=t=out:st={video_length:.4f}:d={XFADE_DURATION}[vv];\n"
     video_fades += f"[vv][v{i_overlay}]overlay=enable='between(t,0,3)'"
 
     # Assemble the FFMPEG command arguments
 
     # Audio
+    audio_fades += f"[{last_audio_output}]afade=t=out:st={video_length:.4f}:d={ACROSSFADE_DURATION * 2}"
+
     command = [
         FFMPEG_PATH,
         '-y',
