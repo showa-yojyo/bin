@@ -8,7 +8,7 @@
 
 declare -r input="${1:?Usage: ${0##*/} INPUT_VIDEO_PATH SECONDS}"
 declare -r seconds="${2:-1}"
-declare -r output="${input%.*}-drop-last.${input#*.}"
+declare -r output="${input%.*}-drop-last.${input##*.}"
 
 declare duration=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$input")
 duration=$(echo $duration - $seconds | bc)

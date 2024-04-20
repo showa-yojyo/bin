@@ -4,7 +4,7 @@
 
 declare -r input="${1:?Usage: ${0##*/} INPUT_VIDEO_PATH SECONDS}"
 declare -r seconds="${2:-1}"
-declare -r output="${input%.*}-drop-first.${input#*.}"
+declare -r output="${input%.*}-drop-first.${input##*.}"
 
 declare -r ffmpeg_global_options="-loglevel error -y"
 declare -r ffmpeg_input_options="-ss $seconds"
