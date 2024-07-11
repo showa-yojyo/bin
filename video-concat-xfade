@@ -10,7 +10,7 @@ import subprocess
 import sys
 import itertools
 
-__version__ = '1.5.1'
+__version__ = '1.6'
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -25,6 +25,9 @@ OUTPUT_VIDEO_PATH = './video-only.mp4'
 
 XFADE_DURATION = 1.0
 ACROSSFADE_DURATION = XFADE_DURATION
+
+AUDIO_NORMALIZE = 'aresample=async=1:first_pts=0,asetpts=PTS,asettb=AVTB,apad'
+AUDIO_REDUCE_NOISE = 'highpass=f=200,lowpass=f=3000'
 
 def parse_args(args):
     """Parse the command line parameters.
@@ -84,7 +87,7 @@ def run(args):
     # Audio normalizer
     audio_normalizer = "\n"
     for i, d in enumerate(file_lengths):
-        audio_normalizer += f"[{i}:a]aresample=async=1:first_pts=0,asetpts=PTS,asettb=AVTB,apad,atrim=0:{d}[a{i}];\n"
+        audio_normalizer += f"[{i}:a]{AUDIO_NORMALIZE},atrim=0:{d}[a{i}];\n"
 
     # Audio fading
     audio_fades = ""
@@ -130,7 +133,7 @@ def run(args):
         FFMPEG_PATH,
         '-y',
         *itertools.chain(*files_input),
-        '-filter_complex', f'"{audio_normalizer}{audio_fades}"',
+        '-filter_complex', f'"{audio_normalizer}{audio_fades},{AUDIO_REDUCE_NOISE}"',
         '-vn',
         '-c:a', 'aac',
         '-ar', '44100',
