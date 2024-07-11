@@ -1,0 +1,10 @@
+#!/bin/bash
+# Mute audio by setting its volume zero
+
+declare -r input="${1:?Usage: ${0##*/} SOURCE_PATH}"
+declare -r output="${input%.*}-mute.${input#*.}"
+declare -r ffmpeg_global_options="-loglevel error -y"
+declare -r ffmpeg_output_options="-c:v copy -af volume=0"
+
+ffmpeg $ffmpeg_global_options -i "$input" $ffmpeg_output_options "$output"
+touch -r "$input" "$output"
