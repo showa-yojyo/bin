@@ -1,0 +1,10 @@
+#!/bin/bash
+# <https://stackoverflow.com/questions/32384057/ffmpeg-black-and-white-conversion>
+
+declare -r input="${1:?Usage: ${0##*/} INPUT_VIDEO_PATH}"
+declare -r output="${input%.*}-greyscale.${input#*.}"
+declare -r ffmpeg_global_options="-loglevel error -y"
+declare -r ffmpeg_output_options="-vf hue=s=0 -crf 32 -c:a copy"
+
+ffmpeg $ffmpeg_global_options -i "$input" $ffmpeg_output_options "$output"
+touch -r "$input" "$output"
