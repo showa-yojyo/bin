@@ -10,7 +10,7 @@ import subprocess
 import sys
 import itertools
 
-__version__ = '1.6'
+__version__ = '1.7'
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -176,6 +176,7 @@ def run(args):
         '-c:a', 'aac',
         '-map', '0:v:0',
         '-map', '1:a:0',
+        '-movflags', '+faststart'
         args.output_filename,]
     print(" ".join(command))
 
