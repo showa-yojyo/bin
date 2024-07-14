@@ -1,0 +1,20 @@
+#!/bin/bash
+# <https://stackoverflow.com/questions/43595880/ffmpeg-sepia-filter>
+# <https://hhsprings.bitbucket.io/docs/programming/examples/ffmpeg/manipulating_video_colors/colorchannelmixer.html>
+
+declare -r input="${1:?Usage: ${0##*/} INPUT_VIDEO_PATH}"
+declare -r output="${input%.*}-sepia.${input#*.}"
+declare -ar ffmpeg_global_options=(-loglevel error -y)
+declare -ar ffmpeg_output_options=(
+    -filter_complex "[0:v]colorchannelmixer=
+        0.393:0.769:0.189:0.000:
+        0.349:0.686:0.168:0.000:
+        0.272:0.534:0.131:0.000:
+        0.000:0.000:0.000:1.000[v]"
+    -map "[v]"
+    -map 0:a:0
+    -crf 32
+    -c:a copy)
+
+ffmpeg "${ffmpeg_global_options[@]}" -i "$input" "${ffmpeg_output_options[@]}" "$output"
+touch -r "$input" "$output"
