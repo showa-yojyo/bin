@@ -4,12 +4,16 @@
 # Frame Number Overlay With FFmpeg - Stack Overflow
 # https://stackoverflow.com/questions/15364861/frame-number-overlay-with-ffmpeg
 
-declare -r input="${1:?Usage: ${0##*/} INPUT_VIDEO_PATH}"
+declare -r input="${1:?Usage: ${0##*/} SOURCE_PATH}"
 declare -r output="${input%.*}-debug.${input#*.}"
-declare -r ffmpeg_global_options="-loglevel error -y"
-declare -r ffmpeg_output_options="-vf
-    drawtext=fontfile=Arial.ttf:text='%{frame_num}':start_number=0:x=(w-tw)/2:y=h-(2*lh):fontcolor=black:fontsize=20:box=1:boxcolor=white:boxborderw=5
-    -c:a copy"
+declare -ar ffmpeg_global_options=(-loglevel error -y)
+declare -ar ffmpeg_output_options=(-vf
+    "drawtext=fontfile=Arial.ttf:text='%{frame_num}'
+    :start_number=0:x=(w-tw)/2:y=h-(2*lh)
+    :fontcolor=black:fontsize=20:box=1:boxcolor=white:boxborderw=5"
+    -c:a copy)
 
-ffmpeg $ffmpeg_global_options -i "$input" $ffmpeg_output_options "$output"
+ffmpeg "${ffmpeg_global_options[@]}" \
+    -i "$input" \
+    "${ffmpeg_output_options[@]}" "$output"
 touch -r "$input" "$output"

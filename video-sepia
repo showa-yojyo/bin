@@ -2,7 +2,7 @@
 # <https://stackoverflow.com/questions/43595880/ffmpeg-sepia-filter>
 # <https://hhsprings.bitbucket.io/docs/programming/examples/ffmpeg/manipulating_video_colors/colorchannelmixer.html>
 
-declare -r input="${1:?Usage: ${0##*/} INPUT_VIDEO_PATH}"
+declare -r input="${1:?Usage: ${0##*/} SOURCE_PATH}"
 declare -r output="${input%.*}-sepia.${input#*.}"
 declare -ar ffmpeg_global_options=(-loglevel error -y)
 declare -ar ffmpeg_output_options=(
@@ -16,5 +16,7 @@ declare -ar ffmpeg_output_options=(
     -crf 32
     -c:a copy)
 
-ffmpeg "${ffmpeg_global_options[@]}" -i "$input" "${ffmpeg_output_options[@]}" "$output"
+ffmpeg "${ffmpeg_global_options[@]}" \
+    -i "$input" \
+    "${ffmpeg_output_options[@]}" "$output"
 touch -r "$input" "$output"

@@ -8,13 +8,13 @@ declare -r input="${1:?Usage: ${0##*/} INPUT_VIDEO_PATH SPEED_FACTOR}"
 declare -r speed="${2:-1}"
 declare -r output="${input%.*}-${speed}x-speed.${input#*.}"
 
-declare -r ffmpeg_global_options="-loglevel error -y"
-declare -r ffmpeg_input_options=""
-declare -r ffmpeg_output_options="
-  -vf setpts=(PTS-STARTPTS)/${speed}\
-  -af atempo=${speed}"
+declare -ar ffmpeg_global_options=(-loglevel error -y)
+declare -ar ffmpeg_input_options=()
+declare -ar ffmpeg_output_options=(
+  -vf "setpts=(PTS-STARTPTS)/${speed}"
+  -af "atempo=${speed}")
 
-ffmpeg $ffmpeg_global_options $ffmpeg_input_options -i \
-  "$input" $ffmpeg_output_options "$output"
-
+ffmpeg "${ffmpeg_global_options[@]}" \
+  "${ffmpeg_input_options[@]}" -i "$input"
+  "${ffmpeg_output_options[@]}" "$output"
 touch -r "$input" "$output"

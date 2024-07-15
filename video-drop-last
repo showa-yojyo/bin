@@ -6,18 +6,18 @@
 # How i could cut the last 7 second of my video with ffmpeg? - Super User
 # <https://superuser.com/questions/744823/how-i-could-cut-the-last-7-second-of-my-video-with-ffmpeg>
 
-declare -r input="${1:?Usage: ${0##*/} INPUT_VIDEO_PATH SECONDS}"
+declare -r input="${1:?Usage: ${0##*/} SOURCE_PATH SECONDS}"
 declare -r seconds="${2:-1}"
 declare -r output="${input%.*}-drop-last.${input##*.}"
 
 declare duration=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$input")
 duration=$(echo $duration - $seconds | bc)
 
-declare -r ffmpeg_global_options="-loglevel error -y"
-declare -r ffmpeg_input_options="-ss 00:00:00 -to $duration"
-declare -r ffmpeg_output_options="-c copy"
+declare -ar ffmpeg_global_options=(-loglevel error -y)
+declare -ar ffmpeg_input_options=(-ss 00:00:00 -to $duration)
+declare -ar ffmpeg_output_options=(-c copy)
 
-ffmpeg $ffmpeg_global_options $ffmpeg_input_options -i \
-  "$input" $ffmpeg_output_options "$output"
-
+ffmpeg "${ffmpeg_global_options[@]}" \
+  "${ffmpeg_input_options[@]}" -i "$input" \
+  "${ffmpeg_output_options[@]}" "$output"
 touch -r "$input" "$output"

@@ -1,10 +1,12 @@
 #!/bin/bash
 # https://superuser.com/questions/268985/remove-audio-from-video-file-with-ffmpeg
 
-declare -r input="${1:?Usage: ${0##*/} INPUT_VIDEO_PATH}"
+declare -r input="${1:?Usage: ${0##*/} SOURCE_PATH}"
 declare -r output="${input%.*}-mute.${input#*.}"
-declare -r ffmpeg_global_options="-loglevel error -y"
-declare -r ffmpeg_output_options="-c copy -an"
+declare -r ffmpeg_global_options=(-loglevel error -y)
+declare -r ffmpeg_output_options=(-c copy -an)
 
-ffmpeg $ffmpeg_global_options -i "$input" $ffmpeg_output_options "$output"
+ffmpeg "${ffmpeg_global_options[@]}" \
+    -i "$input" \
+    "${ffmpeg_output_options[@]}" "$output"
 touch -r "$input" "$output"

@@ -12,9 +12,10 @@
 declare -r input="color=color=black:duration=10:r=30:size=640x480"
 declare -r output="${1:?Usage: ${0##*/} OUTPUT_VIDEO_PATH}"
 
-declare -r ffmpeg_global_options="-loglevel error -y"
-declare -r ffmpeg_input_options="-f lavfi"
-declare -r ffmpeg_output_options="-pix_fmt yuv420p"
+declare -ar ffmpeg_global_options=(-loglevel error -y)
+declare -ar ffmpeg_input_options=(-f lavfi)
+declare -ar ffmpeg_output_options=(-pix_fmt yuv420p)
 
-ffmpeg $ffmpeg_global_options $ffmpeg_input_options -i \
-  "$input" $ffmpeg_output_options "$output"
+ffmpeg "${ffmpeg_global_options[@]}" \
+  "${ffmpeg_input_options[@]}" -i "$input" \
+  "${ffmpeg_output_options[@]}" "$output"
