@@ -10,7 +10,7 @@ import subprocess
 import sys
 import itertools
 
-__version__ = '1.7.1'
+__version__ = '1.8'
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -20,8 +20,10 @@ FFPROBE_PATH = 'ffprobe'
 
 OVERLAY_IMAGE_PATH = './title.png'
 
-OUTPUT_AUDIO_PATH = './audio-only.m4a'
-OUTPUT_VIDEO_PATH = './video-only.mp4'
+CONCAT_AUDIO_PATH = './audio-only.m4a'
+CONCAT_VIDEO_PATH = './video-only.mp4'
+COMMAND_AUDIO_PATH = './audio-command.sh'
+COMMAND_VIDEO_PATH = './video-command.sh'
 
 XFADE_DURATION = 1.0
 ACROSSFADE_DURATION = XFADE_DURATION
@@ -53,6 +55,36 @@ def parse_args(args):
         default='out.mp4',
         help='output filename to provide to ffmpeg. default="out.mp4"')
     parser.add_argument(
+        '--concat-audio-path',
+        dest='concat_audio_path',
+        type=str,
+        default=CONCAT_AUDIO_PATH,
+        help=f'default="{CONCAT_AUDIO_PATH}"')
+    parser.add_argument(
+        '--concat-video-path',
+        dest='concat_video_path',
+        type=str,
+        default=CONCAT_VIDEO_PATH,
+        help=f'default="{CONCAT_VIDEO_PATH}"')
+    parser.add_argument(
+        '--command-audio-path',
+        dest='command_audio_path',
+        type=str,
+        default=COMMAND_AUDIO_PATH,
+        help=f'default="{COMMAND_AUDIO_PATH}"')
+    parser.add_argument(
+        '--command-video-path',
+        dest='command_video_path',
+        type=str,
+        default=COMMAND_VIDEO_PATH,
+        help=f'default="{COMMAND_VIDEO_PATH}"')
+    parser.add_argument(
+        '--overlay-image-path',
+        dest='overlay_path',
+        type=str,
+        default=OVERLAY_IMAGE_PATH,
+        help=f'default="{OVERLAY_IMAGE_PATH}"')
+    parser.add_argument(
         'segments',
         nargs='+')
 
@@ -80,9 +112,6 @@ def run(args):
             capture_output=True).stdout.splitlines()[0])
         for f in segments
     ]
-
-    # File inputs from the list
-    files_input = [['-i', f] for f in segments]
 
     # Audio normalizer
     audio_normalizer = "\n"
@@ -122,13 +151,15 @@ def run(args):
 
     # overlay a still image (e.g. -i title.png)
     video_fades += f"[{last_fade_output}]fade=t=out:st={video_length:.4f}:d={XFADE_DURATION}[vv];\n"
-    video_fades += f"[vv][v{i_overlay}]overlay=enable='between(t,0,3)'"
+    video_fades += f"[vv][v{i_overlay}]overlay=enable='between(t,0,10)'"
 
     # Assemble the FFMPEG command arguments
 
+    # File inputs from the list
+    files_input = [['-i', f] for f in segments]
+
     # Audio
     audio_fades += f"[{last_audio_output}]afade=t=out:st={video_length:.4f}:d={ACROSSFADE_DURATION}"
-
     command = [
         FFMPEG_PATH,
         '-y',
@@ -138,19 +169,15 @@ def run(args):
         '-c:a', 'aac',
         '-ar', '44100',
         '-ac', '2',
-        OUTPUT_AUDIO_PATH,]
-
-    print(" ".join(command))
-    print()
-    # Run FFMPEG
-    ##subprocess.run(command)
+        args.concat_audio_path,]
+    write_command_line(command, args.command_audio_path)
 
     # Video
     command = [
         FFMPEG_PATH,
         '-y',
         *itertools.chain(*files_input),
-        '-i', OVERLAY_IMAGE_PATH,
+        '-i', args.overlay_path,
         '-filter_complex', f'"{video_normalizer}{video_fades}"',
         '-c:v', 'libx264',
         '-pix_fmt', 'yuv420p',
@@ -159,19 +186,15 @@ def run(args):
         '-maxrate', '1M',
         '-bufsize', '1M',
         '-an',
-        OUTPUT_VIDEO_PATH,]
-
-    print(" ".join(command))
-    print()
-    # Run FFMPEG
-    ##subprocess.run(command)
+        args.concat_video_path,]
+    write_command_line(command, args.command_video_path)
 
     # Final command
 
     command = [
         FFMPEG_PATH, '-y',
-        '-i', OUTPUT_VIDEO_PATH,
-        '-i', OUTPUT_AUDIO_PATH,
+        '-i', args.concat_video_path,
+        '-i', args.concat_audio_path,
         '-c:v', 'copy',
         '-c:a', 'aac',
         '-map', '0:v:0',
@@ -182,6 +205,16 @@ def run(args):
 
     # Run FFMPEG
     ##subprocess.run(command)
+
+def write_command_line(command_line, path):
+    """TBD"""
+
+    with open(path, 'w') as fout:
+        print(" ".join(command_line), file=fout)
+        print(file=fout)
+
+    # Run FFMPEG
+    ##subprocess.run(command_line)
 
 def main(args=sys.argv[1:]):
     sys.exit(run(parse_args(args)))
