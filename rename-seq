@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Rename files sequentially
+
+declare -ar input=(${@})
+declare -ir num_video=${#input[@]}
+
+for (( i=0; i<$num_video; i++ ));
+do
+    extension="${input##*.}"
+    mv "${input[i]}" ${i}."${extension}"
+done
