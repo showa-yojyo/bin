@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# See <https://tldp.org/LDP/abs/html/sample-bashrc.html>
+
+script=${0##*/}
+
+[ $# -ne 2 ] && echo "$script: specify two paths" && exit 1
+[ ! -e $1 ] && echo "$script: $1 does not exist" && exit 1
+[ ! -e $2 ] && echo "$script: $2 does not exist" && exit 1
+
+TMPFILE=tmp.$$
+mv "$1" $TMPFILE
+mv "$2" "$1"
+mv $TMPFILE "$2"
