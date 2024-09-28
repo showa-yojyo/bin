@@ -5,12 +5,13 @@
 # (with the `xfade` filter) · GitHub
 # <https://gist.github.com/royshil/369e175960718b5a03e40f279b131788>
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
+import itertools
 import subprocess
 import sys
-import itertools
+from typing import Iterable, Never, Sequence
 
-__version__ = '1.8'
+__version__ = '1.8.1'
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -31,7 +32,7 @@ ACROSSFADE_DURATION = XFADE_DURATION
 AUDIO_NORMALIZE = 'aresample=async=1:first_pts=0,asetpts=PTS,asettb=AVTB,apad'
 AUDIO_REDUCE_NOISE = 'highpass=f=200,lowpass=f=3000'
 
-def parse_args(args):
+def parse_args(args: Sequence[str]) -> Namespace:
     """Parse the command line parameters.
 
     Returns:
@@ -90,7 +91,7 @@ def parse_args(args):
 
     return parser.parse_args(args or ["--help"])
 
-def run(args):
+def run(args: Namespace):
     """The main function"""
 
     if args.segments_file:
@@ -137,7 +138,7 @@ def run(args):
 
     video_fades = ""
     last_fade_output = "v0"
-    video_length = 0
+    video_length: float = 0
     # Video fading
     for i, _ in enumerate(segments[1:]):
         # Video graph: chain the xfade operator together
@@ -206,7 +207,7 @@ def run(args):
     # Run FFMPEG
     ##subprocess.run(command)
 
-def write_command_line(command_line, path):
+def write_command_line(command_line: Iterable[str], path: str) -> None:
     """TBD"""
 
     with open(path, 'w') as fout:
@@ -216,7 +217,7 @@ def write_command_line(command_line, path):
     # Run FFMPEG
     ##subprocess.run(command_line)
 
-def main(args=sys.argv[1:]):
+def main(args: Sequence[str]=sys.argv[1:]) -> Never:
     sys.exit(run(parse_args(args)))
 
 if __name__ == '__main__':
