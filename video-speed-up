@@ -15,6 +15,6 @@ declare -ar ffmpeg_output_options=(
   -af "atempo=${speed}")
 
 ffmpeg "${ffmpeg_global_options[@]}" \
-  "${ffmpeg_input_options[@]}" -i "$input"
+  "${ffmpeg_input_options[@]}" -i "$input" \
   "${ffmpeg_output_options[@]}" "$output"
 touch -r "$input" "$output"
