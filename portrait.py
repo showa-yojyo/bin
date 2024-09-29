@@ -5,11 +5,12 @@ Make landscape images portrait by using PIL (asyncio version)
 """
 
 import asyncio
+from typing import Iterable
 import sys
 from PIL import Image
 
 
-async def generate_images(queue, filenames):
+async def generate_images(queue: asyncio.Queue, filenames: Iterable[str]) -> None:
     """Producer coroutine"""
 
     for filename in filenames:
@@ -17,11 +18,11 @@ async def generate_images(queue, filenames):
 
     print('All task requests sent')
 
-async def rotate_images(queue):
+async def rotate_images(queue: asyncio.Queue) -> None:
     """Consumer coroutine"""
 
     while True:
-        filename = await queue.get()
+        filename: str = await queue.get()
         print(f'Working on {filename}')
         try:
             image = Image.open(filename)
@@ -36,7 +37,7 @@ async def rotate_images(queue):
         finally:
             queue.task_done()
 
-async def terminate_consumers(consumers):
+async def terminate_consumers(consumers: Iterable[asyncio.Task]) -> None:
     """Clean up consumers"""
 
     for consumer in consumers:
@@ -44,11 +45,11 @@ async def terminate_consumers(consumers):
 
     await asyncio.gather(*consumers, return_exceptions=True)
 
-async def main(filenames):
+async def main(filenames: Iterable[str]) -> None:
     """main entry point"""
 
     # Producer/consumer pattern
-    queue = asyncio.Queue()
+    queue: asyncio.Queue = asyncio.Queue()
 
     # turn on the rotate_images thread
     consumers = [asyncio.create_task(rotate_images(queue)) for _ in range(3)]

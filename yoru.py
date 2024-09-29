@@ -5,9 +5,11 @@ No description.
 """
 
 import sys
-from scrapy import cmdline, Request
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
+from typing import Iterator, Mapping, Self
+from scrapy import cmdline, Request # type: ignore
+from scarpy.http import Response # type: ignore
+from scrapy.linkextractors import LinkExtractor # type: ignore
+from scrapy.spiders import CrawlSpider, Rule # type: ignore
 
 TARGET_DOMAIN = 'eromanga-yoru.com'
 
@@ -27,17 +29,18 @@ class EromangaYoruSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_xpaths='(//a[@class="nextpostslink"])[1]')),
     )
 
-    def start_requests(self):
+    def start_requests(self: Self) -> Iterator[Request]:
         """No descrition"""
 
         url = self.tag
         yield Request(url, dont_filter=True)
 
-    def parse_article(self, response):
+    def parse_article(self: Self, response: Response) -> Iterator[Mapping]:
         """No descrition"""
 
         post_url = response.url
-        images = response.xpath('//img[contains(@class, "size-full")]/@src').getall()
+        images = response.xpath(
+            '//img[contains(@class, "size-full")]/@src').getall()
         yield {
             'article': post_url,
             'images': images,}

@@ -5,9 +5,11 @@ No description.
 """
 
 import sys
-from scrapy import cmdline, Request
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
+from typing import Iterator, Mapping, Self
+from scrapy import cmdline, Request # type: ignore
+from scarpy.http import Response # type: ignore
+from scrapy.linkextractors import LinkExtractor # type: ignore
+from scrapy.spiders import CrawlSpider, Rule # type: ignore
 
 TARGET_DOMAIN = '2ji.pink'
 
@@ -25,16 +27,17 @@ class Crawler(CrawlSpider):
         Rule(LinkExtractor(restrict_xpaths='//ul[@class="pagination"]/li/a')),
     )
 
-    def start_requests(self):
+    def start_requests(self: Self) -> Iterator[Request]:
         """No descrition"""
 
         url = self.tag
         yield Request(url, dont_filter=True)
 
-    def parse_entry(self, response):
+    def parse_entry(self: Self, response: Response) -> Iterator[Mapping]:
         """No descrition"""
 
-        if images := response.xpath('//a[@target="_blank"]/img[contains(@src, "img.2ji.pink")]/@src').getall():
+        if images := response.xpath(
+            '//a[@target="_blank"]/img[contains(@src, "img.2ji.pink")]/@src').getall():
             yield {
                 'title': response.xpath('//title/text()').get(),
                 'url': response.url,

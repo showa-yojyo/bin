@@ -6,8 +6,8 @@ Usage:
 """
 
 import sys
-import OpenGL.GL as GL
-import OpenGL.GLUT as GLUT
+import OpenGL.GL as GL # type: ignore
+import OpenGL.GLUT as GLUT # type: ignore
 
 def main():
     """Show the current OpenGL connection strings."""

@@ -5,14 +5,15 @@ Usage:
     $ search_tweets.py QUERY ...
 """
 
-from argparse import (ArgumentParser, FileType)
+from argparse import (ArgumentParser, FileType, Namespace)
 import sys
+from typing import Never, Sequence
 from urllib.parse import urlencode
 from webbrowser import open_new
 
-__version__ = '1.0.0'
+__version__ = '1.1'
 
-def parse_args(args):
+def parse_args(args: Sequence[str]) -> Namespace:
     """Parse the command line parameters."""
 
     parser = ArgumentParser(description='Search the latest tweets in Twitter')
@@ -24,13 +25,13 @@ def parse_args(args):
 
     return parser.parse_args(args or ["--help"])
 
-def run(args):
+def run(args: Namespace) -> int:
     """The main function."""
 
-    open_new('https://twitter.com/search?' + urlencode(
+    return open_new('https://twitter.com/search?' + urlencode(
         {'q': ' '.join(args.query), 'f': 'tweets'}))
 
-def main(args=sys.argv[1:]):
+def main(args: Sequence[str]=sys.argv[1:]) -> Never:
     sys.exit(run(parse_args(args)))
 
 if __name__ == '__main__':

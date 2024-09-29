@@ -29,17 +29,18 @@
 import calendar
 import datetime
 import sys
+from typing import Iterator, Self, Sequence
 
 # pip install jpholiday
-import jpholiday
+import jpholiday # type: ignore
 
 ONEDAY = datetime.timedelta(days=1)
 
-def is_weekend(d):
+def is_weekend(d: datetime.datetime) -> bool:
     return d.weekday() >= 5
 
-def last_business_day(year):
-    for m in range(1, 13):
+def last_business_day(year: int) -> Iterator[datetime.datetime]:
+    for m in calendar.Month:
         _, last = calendar.monthrange(year, m)
         d = datetime.datetime(year, m, last)
         while is_weekend(d) or is_holiday(d):
@@ -47,19 +48,19 @@ def last_business_day(year):
         yield d
 
 class TestHoliday(jpholiday.OriginalHoliday):
-    def _is_holiday(self, d):
+    def _is_holiday(self: Self, d: datetime.datetime) -> bool:
         match d.month:
-            case 1:
+            case calendar.JANUARY:
                 return d.day in (2, 3)
-            case 12:
+            case calendar.DECEMBER:
                 return d.day in (29, 30, 31)
             case _:
                 return False
 
-def is_holiday(d):
+def is_holiday(d: datetime.datetime) -> bool:
     return jpholiday.is_holiday(d)
 
-def main(args=sys.argv[1:]):
+def main(args: Sequence[str]=sys.argv[1:]) -> None:
     year = int(args[0])
     for d in last_business_day(year):
         print(d.isoformat().split('T')[0])
