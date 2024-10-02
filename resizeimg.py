@@ -5,25 +5,26 @@ Make landscape image files portrait.
 """
 
 import asyncio
-import ctypes
+from tkinter import Tk
 import math
 import sys
 from typing import Callable, Iterable, Optional
 from PIL import Image
 
 
-def _determine_portrait_size():
+# python - How could I find the resolution of a display running Python3 on Linux? - Stack Overflow
+# <https://stackoverflow.com/questions/64189320/how-could-i-find-the-resolution-of-a-display-running-python3-on-linux>
+def _determine_portrait_size() -> tuple[int, int]:
     """Determine the dimension of portrait"""
-
-    user32 = ctypes.windll.user32
-    screen_width, screen_height = (
-        user32.GetSystemMetrics(i) for i in range(2))
+    root = Tk()
+    root.withdraw()
+    screen_height, screen_width = (
+        root.winfo_screenheight(), root.winfo_screenwidth())
     if screen_width <= screen_height:
         return (screen_width, screen_height)
+    else:
+        return (screen_height, screen_width)
 
-    return (screen_height, screen_width)
-
-# XXX: Windows only...
 SIZE_PORTRAIT = _determine_portrait_size()
 
 def round_aspect(
@@ -73,10 +74,11 @@ def process_image(image: Image.Image):
         # case of portrait
         use_resize = height_old < SIZE_PORTRAIT[1]
 
+    resize_args = (size_new, Image.Resampling.LANCZOS)
     if use_resize:
-        image = image.resize(size_new, resample=Image.LANCZOS)
+        image = image.resize(*resize_args)
     else:
-        image.thumbnail(size_new, resample=Image.LANCZOS)
+        image.thumbnail(*resize_args)
 
     return image
 
