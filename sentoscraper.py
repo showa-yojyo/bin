@@ -3,18 +3,11 @@
 Usage:
 $ sentoscraper.py ID1 ID2 ...
 
-In Cygwin, run this script as follows:
-$ getclip
-590
-591
-592
-593
-594
-595
-596
-597
-598
-$ getclip | dos2unix | xargs sentoscraper.py --cache-dir D:/home/yojyo/data/sento
+Example:
+$ seq 590 598 | xargs sentoscraper.py --cache-dir "$XDG_CACHE_HOME/sento"
+item-cnt-590.html       さくら湯 [板橋区]       板橋区板橋3-39-12       都営三田線「板橋区役所前」駅下車、徒歩5分   月曜、木曜      0       15:30-21:00
+item-cnt-591.html       金松湯 [板橋区] 板橋区大山東町55-3      東武東上線「大山」駅下車、徒歩2分   火曜    0       15:30-23:30
+item-cnt-592.html       第二富士見湯 [板橋区]   板橋区幸町20-5  東武東上線「大山」駅下車、徒歩7分   土曜    0       16:00-24:00日曜、祝日は15時から営業
 """
 
 import asyncio
@@ -23,11 +16,11 @@ import os.path
 import sys
 from argparse import ArgumentParser, Namespace
 from collections import namedtuple
-from typing import Any, Awaitable, Never, Sequence
+from typing import Any, Awaitable, Never, Self, Sequence
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
-__version__ = '2'
+__version__ = '2.0.1'
 
 URL_PATTERN = 'http://www.1010.or.jp/map/item/item-cnt-{id}'
 
@@ -37,7 +30,7 @@ class Sento(namedtuple('Sento',
     ['id', 'name', 'address', 'access', 'holidays', 'has_laundry', 'office_hours'])):
     """TODO: docstring"""
     __slots__ = ()
-    def __str__(self):
+    def __str__(self: Self) -> str:
         return '\t'.join(self[:5]) + '\t' + str(self.has_laundry) + '\t' + self[-1]
 
 def parse_args(args: Sequence[str]) -> Namespace:
@@ -76,11 +69,11 @@ async def fetch(args: Namespace):
     CACHE_DIR = args.cache_dir
 
     async def scrape_with_semaphore(id: str):
-        with await semaphore:
+        async with semaphore:
             return await scrape(id)
 
-    return await asyncio.wait(
-        [scrape_with_semaphore(i) for i in args.id])
+    return await asyncio.gather(
+        *[scrape_with_semaphore(i) for i in args.id])
 
 
 def make_url(id: str) -> str:
@@ -119,14 +112,31 @@ async def scrape(id: str) -> Sento:
 
     bs = BeautifulSoup(data, "lxml")
 
+    def get_name_from_heading() -> str:
+        if heading := bs.find('h2'):
+            return heading.text
+        raise ValueError()
+
+    def has_laundry() -> bool:
+        return bool(bs.find('a', string="コインランドリー"))
+
+    def get_column_value(propname: str):
+        tag = bs.find(string=propname)
+        if not tag:
+            raise ValueError()
+        column = tag.find_next('td')
+        if not column:
+            raise ValueError()
+        return column.text
+
     sento = Sento(
         id=localpath,
-        name=bs.find('h2').text,
-        has_laundry=0 if bs.find('a', string="コインランドリー") is None else 1,
-        address=process_address(bs.find(string="住所").find_next('td').text),
-        access=sanitize(bs.find(string="アクセス").find_next('td').text),
-        holidays=sanitize(bs.find(string="休日").find_next('td').text),
-        office_hours=sanitize(bs.find(string="営業時間").find_next('td').text))
+        name=get_name_from_heading(),
+        has_laundry=1 if has_laundry() else 0,
+        address=process_address(get_column_value("住所")),
+        access=sanitize(get_column_value("アクセス")),
+        holidays=sanitize(get_column_value("休日")),
+        office_hours=sanitize(get_column_value("営業時間")))
 
     return sento
 
@@ -134,9 +144,9 @@ def run(args: Namespace) -> int:
     """The main function"""
 
     try:
-        loop = asyncio.get_event_loop()
-        done, pending = loop.run_until_complete(fetch(args))
-        for i in sorted(d.result() for d in done):
+        loop = asyncio.new_event_loop()
+        results = loop.run_until_complete(fetch(args))
+        for i in sorted(results):
             print(i)
     finally:
         loop.close()
