@@ -14,7 +14,7 @@ from scrapy.spiders import CrawlSpider, Rule # type: ignore
 TARGET_DOMAIN = 'eromanga-yoru.com'
 
 class EromangaYoruSpider(CrawlSpider):
-    """No descrition"""
+    """No description"""
 
     name = TARGET_DOMAIN
     allowed_domains = [TARGET_DOMAIN]
@@ -30,13 +30,13 @@ class EromangaYoruSpider(CrawlSpider):
     )
 
     def start_requests(self: Self) -> Iterator[Request]:
-        """No descrition"""
+        """No description"""
 
         url = self.tag
         yield Request(url, dont_filter=True)
 
     def parse_article(self: Self, response: Response) -> Iterator[Mapping]:
-        """No descrition"""
+        """No description"""
 
         post_url = response.url
         images = response.xpath(

@@ -5,14 +5,16 @@ No description.
 """
 
 import sys
-from scrapy import cmdline, Request
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
+from typing import Iterator, Mapping, Self
+from scrapy import cmdline, Request # type: ignore
+from scarpy.http import Response # type: ignore
+from scrapy.linkextractors import LinkExtractor # type: ignore
+from scrapy.spiders import CrawlSpider, Rule # type: ignore
 
 TARGET_DOMAIN = 'hnalady.com'
 
 class HNaLadyCrawler(CrawlSpider):
-    """No descrition"""
+    """No descrpition"""
 
     name = TARGET_DOMAIN
     allowed_domains = [TARGET_DOMAIN]
@@ -25,14 +27,14 @@ class HNaLadyCrawler(CrawlSpider):
         Rule(LinkExtractor(restrict_xpaths='//h3/a[contains(@title, "このエントリーの固定リンク")]'), callback='parse_entry'),
     )
 
-    def start_requests(self):
-        """No descrition"""
+    def start_requests(self: Self) -> Iterator[Request]:
+        """No descrpition"""
 
         url = self.tag
         yield Request(url, dont_filter=True)
 
-    def parse_entry(self, response):
-        """No descrition"""
+    def parse_entry(self: Self, response: Response) -> Iterator[Mapping]:
+        """No descrpition"""
 
         if images := response.xpath('//div[@id="more"]/a/img/@src').getall():
             yield {

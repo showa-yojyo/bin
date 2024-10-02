@@ -21,8 +21,9 @@ import asyncio
 import re
 import os.path
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from collections import namedtuple
+from typing import Any, Awaitable, Never, Sequence
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
@@ -39,7 +40,7 @@ class Sento(namedtuple('Sento',
     def __str__(self):
         return '\t'.join(self[:5]) + '\t' + str(self.has_laundry) + '\t' + self[-1]
 
-def parse_args(args):
+def parse_args(args: Sequence[str]) -> Namespace:
     """Parse the command line parameters.
 
     Returns:
@@ -67,14 +68,14 @@ def parse_args(args):
 
     return parser.parse_args(args)
 
-async def fetch(args):
+async def fetch(args: Namespace):
     """TODO: docstring"""
     semaphore = asyncio.Semaphore(args.semaphore)
 
     global CACHE_DIR
     CACHE_DIR = args.cache_dir
 
-    async def scrape_with_semaphore(id):
+    async def scrape_with_semaphore(id: str):
         with await semaphore:
             return await scrape(id)
 
@@ -82,15 +83,15 @@ async def fetch(args):
         [scrape_with_semaphore(i) for i in args.id])
 
 
-def make_url(id):
+def make_url(id: str) -> str:
     return URL_PATTERN.format(id=id)
 
-def make_local_path(url):
+def make_local_path(url: str) -> str:
     return os.path.basename(url) + '.html'
 
 TABLE = str.maketrans('０１２３４５６７８９：−', '0123456789:-')
 
-async def scrape(id):
+async def scrape(id: str) -> Sento:
     """TODO: docstring"""
 
     url = make_url(id)
@@ -109,10 +110,10 @@ async def scrape(id):
         with open(localpath, mode='wb') as fout:
             fout.write(data)
 
-    def sanitize(text):
+    def sanitize(text: str) -> str:
         return re.sub(r'\s+', '', text.strip()).translate(TABLE)
 
-    def process_address(text):
+    def process_address(text: str) -> str:
         """Remove area code from given address"""
         return sanitize(text[9:])
 
@@ -129,7 +130,7 @@ async def scrape(id):
 
     return sento
 
-def run(args):
+def run(args: Namespace) -> int:
     """The main function"""
 
     try:
@@ -140,7 +141,9 @@ def run(args):
     finally:
         loop.close()
 
-def main(args=sys.argv[1:]):
+    return 0
+
+def main(args: Sequence[str]=sys.argv[1:]) -> Never:
     """TODO: docstring"""
     sys.exit(run(parse_args(args)))
 

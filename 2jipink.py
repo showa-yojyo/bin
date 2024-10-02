@@ -14,7 +14,7 @@ from scrapy.spiders import CrawlSpider, Rule # type: ignore
 TARGET_DOMAIN = '2ji.pink'
 
 class Crawler(CrawlSpider):
-    """No descrition"""
+    """No descrpition"""
 
     name = TARGET_DOMAIN
     allowed_domains = [TARGET_DOMAIN]
@@ -28,13 +28,13 @@ class Crawler(CrawlSpider):
     )
 
     def start_requests(self: Self) -> Iterator[Request]:
-        """No descrition"""
+        """No descrpition"""
 
         url = self.tag
         yield Request(url, dont_filter=True)
 
     def parse_entry(self: Self, response: Response) -> Iterator[Mapping]:
-        """No descrition"""
+        """No descrpition"""
 
         if images := response.xpath(
             '//a[@target="_blank"]/img[contains(@src, "img.2ji.pink")]/@src').getall():

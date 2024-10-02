@@ -5,14 +5,17 @@ No description.
 """
 
 import sys
-from scrapy import cmdline, Request
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
+from typing import Iterator, Mapping, Self
+
+from scrapy import cmdline, Request # type: ignore
+from scarpy.http import Response # type: ignore
+from scrapy.linkextractors import LinkExtractor # type: ignore
+from scrapy.spiders import CrawlSpider, Rule # type: ignore
 
 TARGET_DOMAIN = 'moeimg.net'
 
 class MoeImgNetCrawler(CrawlSpider):
-    """No descrition"""
+    """No description"""
 
     name = TARGET_DOMAIN
     allowed_domains = [TARGET_DOMAIN]
@@ -25,14 +28,14 @@ class MoeImgNetCrawler(CrawlSpider):
         Rule(LinkExtractor(restrict_xpaths='//li[@class="next"]/a')),
     )
 
-    def start_requests(self):
-        """No descrition"""
+    def start_requests(self: Self) -> Iterator[Request]:
+        """No description"""
 
         url = self.tag
         yield Request(url, dont_filter=True)
 
-    def parse_entry(self, response):
-        """No descrition"""
+    def parse_entry(self: Self, response: Response) -> Iterator[Mapping]:
+        """No description"""
 
         if images := response.xpath('//a/img[contains(@src, "/wp-content/uploads/archives")]/@src').getall():
             yield {

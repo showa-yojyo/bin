@@ -5,9 +5,10 @@ Make landscape image files portrait.
 """
 
 import asyncio
+import ctypes
 import math
 import sys
-import ctypes
+from typing import Callable, Iterable, Optional
 from PIL import Image
 
 
@@ -25,28 +26,34 @@ def _determine_portrait_size():
 # XXX: Windows only...
 SIZE_PORTRAIT = _determine_portrait_size()
 
-def round_aspect(number, key):
+def round_aspect(
+    number: float,
+    key: Callable[[int], float]) -> int:
     """(code taken from PIL)"""
     return max(min(math.floor(number), math.ceil(number), key=key), 1)
 
 
-def fit_to_screen(width, height):
+def fit_to_screen(width: int, height: int) -> tuple[int, int]:
     """(code taken from PIL)"""
 
+    x: int
+    y: int
     if width < height:
         x, y = SIZE_PORTRAIT
     else:
         y, x = SIZE_PORTRAIT
 
     # preserve aspect ratio
-    aspect = width / height
+    aspect: float = width / height
     if x / y >= aspect:
         x = round_aspect(y * aspect, key=lambda n: abs(aspect - n / y))
     else:
         y = round_aspect(x / aspect, key=lambda n: abs(aspect - x / n))
     return (x, y)
 
-async def generate_images(queue, filenames):
+async def generate_images(
+    queue: asyncio.Queue,
+    filenames: Iterable[str]) -> None:
     """Producer coroutine"""
 
     for name in filenames:
@@ -54,7 +61,7 @@ async def generate_images(queue, filenames):
         await queue.put((name, Image.open(name)))
 
 
-def process_image(image):
+def process_image(image: Image.Image):
     width_old, height_old = image.width, image.height
     size_new = fit_to_screen(width_old, height_old)
 
@@ -73,7 +80,7 @@ def process_image(image):
 
     return image
 
-async def process_images(queue):
+async def process_images(queue: asyncio.Queue) -> None:
     """Consumer coroutine"""
 
     while True:
@@ -89,11 +96,11 @@ async def process_images(queue):
         finally:
             queue.task_done()
 
-async def main(filenames):
+async def main(filenames: Iterable[str]) -> None:
     """main entry point"""
 
     # Producer/consumer pattern
-    queue = asyncio.Queue()
+    queue: asyncio.Queue = asyncio.Queue()
 
     # XXX: the number of consumers shuold be variable
     consumers = [asyncio.create_task(process_images(queue)) for _ in range(3)]
