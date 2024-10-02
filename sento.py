@@ -7,9 +7,9 @@ from argparse import ArgumentParser, Namespace
 from typing import Iterable, Never, Sequence
 from urllib import parse, request
 
-from bs4 import BeautifulSoup, PageElement, Tag
-# :rtype: bs4.element.Tag | bs4.element.NavigableString
-__version__ = '1.3'
+from bs4 import BeautifulSoup, PageElement, NavigableString, Tag # type: ignore
+
+__version__ = '1.3.1'
 
 URL = 'http://www.1010.or.jp/map/archives/area/{ku}/page/{page:d}'
 
@@ -42,14 +42,21 @@ def parse_item(item: Tag) -> Sequence[str]:
     """Return name, location, holiday and office hours"""
 
     def get_column_value(item: Tag, propname: str) -> str:
-        return item.find(string=propname).find_next('td').text.strip()
+        prop = item.find(string=propname)
+        if prop:
+            column = prop.find_next('td')
+            if isinstance(column, Tag):
+                return column.text.strip()
+        raise ValueError()
 
     def has_laundry(item: Tag) -> bool:
         return bool(item.find(string='コインランドリー'))
 
     info = item.find('div', class_='info')
+    if isinstance(info, Tag):
+        if a := info.select_one("div[class=info]>h2>a"):
+            name: str = a.text
 
-    name: str = info.h2.a.text
     location: str = 'TODO'
     access: str = get_column_value(item, 'アクセス')
     holidays: str = get_column_value(item, '休日')
@@ -60,8 +67,8 @@ def parse_item(item: Tag) -> Sequence[str]:
 
 async def fetch(ku: str, page: int):
     """Fetch all the data"""
-    return await asyncio.wait(
-        [scrape(URL.format(ku=ku, page=i + 1)) for i in range(page)])
+    return await asyncio.gather(
+        *[scrape(URL.format(ku=ku, page=i + 1)) for i in range(page)])
 
 async def scrape(url) -> None:
     """Scrape the page located in url"""
@@ -79,7 +86,7 @@ def run(args: Namespace) -> int:
     print('|'.join(('名前', '位置', 'アクセス', '定休日', 'コインランドリー', '営業時間')))
 
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
         loop.run_until_complete(fetch(
             parse.quote(args.ku), args.page))
     finally:
