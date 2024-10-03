@@ -41,8 +41,13 @@ Also see class `Yaku` and class `YakuTable` in module `mjstat.model`.
 
 from collections import Counter
 import re
+from typing import Any, Iterable, TypeAlias
 
-from .model import YAKUMAN_SCALAR
+from .model import YakuTable, YAKUMAN_SCALAR
+
+# type GameData = dict[str, Any]
+GameData: TypeAlias = dict[str, Any]
+PlayerData: TypeAlias = dict[str, Any]
 
 # Mapping from special player names to key values.
 DEFAULT_PLAYERS = {
@@ -52,11 +57,11 @@ DEFAULT_PLAYERS = {
     '上家':4,
     }
 
-def get_key(player_name):
+def get_key(player_name: str) -> int:
     """Return key value for sorting a list of `player_data`."""
     return DEFAULT_PLAYERS.get(player_name, hash(player_name))
 
-def create_player_data(game_data, *players):
+def create_player_data(game_data: GameData, *players: str) -> list[PlayerData]:
     """Create new (fresh) player data objects.
 
     Args:
@@ -69,7 +74,6 @@ def create_player_data(game_data, *players):
     """
 
     games = game_data['games']
-
     data_list = []
     for i in sorted(players, key=get_key):
         target_games = [g for g in games if i in g['players']]
@@ -78,10 +82,9 @@ def create_player_data(game_data, *players):
             games=target_games,
             name=i,)
         data_list.append(data)
-
     return data_list
 
-def evaluate_placing(player_data):
+def evaluate_placing(player_data: PlayerData) -> None:
     """Evaluate frequency of target player's placing, or 着順表.
 
     This function stores the following items to `player_data`:
@@ -127,7 +130,7 @@ def evaluate_placing(player_data):
 
 DORA_RE = re.compile(r'[裏赤]?ドラ(\d)+')
 
-def count_han(yakulist, concealed=False):
+def count_han(yakulist: Iterable[YakuTable], concealed: bool=False) -> int:
     """Count the total number of han (doubles)."""
 
     total_han = 0
@@ -147,7 +150,7 @@ WINNING_VALUE_RE = re.compile(r'''
 
 HAN_CHAR_TABLE = {k:v for v, k in enumerate('一二三四', 1)}
 
-def evaluate_winning(player_data):
+def evaluate_winning(player_data: PlayerData) -> None:
     """Evaluate target player's winning data.
 
     This function stores the following items to `player_data`:
@@ -229,7 +232,7 @@ def evaluate_winning(player_data):
             winning_mean_han=total_han / num_winning,
             winning_mean_turns=total_turns / num_winning,)
 
-def evaluate_losing(player_data):
+def evaluate_losing(player_data: PlayerData) -> None:
     """Evaluate target player's losses when he deals in an opponent
     player.
 
@@ -273,7 +276,7 @@ def evaluate_losing(player_data):
             lod_rate=num_lod / num_hands,
             lod_mean=total_losing_points / num_lod,)
 
-def evaluate_riichi(player_data):
+def evaluate_riichi(player_data: PlayerData) -> None:
     """Evaluate target player's riichi rate.
 
     This function stores the following items to `player_data`:
@@ -320,7 +323,7 @@ def evaluate_riichi(player_data):
             riichi_count=num_riichi,
             riichi_rate=num_riichi / num_hands,)
 
-def evaluate_melding(player_data):
+def evaluate_melding(player_data: PlayerData) -> None:
     """Evaluate target player's melding rate.
 
     N.B. Unlike できすぎくん criteria, this function evaluates how
@@ -359,7 +362,7 @@ def evaluate_melding(player_data):
             melding_count=num_melding,
             melding_rate=num_melding / num_hands,)
 
-def evaluate_yaku_frequency(player_data):
+def evaluate_yaku_frequency(player_data: PlayerData) -> None:
     """Count all yaku occurrences that the player wins.
 
     Args:

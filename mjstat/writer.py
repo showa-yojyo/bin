@@ -1,9 +1,14 @@
 """writer.py: Define class MJScoreWriter.
 """
 
+from collections.abc import Collection
 from itertools import product
-#from docutils.writers import UnfilteredWriter
 from jinja2 import Environment
+from typing import Any, Callable, Sequence, Self, TypeAlias
+from types import ModuleType
+
+from docutils.io import Output
+
 from .languages import get_language
 from .model import YakuTable
 from .stat import (create_player_data,
@@ -14,18 +19,22 @@ from .stat import (create_player_data,
                    evaluate_melding,
                    evaluate_yaku_frequency)
 
+GameData: TypeAlias = dict[str, Any]
+PlayerData: TypeAlias = dict[str, Any]
+EvaluatorType: TypeAlias = Callable[[PlayerData], None]
+
 #class MJScoreWriter(UnfilteredWriter):
 class MJScoreWriter(object):
     """Write score data to e.g. stdout."""
 
-    def __init__(self):
-        self.language = None
-        self.game_data = None
-        self.output = None
-        self.destination = None
-        self.parts = {}
+    def __init__(self: Self) -> None:
+        self.language: ModuleType
+        self.game_data: GameData
+        self.output: str
+        self.destination: Output
+        self.parts: dict[str, Any] = {}
 
-    def write(self, game_data, destination):
+    def write(self: Self, game_data: GameData, destination: Output) -> str:
         """Output `game_data` into `destination`."""
 
         settings = game_data['settings']
@@ -34,35 +43,35 @@ class MJScoreWriter(object):
         self.destination = destination
 
         self.translate()
+        return self.destination.write(self.output)
 
-        output = self.destination.write(self.output)
-        return output
-
-    def translate(self):
+    def translate(self: Self) -> None:
         """Translate `self.game_data` into `self.output`."""
 
         self.assemble_parts()
-        self.output = fill_template(self.parts['player_data'],
-                                    self.language,
-                                    **self.parts['options'])
+        self.output = fill_template(
+            self.parts['player_data'],
+            self.language,
+            **self.parts['options'])
 
-    def assemble_parts(self):
+    def assemble_parts(self: Self) -> None:
         """Assemble the `self.parts` dictionary."""
 
         game_data = self.game_data
         settings = game_data['settings']
         target_player = settings.target_player
 
+        player_names: Collection[str]
         if target_player == 'all':
             # Detect all players from game data.
-            player_names = set().union(
-                *(g['players'] for g in game_data['games']))
+            # Note: g['players'] is a list of str
+            player_names = set(*(g['players'] for g in game_data['games']))
         else:
             player_names = (target_player,)
 
         player_data_list = create_player_data(game_data, *player_names)
 
-        evaluators = []
+        evaluators: list[EvaluatorType] = []
         if settings.fundamental:
             evaluators.extend((
                 evaluate_placing,
@@ -84,20 +93,24 @@ class MJScoreWriter(object):
         assert 'player_data' in self.parts
         assert 'options' in self.parts
 
-def format_float(val):
+def format_float(val: float) -> str:
     """Set a floating point number into a specific format."""
     return f'{val:.2f}'
 
-def format_percentage(val):
+def format_percentage(val: float) -> str:
     """Set a percentile into a specific format."""
     return f'{val:.2%}'
 
-def fill_template(player_data, lang, fundamental, yaku):
+def fill_template(
+        player_data: Sequence[PlayerData],
+        lang: ModuleType,
+        fundamental: bool,
+        yaku: bool) -> str:
     """Build long text which shows the statistics of the target
     player(s).
     """
 
-    target_games = player_data[0]['games'] if player_data else None
+    target_games: Sequence[Any] = player_data[0]['games'] if player_data else None
     if not target_games:
         return 'NO DATA\n'
 

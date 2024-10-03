@@ -9,17 +9,19 @@ Usage:
     [-c | --config <FILE>]
 """
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from configparser import ConfigParser
 from os.path import expandvars
 import sys
-from docutils.io import (StringInput, FileInput, FileOutput)
+from typing import Never, Sequence
+
+from docutils.io import (StringInput, FileInput, FileOutput, Input)
 from mjstat.reader import MJScoreReader
 from mjstat.parser import MJScoreParser
 from mjstat.writer import MJScoreWriter
 from mjstat.model import (apply_transforms, merge_games)
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 SEARCH_PATH = (
     '$XDG_CONFIG_HOME/mjscore/mjscore.conf',
@@ -27,7 +29,7 @@ SEARCH_PATH = (
     '$HOME/.mjscore/mjscore.conf',
     '$HOME/.mjscore.conf')
 
-def read_settings(args):
+def read_settings(args: Namespace) -> ConfigParser:
     """Read settings from a dotfile"""
 
     config = ConfigParser()
@@ -41,7 +43,7 @@ def read_settings(args):
 
     return config
 
-def parse_args(args):
+def parse_args(args: Sequence[str]) -> Namespace:
     """Convert argument strings to objects."""
 
     parser = ArgumentParser(add_help=False)
@@ -50,11 +52,9 @@ def parse_args(args):
         metavar='FILE',
         help='path to config file')
 
-    args, remaining_argv = parser.parse_known_args()
+    known_args, remaining_argv = parser.parse_known_args(args)
 
-    defaults = {}
-    config = read_settings(args)
-
+    config = read_settings(known_args)
     try:
         defaults = dict(config.items("General"))
     except Exception as ex:
@@ -125,10 +125,10 @@ def parse_args(args):
 
     return parser.parse_args(args=remaining_argv or ('--help',))
 
-def run(args):
+def run(args: Namespace) -> int:
     """The main function."""
 
-    sources = []
+    sources: list[Input] = []
     if args.debug:
         from mjstat.testdata import TEST_INPUT
         sources.append(StringInput(source=TEST_INPUT))
@@ -148,14 +148,16 @@ def run(args):
     parser = MJScoreParser()
     reader = MJScoreReader()
 
-    game_data_list = tuple(reader.read(i, parser, args) for i in sources)
+    game_data_list = tuple(
+        reader.read(src, parser, args) for src in sources) # type: ignore[arg-type]
     game_data = merge_games(game_data_list)
     apply_transforms(game_data)
 
     writer = MJScoreWriter()
-    writer.write(game_data, FileOutput(None))
+    writer.write(game_data, FileOutput(None)) # type: ignore[arg-type]
+    return 0
 
-def main(args=sys.argv[1:]):
+def main(args: Sequence[str]=sys.argv[1:]) -> Never:
     sys.exit(run(parse_args(args=args)))
 
 if __name__ == '__main__':

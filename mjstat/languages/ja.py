@@ -1,8 +1,6 @@
 """ja.py: Japanese language mappings for language-dependent features.
 """
 
-from ..model import YakuTable
-
 yaku_names = (
     '立直',
     '一発',

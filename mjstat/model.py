@@ -8,11 +8,14 @@ yakuman grades to the multiplicand numbers; and a handful of
 functions for construction of score data.
 """
 
+from argparse import Namespace
 from collections import namedtuple
 from enum import Enum
 import datetime
 from itertools import (chain, product)
+from typing import Any, Sequence
 
+from docutils.nodes import document
 import dateutil.parser
 
 DATETIME_FORMAT = r'%Y/%m/%d %H:%M'
@@ -86,7 +89,7 @@ YAKUMAN_SCALAR = {
     '六倍':6,      # 48000, 96000
     '超':7,}       # 56000, 112000
 
-def create_score_records(settings):
+def create_score_records(settings: Namespace) -> dict[str, Any]:
     """Create new game data.
 
     The structure of `game_data` is like as follows::
@@ -97,7 +100,7 @@ def create_score_records(settings):
             result ::= (player->points){4};
               points ::= integer;
             hand ::= game, action_table, balance, dora_table, seat_table,
-                     start_hand_table, chow*, pung*, kong*,
+                     start_hand_table, chows, pungs, kongs,
                      ending, winner?, winning_dora,
                      winning_value, winning_yaku_list;
               action_table ::= action+;
@@ -109,9 +112,9 @@ def create_score_records(settings):
               start_hand_table ::= start_hand{4};
                 start_hand ::= tile{13};
                   tile ::= TODO;
-              chow ::= (tile{3})*;
-              pung ::= tile*;
-              kong ::= tile*;
+              chows ::= (tile{3})*;
+              pungs ::= tile*;
+              kongs ::= tile*;
               ending ::= (ロン|ツモ|流局|四風連打|...);
               winner ::= player;
               winning_dora ::= integer;
@@ -132,7 +135,7 @@ def create_score_records(settings):
     set_reference_period(game_data, settings)
     return game_data
 
-def create_game_record(context):
+def create_game_record(context: dict[str, Any]) -> dict[str, Any]:
     """Create an empty game record.
 
     Args:
@@ -154,7 +157,7 @@ def create_game_record(context):
     assert context['games'][-1] == game
     return game
 
-def create_hand_record(context):
+def create_hand_record(context: dict[str, Any]) -> dict[str, Any]:
     """Create an empty hand and store it to the current hands.
 
     Args:
@@ -181,7 +184,7 @@ def create_hand_record(context):
     assert context['games'][-1]['hands'][-1] == hand
     return hand
 
-def set_reference_period(game_data, settings):
+def set_reference_period(game_data: dict[str, Any], settings: Namespace) -> None:
     """Set reference period to the score records.
 
     Args:
@@ -212,7 +215,7 @@ def set_reference_period(game_data, settings):
         since=since_date,
         until=until_date,)
 
-def find_winner(hand):
+def find_winner(hand: dict[str, Any]) -> None:
     """Find the winner of all hands.
 
     Args:
@@ -232,7 +235,7 @@ def find_winner(hand):
     assert index in range(4)
     hand['winner'] = hand['game']['players'][index]
 
-def find_meldings(hand):
+def find_meldings(hand: dict[str, Any]) -> None:
     """Find meldings (tile-calls) happened in a hand.
 
     Args:
@@ -244,46 +247,47 @@ def find_meldings(hand):
 
     actions = hand['action_table']
 
-    chows = [[] for i in range(4)]
-    pungs = [[] for i in range(4)]
-    kongs = [[] for i in range(4)]
+    chows: list[list[str]] = [[] for i in range(4)]
+    pungs: list[list[str]] = [[] for i in range(4)]
+    kongs: list[list[str]] = [[] for i in range(4)]
 
     for i, action in enumerate(actions):
         assert len(action) > 1
-        index, action_type = action[0], action[1]
+        index, action_type = action[0:2]
         assert index in '1234'
         assert action_type in 'ACDGKNRd'
         index = int(index) - 1
 
         prev_action = actions[i - 1] if i > 0 else None
 
-        if action_type == 'C':
-            assert prev_action
-            chows[index].append(prev_action[2:] + action[2:])
-            continue
-        elif action_type == 'N':
-            assert prev_action
-            pungs[index].append(prev_action[2:])
-            continue
-        elif action_type == 'K':
-            # Test if this is extending a melded pung to a kong, or 加槓.
-            tile = action[2:]
-            if tile in pungs[index]:
+        match action_type:
+            case 'C':
+                assert prev_action
+                chows[index].append(prev_action[2:] + action[2:])
                 continue
-            # Test if this is a concealed kong, or 暗槓.
-            if prev_action and prev_action[1] == 'G':
+            case 'N':
+                assert prev_action
+                pungs[index].append(prev_action[2:])
                 continue
-            # Otherwise, this is a melded kong, or 大明槓.
-            assert (not prev_action) or (prev_action[1] in 'dD')
-            kongs[index].append(tile)
-            continue
+            case 'K':
+                # Test if this is extending a melded pung to a kong, or 加槓.
+                tile = action[2:]
+                if tile in pungs[index]:
+                    continue
+                # Test if this is a concealed kong, or 暗槓.
+                if prev_action and prev_action[1] == 'G':
+                    continue
+                # Otherwise, this is a melded kong, or 大明槓.
+                assert (not prev_action) or (prev_action[1] in 'dD')
+                kongs[index].append(tile)
+                continue
 
     hand.update(
         chows=chows,
         pungs=pungs,
         kongs=kongs)
 
-def apply_transforms(game_data):
+def apply_transforms(game_data: document) -> None:
     """Apply a sort of transforms to elements in `game_data`.
 
     Args:
@@ -304,7 +308,7 @@ def apply_transforms(game_data):
         for transform, hand in product(transforms, i['hands']):
             transform(hand)
 
-def merge_games(game_data_list):
+def merge_games(game_data_list: Sequence[document]) -> document:
     """Merge games of a collection of `game_data` to an instance of
     `game_data`.
 

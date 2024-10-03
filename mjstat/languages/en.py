@@ -1,8 +1,6 @@
 """en.py: English language mappings for language-dependent features.
 """
 
-from ..model import YakuTable
-
 yaku_names = (
     'Ready Hand',
     'One Shot',
