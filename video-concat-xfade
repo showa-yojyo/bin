@@ -11,7 +11,7 @@ import subprocess
 import sys
 from typing import Iterable, Never, Sequence
 
-__version__ = '1.8.1'
+__version__ = '1.8.2'
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -124,7 +124,7 @@ def run(args: Namespace):
     last_audio_output = "a0"
     for i, _ in enumerate(segments[1:]):
         # x01, x12, ...
-        next_audio_output = f"x{i}{i + 1}"
+        next_audio_output = f"a{i}-{i + 1}"
         audio_fades += f"[{last_audio_output}][a{i + 1}]acrossfade=d={ACROSSFADE_DURATION}:o=1:c1=tri:c2=tri[{next_audio_output}];\n"
         last_audio_output = next_audio_output
 
@@ -143,7 +143,7 @@ def run(args: Namespace):
     for i, _ in enumerate(segments[1:]):
         # Video graph: chain the xfade operator together
         video_length += file_lengths[i] - XFADE_DURATION
-        next_fade_output = "v%d%d" % (i, i + 1)
+        next_fade_output = f"v{i}-{i + 1}"
         video_fades += f"[{last_fade_output}][v{i + 1}]xfade=duration={XFADE_DURATION}:offset={video_length:.4f}[{next_fade_output}];\n"
         last_fade_output = next_fade_output
 
