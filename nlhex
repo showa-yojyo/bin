@@ -1,0 +1,5 @@
+#!/bin/bash
+
+declare -r input_file="${1:-/dev/stdin}"
+
+awk '{print sprintf("%04X", NR-1) " " $0}' "$input_file"
