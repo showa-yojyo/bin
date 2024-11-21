@@ -1,10 +1,12 @@
 #!/bin/bash
 
-# Example: mydump /path/to/DQ3.smc 0x030900 0x09 0x34
+# Example: myhd /path/to/DQ3.smc 0x030900 0x09 0x34
 
-declare -r rom="$1"
+declare -r rom_image_path="$1"
 declare -r offset="$2"
 declare -r len="$3"
 declare -r num="$4"
 
-hd -v -s $offset -n $(($len * $num)) -e "$(($len))/1 \"%02X\" \"\n\"" "$rom"
+hd -v -s $offset -n $(($len * $num)) \
+    -e "1/0 \"%06_ax \"" \
+    -e "$(($len))/1 \"%02X \" \"\n\"" "$rom_image_path"
