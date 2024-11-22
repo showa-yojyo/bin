@@ -1,0 +1,27 @@
+#!/bin/bash
+# Convert an address from Hi-Rom or Lo-ROM to the offset address of the ROM
+# image.
+
+# Example:
+# $ printf "0x%06X\n" $(from-snes-addr Hi 0xC20154)
+# 0x020154
+# $ printf "0x%06X\n" $(from-snes-addr Lo 0x238000)
+# 0x118000
+
+declare -r usage="Usage: ${0##*/} (HI|LO) ADDRESS"
+declare -r mode="${1:?$usage}"
+declare -r cpu_addr="${2:?$usage}"
+
+declare rom_addr
+case "${mode^^}" in
+    HI)
+        rom_addr="$((0x003FFFFF & $cpu_addr))";;
+    LO)
+        rom_addr="$(( ($cpu_addr & 0x007FFF) \
+                   | (($cpu_addr & 0x007F0000) >> 1) ))";;
+    *)
+        echo $usage >&2
+        exit 1
+esac
+
+echo $rom_addr
