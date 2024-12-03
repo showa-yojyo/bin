@@ -35,7 +35,9 @@ done
 * [Python 3.x][Python]: Additionally, some scripts use some third party
   packages:
   * [Beautiful Soup]
+  * [dateutil]
   * [Docutils]
+  * [Jinja2]
   * [Scrapy]
   * [PyYaml]
   * [JPHoliday]
@@ -46,12 +48,14 @@ done
 
 Please do not report any issues you find to me.
 
-[GNU Bash]: https://www.gnu.org/software/bash/
-[Python]: http://www.python.org/
-[Beautiful Soup]: https://www.crummy.com/software/BeautifulSoup/
-[Docutils]: https://sourceforge.net/projects/docutils/
-[Scrapy]: https://scrapy.org/
-[PyYAML]: https://pyyaml.org/
-[FFmpeg]: https://ffmpeg.org/
-[ImageMagick]: https://imagemagick.org/
-[JPHoliday]: https://github.com/Lalcs/jpholiday
+[GNU Bash]: <https://www.gnu.org/software/bash/>
+[Python]: <https://www.python.org/>
+[Beautiful Soup]: <https://www.crummy.com/software/BeautifulSoup/>
+[dateutil]: <https://github.com/dateutil/dateutil>
+[Docutils]: <https://sourceforge.net/projects/docutils/>
+[Jinja2]: <https://palletsprojects.com/projects/jinja/>
+[Scrapy]: <https://scrapy.org/>
+[PyYAML]: <https://pyyaml.org/>
+[FFmpeg]: <https://ffmpeg.org/>
+[ImageMagick]: <https://imagemagick.org/>
+[JPHoliday]: <https://github.com/Lalcs/jpholiday>
