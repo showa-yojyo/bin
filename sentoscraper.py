@@ -16,22 +16,30 @@ import os.path
 import sys
 from argparse import ArgumentParser, Namespace
 from collections import namedtuple
-from typing import Any, Awaitable, Never, Self, Sequence
+from typing import Never, Self, Sequence
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
-__version__ = '2.0.1'
+__version__ = "2.0.1"
 
-URL_PATTERN = 'http://www.1010.or.jp/map/item/item-cnt-{id}'
+URL_PATTERN = "http://www.1010.or.jp/map/item/item-cnt-{id}"
 
 CACHE_DIR = None
 
-class Sento(namedtuple('Sento',
-    ['id', 'name', 'address', 'access', 'holidays', 'has_laundry', 'office_hours'])):
+
+class Sento(
+    namedtuple(
+        "Sento",
+        ["id", "name", "address", "access", "holidays", "has_laundry", "office_hours"],
+    )
+):
     """TODO: docstring"""
+
     __slots__ = ()
+
     def __str__(self: Self) -> str:
-        return '\t'.join(self[:5]) + '\t' + str(self.has_laundry) + '\t' + self[-1]
+        return "\t".join(self[:5]) + "\t" + str(self.has_laundry) + "\t" + self[-1]
+
 
 def parse_args(args: Sequence[str]) -> Namespace:
     """Parse the command line parameters.
@@ -41,25 +49,21 @@ def parse_args(args: Sequence[str]) -> Namespace:
         parameters.
     """
 
-    parser = ArgumentParser(description='A downloader')
-    parser.add_argument('--version', action='version', version=__version__)
+    parser = ArgumentParser(description="A downloader")
+    parser.add_argument("--version", action="version", version=__version__)
+
+    parser.add_argument("id", nargs="+", help="numeric ID")
 
     parser.add_argument(
-        'id',
-        nargs='+',
-        help='numeric ID')
+        "-s", "--semaphore", type=int, default=3, help="the count of the semaphore"
+    )
 
     parser.add_argument(
-        '-s', '--semaphore',
-        type=int,
-        default=3,
-        help='the count of the semaphore')
-
-    parser.add_argument(
-        '-c', '--cache-dir',
-        help='directory in which cache files to be stored')
+        "-c", "--cache-dir", help="directory in which cache files to be stored"
+    )
 
     return parser.parse_args(args)
+
 
 async def fetch(args: Namespace):
     """TODO: docstring"""
@@ -72,17 +76,19 @@ async def fetch(args: Namespace):
         async with semaphore:
             return await scrape(id)
 
-    return await asyncio.gather(
-        *[scrape_with_semaphore(i) for i in args.id])
+    return await asyncio.gather(*[scrape_with_semaphore(i) for i in args.id])
 
 
 def make_url(id: str) -> str:
     return URL_PATTERN.format(id=id)
 
-def make_local_path(url: str) -> str:
-    return os.path.basename(url) + '.html'
 
-TABLE = str.maketrans('０１２３４５６７８９：−', '0123456789:-')
+def make_local_path(url: str) -> str:
+    return os.path.basename(url) + ".html"
+
+
+TABLE = str.maketrans("０１２３４５６７８９：−", "0123456789:-")
+
 
 async def scrape(id: str) -> Sento:
     """TODO: docstring"""
@@ -95,16 +101,16 @@ async def scrape(id: str) -> Sento:
         localpath = os.path.normpath(os.path.join(CACHE_DIR, localpath))
 
     try:
-        with open(localpath, mode='rb') as fin:
+        with open(localpath, mode="rb") as fin:
             data = fin.read()
     except (IOError, FileNotFoundError):
         with urlopen(url) as fin:
             data = fin.read()
-        with open(localpath, mode='wb') as fout:
+        with open(localpath, mode="wb") as fout:
             fout.write(data)
 
     def sanitize(text: str) -> str:
-        return re.sub(r'\s+', '', text.strip()).translate(TABLE)
+        return re.sub(r"\s+", "", text.strip()).translate(TABLE)
 
     def process_address(text: str) -> str:
         """Remove area code from given address"""
@@ -113,18 +119,18 @@ async def scrape(id: str) -> Sento:
     bs = BeautifulSoup(data, "lxml")
 
     def get_name_from_heading() -> str:
-        if heading := bs.find('h2'):
+        if heading := bs.find("h2"):
             return heading.text
         raise ValueError()
 
     def has_laundry() -> bool:
-        return bool(bs.find('a', string="コインランドリー"))
+        return bool(bs.find("a", string="コインランドリー"))
 
     def get_column_value(propname: str):
         tag = bs.find(string=propname)
         if not tag:
             raise ValueError()
-        column = tag.find_next('td')
+        column = tag.find_next("td")
         if not column:
             raise ValueError()
         return column.text
@@ -136,9 +142,11 @@ async def scrape(id: str) -> Sento:
         address=process_address(get_column_value("住所")),
         access=sanitize(get_column_value("アクセス")),
         holidays=sanitize(get_column_value("休日")),
-        office_hours=sanitize(get_column_value("営業時間")))
+        office_hours=sanitize(get_column_value("営業時間")),
+    )
 
     return sento
+
 
 def run(args: Namespace) -> int:
     """The main function"""
@@ -153,9 +161,11 @@ def run(args: Namespace) -> int:
 
     return 0
 
-def main(args: Sequence[str]=sys.argv[1:]) -> Never:
+
+def main(args: Sequence[str] = sys.argv[1:]) -> Never:
     """TODO: docstring"""
     sys.exit(run(parse_args(args)))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

@@ -10,39 +10,43 @@ import os.path
 import sys
 from typing import Any, Iterator, Self
 
-from scrapy import cmdline, Request, Spider, FormRequest # type: ignore
-from scrapy.http import Response # type: ignore
-from scrapy.linkextractors import LinkExtractor # type: ignore
-from scrapy.selector import Selector # type: ignore
-from scrapy.shell import inspect_response # type: ignore
+from scrapy import cmdline, Request, Spider, FormRequest  # type: ignore
+from scrapy.http import Response  # type: ignore
+from scrapy.linkextractors import LinkExtractor  # type: ignore
+from scrapy.selector import Selector  # type: ignore
+from scrapy.shell import inspect_response  # type: ignore
 import yaml
 
 DEFAULT_CREDENTIALS_PATH = (
-    '$XDG_CONFIG_HOME/mjnet_auto/mjnet_auto.yaml',
-    '$HOME/.config/mjnet_auto/mjnet_auto.yaml',
-    '$HOME/.mjnet_auto/mjnet_auto.yaml',
-    '$HOME/mjnet_auto.yaml')
+    "$XDG_CONFIG_HOME/mjnet_auto/mjnet_auto.yaml",
+    "$HOME/.config/mjnet_auto/mjnet_auto.yaml",
+    "$HOME/.mjnet_auto/mjnet_auto.yaml",
+    "$HOME/mjnet_auto.yaml",
+)
 
-MJ_NET_URL = 'https://www.sega-mj.net/mjac_p'
-MJ_NET_URL_SIGN_IN = f'{MJ_NET_URL}/mjlogin/login.jsp'
-MJ_NET_URL_SIGN_IN_DO = f'{MJ_NET_URL}/login.do'
-MJ_NET_URL_SIGN_OUT = f'{MJ_NET_URL}/FwdPage?page=logout'
-MJ_NET_URL_TOP_PAGE = f'{MJ_NET_URL}/FwdPage?page=top'
-MJ_NET_URL_PLAYER_DATA_PAGE = f'{MJ_NET_URL}/FwdPage?page=playdata&i=0'
+MJ_NET_URL = "https://www.sega-mj.net/mjac_p"
+MJ_NET_URL_SIGN_IN = f"{MJ_NET_URL}/mjlogin/login.jsp"
+MJ_NET_URL_SIGN_IN_DO = f"{MJ_NET_URL}/login.do"
+MJ_NET_URL_SIGN_OUT = f"{MJ_NET_URL}/FwdPage?page=logout"
+MJ_NET_URL_TOP_PAGE = f"{MJ_NET_URL}/FwdPage?page=top"
+MJ_NET_URL_PLAYER_DATA_PAGE = f"{MJ_NET_URL}/FwdPage?page=playdata&i=0"
 
 # TODO: When XPath upgrades to 2.0, use the function matches() instead of contains().
-XPATH_BEST_MAHJONG = "//a[text()[contains(., '倍満') or contains(., '三倍満') or contains(., '役満')]]"
+XPATH_BEST_MAHJONG = (
+    "//a[text()[contains(., '倍満') or contains(., '三倍満') or contains(., '役満')]]"
+)
 
 # 一般卓東風戦
-GAME_MODE_STANDARD = 'standard'
+GAME_MODE_STANDARD = "standard"
 # プロ卓東風戦
-GAME_MODE_PROFESSIONAL = 'professional'
+GAME_MODE_PROFESSIONAL = "professional"
+
 
 class MjscoreSpider(Spider):
     """MJ.NET"""
 
-    name = 'mjnet'
-    allowed_domains = ['www.sega-mj.net']
+    name = "mjnet"
+    allowed_domains = ["www.sega-mj.net"]
     start_urls = [MJ_NET_URL_SIGN_IN]
 
     def parse(self: Self, response: Response, **kwargs) -> FormRequest:
@@ -51,14 +55,16 @@ class MjscoreSpider(Spider):
         return FormRequest.from_response(
             response,
             formdata={
-                'uid': getattr(self, 'uid'),
-                'password': getattr(self, 'password')},
-            callback=self._after_login)
+                "uid": getattr(self, "uid"),
+                "password": getattr(self, "password"),
+            },
+            callback=self._after_login,
+        )
 
     def _after_login(self: Self, response: Response) -> Iterator[Request]:
         """Nagivate to the top page"""
 
-        self.logger.info('_after_login')
+        self.logger.info("_after_login")
         self.logger.info(response.url)
 
         if response.url == MJ_NET_URL_SIGN_IN_DO:
@@ -74,14 +80,14 @@ class MjscoreSpider(Spider):
     def _play_data(self: Self, response: Response) -> Iterator[Request]:
         """Navigate to the page 一般卓東風戦 or プロ卓東風戦"""
 
-        ext = LinkExtractor(restrict_text='東風戦')
+        ext = LinkExtractor(restrict_text="東風戦")
         links = ext.extract_links(response)
         if len(links) == 1:
-            self.logger.info('Something went wrong')
+            self.logger.info("Something went wrong")
             inspect_response(response, self)
             return
 
-        game_mode = getattr(self, 'game_mode')
+        game_mode = getattr(self, "game_mode")
         if game_mode == GAME_MODE_PROFESSIONAL:
             link_index = -1
         else:
@@ -91,7 +97,7 @@ class MjscoreSpider(Spider):
     def _tompu_games(self: Self, response: Response) -> Iterator[Request]:
         """Navigate to the daily record page"""
 
-        ext = LinkExtractor(restrict_text='デイリー戦績')
+        ext = LinkExtractor(restrict_text="デイリー戦績")
         links = ext.extract_links(response)
         yield response.follow(links[0].url, self.parse_daily_score)
 
@@ -112,16 +118,16 @@ class MjscoreSpider(Spider):
         if link := response.xpath(XPATH_BEST_MAHJONG).get():
             yield response.follow(link, self.parse_best_mahjong)
         else:
-            self.logger.debug('倍満以上なし終了')
+            self.logger.debug("倍満以上なし終了")
 
     def parse_best_mahjong(self: Self, response: Response) -> None:
-        """TODO: 跳満以上のアガリがある場合にはリンク先のスクリーンショットを保存する (very hard)
-        """
+        """TODO: 跳満以上のアガリがある場合にはリンク先のスクリーンショットを保存する (very hard)"""
         pass
-        #inspect_response(response, self)
+        # inspect_response(response, self)
         # 不正なアクセスを検知しました
-        #import webbrowser
-        #webbrowser.open(response.url)
+        # import webbrowser
+        # webbrowser.open(response.url)
+
 
 # 【SCORE】
 # 合計SCORE:-197.0
@@ -129,11 +135,12 @@ def parse_score(selector: Selector, item: MutableMapping[str, str]) -> None:
     """Parse 【SCORE】"""
 
     value = selector.xpath('//font[text() = "【SCORE】"]/following::text()').get()
-    item['score'] = value.strip()
+    item["score"] = value.strip()
 
     print("【SCORE】")
-    print(item['score'])
+    print(item["score"])
     print()
+
 
 # 【最終段位】
 # 四人打ち段位:魔神 幻球:7
@@ -141,11 +148,12 @@ def parse_recent_level(selector: Selector, item: MutableMapping[str, str]) -> No
     """Parse 【最終段位】"""
 
     value = selector.xpath('//font[text() = "【最終段位】"]/following::text()').get()
-    item['recent_level'] = value.strip()
+    item["recent_level"] = value.strip()
 
     print("【最終段位】")
-    print(item['recent_level'])
+    print(item["recent_level"])
     print()
+
 
 # 【3/9の最新8試合の履歴】
 #
@@ -159,12 +167,17 @@ def parse_history(selector: Selector, item: MutableMapping[str, str]) -> None:
 
     title = selector.xpath('//font[contains(.,"履歴")]/text()').get().strip()
 
-    values = selector.xpath('//text()[preceding::font[contains(.,"履歴")]][following::font[text()="【順位】"]]').getall()
-    item['history'] = '\n'.join(istripped for i in values if (istripped := i.strip())).replace('\nE', 'E')
+    values = selector.xpath(
+        '//text()[preceding::font[contains(.,"履歴")]][following::font[text()="【順位】"]]'
+    ).getall()
+    item["history"] = "\n".join(
+        istripped for i in values if (istripped := i.strip())
+    ).replace("\nE", "E")
 
     print(title)
-    print(item['history'])
+    print(item["history"])
     print()
+
 
 # 【順位】
 # 1位回数:0(0.00%)
@@ -177,12 +190,15 @@ def parse_history(selector: Selector, item: MutableMapping[str, str]) -> None:
 def parse_ranks(selector: Selector, item: MutableMapping[str, str]) -> None:
     """Parse 【順位】"""
 
-    values = selector.xpath('//font[contains(.,"順位")]/following::text()[position() < 8]').getall()
-    item['rank'] = '\n'.join(i.strip() for i in values)
+    values = selector.xpath(
+        '//font[contains(.,"順位")]/following::text()[position() < 8]'
+    ).getall()
+    item["rank"] = "\n".join(i.strip() for i in values)
 
     print("【順位】")
-    print(item['rank'])
+    print(item["rank"])
     print()
+
 
 # 【打ち筋】
 # アガリ率:10.00%(4/40)
@@ -192,12 +208,15 @@ def parse_ranks(selector: Selector, item: MutableMapping[str, str]) -> None:
 def parse_stats(selector: Selector, item: MutableMapping[str, str]) -> None:
     """Parse 【打ち筋】"""
 
-    values = selector.xpath('//font[text() = "【打ち筋】"]/following::text()[position() < 5]').getall()
-    item['stats'] = '\n'.join(istripped for i in values if (istripped := i.strip()))
+    values = selector.xpath(
+        '//font[text() = "【打ち筋】"]/following::text()[position() < 5]'
+    ).getall()
+    item["stats"] = "\n".join(istripped for i in values if (istripped := i.strip()))
 
     print("【打ち筋】")
-    print(item['stats'])
+    print(item["stats"])
     print()
+
 
 # 【3/9の最高役】--> //font[contains(.,"最高役")]/following-sibling::text()
 # 最高役のデータがありません。最高役は、跳満以上のアガリが対象となります。
@@ -207,13 +226,18 @@ def parse_best(selector: Selector, item: MutableMapping[str, str]) -> None:
     title = selector.xpath('//font[contains(.,"最高役")]/text()').get().strip()
 
     # TODO: まだよくわからない
-    #values = selector.xpath('//font[contains(.,"最高役")]/following-sibling::text()').getall()
-    values = selector.xpath('//text()[preceding::font[contains(.,"最高役")]][following::hr]').getall()
-    item['best'] = '\n'.join(istripped for i in values if (istripped := i.strip())).replace('・\n', '・')
+    # values = selector.xpath('//font[contains(.,"最高役")]/following-sibling::text()').getall()
+    values = selector.xpath(
+        '//text()[preceding::font[contains(.,"最高役")]][following::hr]'
+    ).getall()
+    item["best"] = "\n".join(
+        istripped for i in values if (istripped := i.strip())
+    ).replace("・\n", "・")
 
     print(title)
-    print(item['best'])
+    print(item["best"])
     print()
+
 
 def read_credentials() -> Any:
     """Try to read the ID and password from
@@ -230,33 +254,41 @@ def read_credentials() -> Any:
     for path in DEFAULT_CREDENTIALS_PATH:
         try:
             path = os.path.expandvars(path)
-            with open(path, mode='r') as fin:
+            with open(path, mode="r") as fin:
                 return yaml.safe_load(fin)
         except OSError:
             pass
+
 
 def main() -> None:
     """Receive account information and run spider"""
 
     game_mode = GAME_MODE_PROFESSIONAL
-    if len(sys.argv) == 2 and sys.argv[1] == '--standard':
+    if len(sys.argv) == 2 and sys.argv[1] == "--standard":
         game_mode = GAME_MODE_STANDARD
 
     if credentials := read_credentials():
-        user_id = credentials['uid']
-        password = credentials['password']
+        user_id = credentials["uid"]
+        password = credentials["password"]
     else:
-        user_id = input('Enter user id for MJ.NET: ')
-        password = getpass('Enter password: ')
+        user_id = input("Enter user id for MJ.NET: ")
+        password = getpass("Enter password: ")
 
     command = [
-        "scrapy", "runspider", sys.argv[0],
-        "-a", f"uid={user_id}",
-        "-a", f"password={password}",
-        "-a", f"game_mode={game_mode}",]
+        "scrapy",
+        "runspider",
+        sys.argv[0],
+        "-a",
+        f"uid={user_id}",
+        "-a",
+        f"password={password}",
+        "-a",
+        f"game_mode={game_mode}",
+    ]
 
     # To suppress log text from scrapy, use 2>/dev/null redirection
     cmdline.execute(command)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

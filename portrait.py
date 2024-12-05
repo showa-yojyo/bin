@@ -16,26 +16,28 @@ async def generate_images(queue: asyncio.Queue, filenames: Iterable[str]) -> Non
     for filename in filenames:
         await queue.put(filename)
 
-    print('All task requests sent')
+    print("All task requests sent")
+
 
 async def rotate_images(queue: asyncio.Queue) -> None:
     """Consumer coroutine"""
 
     while True:
         filename: str = await queue.get()
-        print(f'Working on {filename}')
+        print(f"Working on {filename}")
         try:
             image = Image.open(filename)
             if image.width <= image.height:
                 # already portrait
-                print(f'Skip {filename}')
+                print(f"Skip {filename}")
                 continue
 
             image_new = image.rotate(-90, expand=True)
-            print(f'Saving {filename}')
+            print(f"Saving {filename}")
             image_new.save(filename)
         finally:
             queue.task_done()
+
 
 async def terminate_consumers(consumers: Iterable[asyncio.Task]) -> None:
     """Clean up consumers"""
@@ -44,6 +46,7 @@ async def terminate_consumers(consumers: Iterable[asyncio.Task]) -> None:
         consumer.cancel()
 
     await asyncio.gather(*consumers, return_exceptions=True)
+
 
 async def main(filenames: Iterable[str]) -> None:
     """main entry point"""
@@ -57,9 +60,10 @@ async def main(filenames: Iterable[str]) -> None:
 
     # block until all tasks are done
     await queue.join()
-    print('All work completed')
+    print("All work completed")
 
     await terminate_consumers(consumers)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     asyncio.run(main(sys.argv[1:]))

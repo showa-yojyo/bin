@@ -8,7 +8,7 @@ import asyncio
 from tkinter import Tk
 import math
 import sys
-from typing import Callable, Iterable, Optional
+from typing import Callable, Iterable
 from PIL import Image
 
 
@@ -18,18 +18,17 @@ def _determine_portrait_size() -> tuple[int, int]:
     """Determine the dimension of portrait"""
     root = Tk()
     root.withdraw()
-    screen_height, screen_width = (
-        root.winfo_screenheight(), root.winfo_screenwidth())
+    screen_height, screen_width = (root.winfo_screenheight(), root.winfo_screenwidth())
     if screen_width <= screen_height:
         return (screen_width, screen_height)
     else:
         return (screen_height, screen_width)
 
+
 SIZE_PORTRAIT = _determine_portrait_size()
 
-def round_aspect(
-    number: float,
-    key: Callable[[int], float]) -> int:
+
+def round_aspect(number: float, key: Callable[[int], float]) -> int:
     """(code taken from PIL)"""
     return max(min(math.floor(number), math.ceil(number), key=key), 1)
 
@@ -52,13 +51,12 @@ def fit_to_screen(width: int, height: int) -> tuple[int, int]:
         y = round_aspect(x / aspect, key=lambda n: abs(aspect - x / n))
     return (x, y)
 
-async def generate_images(
-    queue: asyncio.Queue,
-    filenames: Iterable[str]) -> None:
+
+async def generate_images(queue: asyncio.Queue, filenames: Iterable[str]) -> None:
     """Producer coroutine"""
 
     for name in filenames:
-        #print(f'Producing {name}')
+        # print(f'Producing {name}')
         await queue.put((name, Image.open(name)))
 
 
@@ -82,6 +80,7 @@ def process_image(image: Image.Image):
 
     return image
 
+
 async def process_images(queue: asyncio.Queue) -> None:
     """Consumer coroutine"""
 
@@ -90,13 +89,14 @@ async def process_images(queue: asyncio.Queue) -> None:
         try:
             image_new = process_image(image)
             if not image_new:
-                print(f'Skip {filename} {image.size}')
+                print(f"Skip {filename} {image.size}")
                 continue
 
-            print(f'Saving {filename} {image_new.size}')
+            print(f"Saving {filename} {image_new.size}")
             image_new.save(filename)
         finally:
             queue.task_done()
+
 
 async def main(filenames: Iterable[str]) -> None:
     """main entry point"""
@@ -115,5 +115,6 @@ async def main(filenames: Iterable[str]) -> None:
 
     await asyncio.gather(*consumers, return_exceptions=True)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     asyncio.run(main(sys.argv[1:]))
