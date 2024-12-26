@@ -35,6 +35,7 @@ done
 * [Python 3.x][Python]: Additionally, some scripts use some third party
   packages:
   * [Beautiful Soup]
+  * [Click]
   * [dateutil]
   * [Docutils]
   * [Jinja2]
@@ -59,3 +60,4 @@ Please do not report any issues you find to me.
 [FFmpeg]: <https://ffmpeg.org/>
 [ImageMagick]: <https://imagemagick.org/>
 [JPHoliday]: <https://github.com/Lalcs/jpholiday>
+[Click]: <https://click.palletsprojects.com/en/stable/>
