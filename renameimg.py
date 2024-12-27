@@ -1,28 +1,44 @@
 #!/usr/bin/env python
 
-import sys
 from hashlib import md5
-from os import remove, rename
-from os.path import dirname, join, splitext
+from os import rename
+from pathlib import Path
 from typing import Iterable
 
-
-def newname(data: bytes, oldname: str) -> str:
-    h = md5(data)
-    newbasename: str = h.hexdigest()
-
-    oldbasename, extension = splitext(oldname)
-    return join(dirname(oldname), newbasename + extension)
+import click
 
 
-def main(args: Iterable[str] = sys.argv[1:]) -> None:
-    for oldname in args:
+def newname(data: bytes, path: Path) -> Path:
+    """Rename a file based on its hash value."""
+    return path.parent / f"{md5(data).hexdigest()}{path.suffix}"
+
+
+@click.command()
+@click.argument("paths", nargs=-1, type=click.Path())
+@click.help_option(help="Print this message and exit.")
+@click.option(
+    "-n",
+    "--dry-run",
+    is_flag=True,
+    help="Don't actually rename; just print them.",
+)
+def main(paths: Iterable[click.Path], dry_run: bool) -> None:
+    """Rename files to their hash values."""
+
+    for oldname in paths:
         with open(oldname, "rb") as input:
             data = input.read()
         try:
-            rename(oldname, newname(data, oldname))
+            old_path = Path(oldname)
+            if dry_run:
+                click.echo(f"{old_path} => {newname(data, old_path)}")
+            else:
+                rename(old_path, newname(data, old_path))
         except FileExistsError:
-            remove(oldname)
+            if dry_run:
+                click.echo(f"remove({oldname})")
+            else:
+                remove(oldname)
 
 
 if __name__ == "__main__":
