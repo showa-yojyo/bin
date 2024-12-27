@@ -42,6 +42,7 @@ done
   * [Scrapy]
   * [PyYaml]
   * [JPHoliday]
+  * [Pillow]
 * [ImageMagick]
 * [FFmpeg]
 
@@ -61,3 +62,4 @@ Please do not report any issues you find to me.
 [ImageMagick]: <https://imagemagick.org/>
 [JPHoliday]: <https://github.com/Lalcs/jpholiday>
 [Click]: <https://click.palletsprojects.com/en/stable/>
+[Pillow]: <https://pillow.readthedocs.io/en/stable/>

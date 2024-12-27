@@ -11,6 +11,8 @@ import sys
 from typing import Callable, Iterable
 from PIL import Image
 
+import click
+
 
 # python - How could I find the resolution of a display running Python3 on Linux? - Stack Overflow
 # <https://stackoverflow.com/questions/64189320/how-could-i-find-the-resolution-of-a-display-running-python3-on-linux>
@@ -52,11 +54,13 @@ def fit_to_screen(width: int, height: int) -> tuple[int, int]:
     return (x, y)
 
 
-async def generate_images(queue: asyncio.Queue, filenames: Iterable[str]) -> None:
+async def generate_images(
+    queue: asyncio.Queue,
+    paths: Iterable[click.Path]) -> None:
     """Producer coroutine"""
 
-    for name in filenames:
-        # print(f'Producing {name}')
+    for path in paths:
+        name = str(path)
         await queue.put((name, Image.open(name)))
 
 
@@ -98,15 +102,18 @@ async def process_images(queue: asyncio.Queue) -> None:
             queue.task_done()
 
 
-async def main(filenames: Iterable[str]) -> None:
-    """main entry point"""
+@click.command()
+@click.argument("paths", nargs=-1, type=click.Path())
+@click.help_option(help="Print this message and exit.")
+async def main(paths: Iterable[click.Path]) -> None:
+    """Resize images."""
 
     # Producer/consumer pattern
     queue: asyncio.Queue = asyncio.Queue()
 
     # XXX: the number of consumers shuold be variable
     consumers = [asyncio.create_task(process_images(queue)) for _ in range(3)]
-    await generate_images(queue, filenames)
+    await generate_images(queue, paths)
     await queue.join()
 
     # Clean up consumers
