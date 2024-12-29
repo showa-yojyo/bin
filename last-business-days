@@ -1,23 +1,7 @@
 #!/usr/bin/env python
 
 # Synopsys:
-#   Print the last business days in one year.
-#
-# Example:
-#   $ last-business-days 2024
-#   2024-01-31
-#   2024-02-29
-#   2024-03-29
-#   2024-04-30
-#   2024-05-31
-#   2024-06-28
-#   2024-07-31
-#   2024-08-30
-#   2024-09-30
-#   2024-10-31
-#   2024-11-29
-#   2024-12-27
-#
+#   Output all last business days of the year.
 # References:
 #   * Generate last business day of the month variable in Python for US Calendar - Stack Overflow
 #     <https://stackoverflow.com/questions/62557373/generate-last-business-day-of-the-month-variable-in-python-for-us-calendar>
@@ -25,19 +9,28 @@
 #     <https://stackoverflow.com/questions/42950/get-the-last-day-of-the-month>
 #   * Lalcs/jpholiday: 日本の祝日を取得するライブラリ
 #     <https://github.com/Lalcs/jpholiday>
+# Requirements:
+#   * jpholiday (pip install jpholiday)
+
+from __future__ import annotations
 
 import calendar
 import datetime
 import sys
-from typing import Iterator, Self, Sequence
+from typing import TYPE_CHECKING
 
-# pip install jpholiday
-import jpholiday # type: ignore
+if TYPE_CHECKING:
+    from typing import Iterator, Self, Sequence
+
+import click
+import jpholiday  # type: ignore
 
 ONEDAY = datetime.timedelta(days=1)
 
+
 def is_weekend(d: datetime.datetime) -> bool:
     return d.weekday() >= 5
+
 
 def last_business_day(year: int) -> Iterator[datetime.datetime]:
     for m in calendar.Month:
@@ -46,6 +39,7 @@ def last_business_day(year: int) -> Iterator[datetime.datetime]:
         while is_weekend(d) or is_holiday(d):
             d -= ONEDAY
         yield d
+
 
 class TestHoliday(jpholiday.OriginalHoliday):
     def _is_holiday(self: Self, d: datetime.datetime) -> bool:
@@ -57,13 +51,36 @@ class TestHoliday(jpholiday.OriginalHoliday):
             case _:
                 return False
 
+
 def is_holiday(d: datetime.datetime) -> bool:
     return jpholiday.is_holiday(d)
 
-def main(args: Sequence[str]=sys.argv[1:]) -> None:
-    year = int(args[0])
-    for d in last_business_day(year):
-        print(d.isoformat().split('T')[0])
 
-if __name__ == '__main__':
+@click.command()
+@click.argument("year", type=int)
+def main(year: int) -> None:
+    """Output all last business days of a year.
+
+    \b
+    Example:
+    $ last-business-days 2024
+    2024-01-31
+    2024-02-29
+    2024-03-29
+    2024-04-30
+    2024-05-31
+    2024-06-28
+    2024-07-31
+    2024-08-30
+    2024-09-30
+    2024-10-31
+    2024-11-29
+    2024-12-27
+    """
+
+    for d in last_business_day(year):
+        click.echo(d.isoformat().split("T")[0])
+
+
+if __name__ == "__main__":
     main()
