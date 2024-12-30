@@ -4,13 +4,19 @@
 No description.
 """
 
-import sys
-from typing import Iterator, Mapping, Self
+from __future__ import annotations
 
-from scrapy import cmdline, Request  # type: ignore
-from scarpy.http import Response  # type: ignore
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Iterator, Mapping, Self
+
+from scrapy import Request  # type: ignore
+from scrapy.http import Response  # type: ignore
 from scrapy.linkextractors import LinkExtractor  # type: ignore
 from scrapy.spiders import CrawlSpider, Rule  # type: ignore
+
+import myscrapy
 
 TARGET_DOMAIN = "moeimg.net"
 
@@ -32,7 +38,7 @@ class MoeImgNetCrawler(CrawlSpider):
     def start_requests(self: Self) -> Iterator[Request]:
         """No description"""
 
-        url = self.tag
+        url = f"https://{TARGET_DOMAIN}/tag/{self.tag}"  # type: ignore[attr-defined]
         yield Request(url, dont_filter=True)
 
     def parse_entry(self: Self, response: Response) -> Iterator[Mapping]:
@@ -49,7 +55,4 @@ class MoeImgNetCrawler(CrawlSpider):
 
 
 if __name__ == "__main__":
-    # cmdline.execute(f"scrapy runspider {sys.argv[0]} -a tag={sys.argv[1]} -O images.csv".split())
-    command_line = ["scrapy", "runspider"]
-    command_line.extend(sys.argv)
-    cmdline.execute(command_line)
+    myscrapy.main()
