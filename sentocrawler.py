@@ -1,19 +1,32 @@
 #!/usr/bin/env python
 
 """
-No description.
+Example:
+$ ./sentocrawler.py -f json
 """
 
+from __future__ import annotations
 import sys
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Iterator, Mapping, Self
+
+from scrapy import cmdline
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
+if TYPE_CHECKING:
+    from scrapy.http import Response
+
+import click
+
 
 class SentoListSpider(CrawlSpider):
-    """No descrition"""
+    """No description"""
 
     name = "sentolist"
-    allowed_domains = ["www.1010.or.jp"]
+    allowed_domains = ("www.1010.or.jp",)
     start_urls = [
         "https://www.1010.or.jp/map/item/",
         "https://www.1010.or.jp/map/item/page/2",
@@ -27,18 +40,58 @@ class SentoListSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_xpaths='//div[@class="wp-pagenavi"]/a')),
     )
 
-    def parse_entry(self, response):
-        """No descrition"""
+    def parse_entry(self: Self, response: Response) -> Iterator[Mapping]:
+        """No descrpition"""
+
+        def safe_xpath(xpath: str) -> str:
+            sel_list = response.xpath(xpath)
+            if text := sel_list.get():
+                return text.strip()
+            return ""
 
         yield {
-            "id": response.xpath("string(//tr[1]/td)").get().strip(),
-            "name": response.xpath("//h2/text()").get().strip(),
-            "address": response.xpath("string(//tr[2]/td)").get().strip(),
-            "holidays": response.xpath("string(//tr[6]/td)").get().strip(),
-            "office_hours": response.xpath("string(//tr[7]/td)").get().strip(),
+            "id": safe_xpath("string(//tr[1]/td)"),
+            "name": safe_xpath("//h2/text()"),
+            "address": safe_xpath("string(//tr[2]/td)"),
+            "holidays": safe_xpath("string(//tr[6]/td)"),
+            "office_hours": safe_xpath("string(//tr[7]/td)"),
             "url": response.url,
         }
 
 
+@click.command()
+@click.option(
+    "-f",
+    "--format",
+    type=click.Choice(
+        ["json", "jsonline", "xml", "csv"],
+        case_sensitive=False,
+    ),
+    default="json",
+    help="scraped data format",
+)
+@click.option(
+    "--log/--nolog",
+    default=False,
+    help="enable logging",
+)
+@click.help_option(help="show this message and exit")
+def main(format: str, log: bool) -> None:
+    """A scraping tool for Tokyo Sento."""
+
+    command_line = [
+        "scrapy",
+        "runspider",
+        sys.argv[0],
+        "-o",
+        f"-:{format}",
+    ]
+
+    if not log:
+        command_line.append("--nolog")
+
+    cmdline.execute(command_line)
+
+
 if __name__ == "__main__":
-    print(f"Usage: scrapy runspider {sys.argv[0]}")
+    main()
