@@ -1,41 +1,30 @@
 #!/usr/bin/env python
 """sento.py: List bath houses in KU of Tokyo"""
 
+from __future__ import annotations
 import asyncio
-import sys
-from argparse import ArgumentParser, Namespace
-from typing import Never, Sequence
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Sequence
+
 from urllib import parse, request
 
 from bs4 import BeautifulSoup, Tag  # type: ignore
+import click
 
-__version__ = "1.3.1"
+__version__ = "1.4"
 
+CSV_HEADER = (
+    "名前",
+    "位置",
+    "アクセス",
+    "定休日",
+    "コインランドリー",
+    "営業時間",
+)
+SEP = "|"
 URL = "http://www.1010.or.jp/map/archives/area/{ku}/page/{page:d}"
-
-
-def parse_args(args: Sequence[str]) -> Namespace:
-    """Parse the command line parameters.
-
-    Returns:
-        An instance of argparse.ArgumentParser that stores the command line
-        parameters.
-    """
-
-    parser = ArgumentParser(description="List bath houses in KU of Tokyo")
-    parser.add_argument("--version", action="version", version=__version__)
-
-    parser.add_argument(
-        "ku",
-        metavar="KU",
-        default="北区",
-        help="ku (ward) in which bath houses to be searched",
-    )
-    parser.add_argument(
-        "page", default=1, type=int, help="the number of pages to be searched"
-    )
-
-    return parser.parse_args(args or ["--help"])
 
 
 def parse_item(item: Tag) -> Sequence[str]:
@@ -68,6 +57,8 @@ def parse_item(item: Tag) -> Sequence[str]:
 
 async def fetch(ku: str, page: int):
     """Fetch all the data"""
+
+    click.echo(SEP.join(CSV_HEADER))
     return await asyncio.gather(
         *[scrape(URL.format(ku=ku, page=i + 1)) for i in range(page)]
     )
@@ -81,27 +72,23 @@ async def scrape(url) -> None:
         soup = BeautifulSoup(html, "html.parser")
 
     for j in soup.find_all("div", attrs={"class": "item"}):
-        print("|".join(parse_item(j)))
+        click.echo(SEP.join(parse_item(j)))
 
 
-def run(args: Namespace) -> int:
-    """The main function"""
+@click.command()
+@click.argument("ku")
+@click.argument("page", type=int)
+@click.help_option(help="show this help message and exit")
+@click.version_option(__version__, help="show the version and exit")
+def main(ku: str, page: int) -> None:
+    """List bath houses in KU of Tokyo.
 
-    print(
-        "|".join(("名前", "位置", "アクセス", "定休日", "コインランドリー", "営業時間"))
-    )
+    \b
+    Example:
+    $ sento 足立区 1
+    """
 
-    try:
-        loop = asyncio.new_event_loop()
-        loop.run_until_complete(fetch(parse.quote(args.ku), args.page))
-    finally:
-        loop.close()
-
-    return 0
-
-
-def main(args: Sequence[str] = sys.argv[1:]) -> Never:
-    sys.exit(run(parse_args(args)))
+    asyncio.run(fetch(parse.quote(ku), page))
 
 
 if __name__ == "__main__":
