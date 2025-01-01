@@ -2,29 +2,27 @@
 """
 Usage:
 $ sentoscraper.py ID1 ID2 ...
-
-Example:
-$ seq 590 598 | xargs sentoscraper.py --cache-dir "$XDG_CACHE_HOME/sento"
-item-cnt-590.html       さくら湯 [板橋区]       板橋区板橋3-39-12       都営三田線「板橋区役所前」駅下車、徒歩5分   月曜、木曜      0       15:30-21:00
-item-cnt-591.html       金松湯 [板橋区] 板橋区大山東町55-3      東武東上線「大山」駅下車、徒歩2分   火曜    0       15:30-23:30
-item-cnt-592.html       第二富士見湯 [板橋区]   板橋区幸町20-5  東武東上線「大山」駅下車、徒歩7分   土曜    0       16:00-24:00日曜、祝日は15時から営業
 """
 
+from __future__ import annotations
 import asyncio
-import re
-import os.path
-import sys
-from argparse import ArgumentParser, Namespace
 from collections import namedtuple
-from typing import Never, Self, Sequence
+import pathlib
+import re
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from typing import Self, Sequence, reveal_type
 from urllib.request import urlopen
-from bs4 import BeautifulSoup
 
-__version__ = "2.0.1"
+from bs4 import BeautifulSoup  # type: ignore
+import click
 
+__version__ = "2.1"
+
+SEP = "|"
 URL_PATTERN = "http://www.1010.or.jp/map/item/item-cnt-{id}"
-
-CACHE_DIR = None
 
 
 class Sento(
@@ -38,73 +36,48 @@ class Sento(
     __slots__ = ()
 
     def __str__(self: Self) -> str:
-        return "\t".join(self[:5]) + "\t" + str(self.has_laundry) + "\t" + self[-1]
+        return f"{SEP.join(self[:5])}{SEP}{self.has_laundry}{SEP}{self[-1]}"
 
 
-def parse_args(args: Sequence[str]) -> Namespace:
-    """Parse the command line parameters.
-
-    Returns:
-        An instance of argparse.ArgumentParser that stores the command line
-        parameters.
-    """
-
-    parser = ArgumentParser(description="A downloader")
-    parser.add_argument("--version", action="version", version=__version__)
-
-    parser.add_argument("id", nargs="+", help="numeric ID")
-
-    parser.add_argument(
-        "-s", "--semaphore", type=int, default=3, help="the count of the semaphore"
-    )
-
-    parser.add_argument(
-        "-c", "--cache-dir", help="directory in which cache files to be stored"
-    )
-
-    return parser.parse_args(args)
-
-
-async def fetch(args: Namespace):
+async def fetch(
+    id: Iterable[str],
+    sem_count: int,
+    cache_dir: pathlib.Path,
+) -> list[Sento]:
     """TODO: docstring"""
-    semaphore = asyncio.Semaphore(args.semaphore)
+    semaphore = asyncio.Semaphore(sem_count)
 
-    global CACHE_DIR
-    CACHE_DIR = args.cache_dir
-
-    async def scrape_with_semaphore(id: str):
+    async def scrape_with_semaphore(i: str) -> Sento:
         async with semaphore:
-            return await scrape(id)
+            return await scrape(i, cache_dir)
 
-    return await asyncio.gather(*[scrape_with_semaphore(i) for i in args.id])
-
-
-def make_url(id: str) -> str:
-    return URL_PATTERN.format(id=id)
+    return await asyncio.gather(*[scrape_with_semaphore(i) for i in id])
 
 
-def make_local_path(url: str) -> str:
-    return os.path.basename(url) + ".html"
+def get_source_path(id: str) -> pathlib.Path:
+    return pathlib.Path(URL_PATTERN.format(id=id))
+
+
+def get_cache_path(url: pathlib.Path) -> pathlib.Path:
+    return pathlib.Path(url.with_suffix(".html").name)
 
 
 TABLE = str.maketrans("０１２３４５６７８９：−", "0123456789:-")
 
 
-async def scrape(id: str) -> Sento:
+async def scrape(id: str, cache_dir: pathlib.Path) -> Sento:
     """TODO: docstring"""
 
-    url = make_url(id)
-    localpath = make_local_path(url)
-
-    global CACHE_DIR
-    if CACHE_DIR:
-        localpath = os.path.normpath(os.path.join(CACHE_DIR, localpath))
+    url = get_source_path(id)
+    localpath = get_cache_path(url)
+    if cache_dir:
+        localpath = cache_dir / localpath
 
     try:
         with open(localpath, mode="rb") as fin:
             data = fin.read()
     except (IOError, FileNotFoundError):
-        with urlopen(url) as fin:
+        with urlopen(str(url)) as fin:
             data = fin.read()
         with open(localpath, mode="wb") as fout:
             fout.write(data)
@@ -135,8 +108,8 @@ async def scrape(id: str) -> Sento:
             raise ValueError()
         return column.text
 
-    sento = Sento(
-        id=localpath,
+    return Sento(
+        id=id,
         name=get_name_from_heading(),
         has_laundry=1 if has_laundry() else 0,
         address=process_address(get_column_value("住所")),
@@ -145,26 +118,44 @@ async def scrape(id: str) -> Sento:
         office_hours=sanitize(get_column_value("営業時間")),
     )
 
-    return sento
 
+@click.command()
+@click.argument("id", nargs=-1)
+@click.help_option(help="show this message and exit")
+@click.version_option(__version__, help="show the version and exit")
+@click.option(
+    "-s",
+    "--semaphore",
+    type=int,
+    default=3,
+    help="the number of the semaphore",
+)
+@click.option(
+    "-c",
+    "--cache-dir",
+    type=click.Path(
+        exists=True,
+        readable=True,
+        writable=True,
+        dir_okay=True,
+        path_type=pathlib.Path,
+    ),
+    help="directory in which cache files are stored",
+)
+def main(id: Sequence[str], semaphore: int, cache_dir: pathlib.Path) -> None:
+    """Given sento identifiers, show their simple information.
 
-def run(args: Namespace) -> int:
-    """The main function"""
+    \b
+    Example:
+    $ sentoscraper.py $(seq 590 592)
+    590|さくら湯 [板橋区]|板橋区板橋3-39-12|都営三田線「板橋区役所前」駅下車、徒歩5分|月曜、木曜|0|15:30-21:00
+    591|金松湯 [板橋区]|板橋区大山東町55-3|東武東上線「大山」駅下車、徒歩2分|火曜|0|15:30-23:30
+    592|第二富士見湯 [板橋区]|板橋区幸町20-5|東武東上線「大山」駅下車、徒歩7分|土曜|0|16:00-24:00日曜、 祝日は15時から営業
+    """
 
-    try:
-        loop = asyncio.new_event_loop()
-        results = loop.run_until_complete(fetch(args))
-        for i in sorted(results):
-            print(i)
-    finally:
-        loop.close()
-
-    return 0
-
-
-def main(args: Sequence[str] = sys.argv[1:]) -> Never:
-    """TODO: docstring"""
-    sys.exit(run(parse_args(args)))
+    results = asyncio.run(fetch(id, semaphore, cache_dir))
+    for i in sorted(results):
+        click.echo(i)
 
 
 if __name__ == "__main__":
