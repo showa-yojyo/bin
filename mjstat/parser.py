@@ -1,12 +1,16 @@
-"""parser.py: Define class MJScoreParser.
-"""
-from typing import Any, Self, TypeAlias
+"""parser.py: Define class MJScoreParser."""
 
-from docutils.statemachine import StateMachine
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Any, Self
+
+from docutils.statemachine import StateMachine  # type: ignore
 from .states import MJScoreState
 
-# type GameData = dict[str, Any]
-GameData: TypeAlias = dict[str, Any]
+type GameData = dict[str, Any]
+
 
 class MJScoreParser(object):
     """Parse the content of mjscore.txt."""
@@ -21,19 +25,20 @@ class MJScoreParser(object):
         a list of game records.
         """
 
-        settings = game_data['settings']
-        assert 'debug' in settings
-        assert 'verbose' in settings
+        settings = game_data["settings"]
+        assert "debug" in settings
+        assert "verbose" in settings
 
         self.setup_parse(input_string, game_data)
         # pylint: disable=no-member
         self.state_machine = StateMachine(
             state_classes=MJScoreState.__subclasses__(),
-            initial_state='GameOpening',
-            debug=settings.debug and settings.verbose)
+            initial_state="GameOpening",
+            debug=settings.debug and settings.verbose,
+        )
         # self.state_machine.config = settings
 
-        input_lines = tuple(line.strip() for line in input_string.split('\n'))
+        input_lines = tuple(line.strip() for line in input_string.split("\n"))
 
         self.state_machine.run(input_lines, context=game_data)
         self.state_machine.unlink()
