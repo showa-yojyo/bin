@@ -16,7 +16,7 @@ import click
 from PIL import Image
 
 
-__version__ = "1.1"
+__version__ = "1.2"
 
 
 async def generate_images(
@@ -36,17 +36,19 @@ async def rotate_image(queue: asyncio.Queue) -> None:
 
     while True:
         filename: str = await queue.get()
-        click.echo(f"Working on {filename}")
+        click.echo(f"Working on {filename}", err=True)
         try:
             image = Image.open(filename)
             if image.width <= image.height:
                 # already portrait
-                click.echo(f"Skip {filename}")
+                click.echo(f"Skip {filename}", err=True)
                 continue
 
             image_new = image.rotate(-90, expand=True)
-            click.echo(f"Saving {filename}")
+            click.echo(f"Saving {filename}", err=True)
             image_new.save(filename)
+        except Exception as e:
+            click.secho(f"Error: {e}", err=True, fg="red")
         finally:
             queue.task_done()
 
@@ -60,12 +62,12 @@ async def terminate_consumers(consumers: Iterable[asyncio.Task]) -> None:
     await asyncio.gather(*consumers, return_exceptions=True)
 
 
-async def amain(filename: Sequence[pathlib.Path]) -> None:
+async def amain(filename: Sequence[pathlib.Path], num_consumers: int) -> None:
     # Producer/consumer pattern
     queue: asyncio.Queue = asyncio.Queue()
 
     # turn on the rotate_image thread
-    consumers = [asyncio.create_task(rotate_image(queue)) for _ in range(3)]
+    consumers = [asyncio.create_task(rotate_image(queue)) for _ in range(num_consumers)]
     await generate_images(queue, filename)
 
     # block until all tasks are done
@@ -91,10 +93,17 @@ async def amain(filename: Sequence[pathlib.Path]) -> None:
     __version__,
     help="output version information and exit",
 )
-def main(filename: Sequence[pathlib.Path]) -> None:
+@click.option(
+    "-n",
+    "--num-consumers",
+    type=int,
+    default=3,
+    help="the number of consumers",
+)
+def main(filename: Sequence[pathlib.Path], num_consumers: int) -> None:
     """Make landscape images portrait."""
 
-    asyncio.run(amain(filename))
+    asyncio.run(amain(filename, num_consumers))
 
 
 if __name__ == "__main__":
