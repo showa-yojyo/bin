@@ -4,36 +4,48 @@
 Make landscape images portrait by using PIL (asyncio version)
 """
 
+from __future__ import annotations
 import asyncio
-from typing import Iterable
-import sys
+import pathlib
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
+
+import click
 from PIL import Image
 
 
-async def generate_images(queue: asyncio.Queue, filenames: Iterable[str]) -> None:
+__version__ = "1.1"
+
+
+async def generate_images(
+    queue: asyncio.Queue,
+    filename: Iterable[pathlib.Path],
+) -> None:
     """Producer coroutine"""
 
-    for filename in filenames:
-        await queue.put(filename)
+    for f in filename:
+        await queue.put(f)
 
-    print("All task requests sent")
+    click.echo("All task requests sent")
 
 
-async def rotate_images(queue: asyncio.Queue) -> None:
+async def rotate_image(queue: asyncio.Queue) -> None:
     """Consumer coroutine"""
 
     while True:
         filename: str = await queue.get()
-        print(f"Working on {filename}")
+        click.echo(f"Working on {filename}")
         try:
             image = Image.open(filename)
             if image.width <= image.height:
                 # already portrait
-                print(f"Skip {filename}")
+                click.echo(f"Skip {filename}")
                 continue
 
             image_new = image.rotate(-90, expand=True)
-            print(f"Saving {filename}")
+            click.echo(f"Saving {filename}")
             image_new.save(filename)
         finally:
             queue.task_done()
@@ -48,22 +60,42 @@ async def terminate_consumers(consumers: Iterable[asyncio.Task]) -> None:
     await asyncio.gather(*consumers, return_exceptions=True)
 
 
-async def main(filenames: Iterable[str]) -> None:
-    """main entry point"""
-
+async def amain(filename: Sequence[pathlib.Path]) -> None:
     # Producer/consumer pattern
     queue: asyncio.Queue = asyncio.Queue()
 
-    # turn on the rotate_images thread
-    consumers = [asyncio.create_task(rotate_images(queue)) for _ in range(3)]
-    await generate_images(queue, filenames)
+    # turn on the rotate_image thread
+    consumers = [asyncio.create_task(rotate_image(queue)) for _ in range(3)]
+    await generate_images(queue, filename)
 
     # block until all tasks are done
     await queue.join()
-    print("All work completed")
+    click.echo("All work completed")
 
     await terminate_consumers(consumers)
 
 
+@click.command()
+@click.argument(
+    "filename",
+    nargs=-1,
+    type=click.Path(
+        exists=True,
+        path_type=pathlib.Path,
+    ),
+)
+@click.help_option(
+    help="display this message and exit",
+)
+@click.version_option(
+    __version__,
+    help="output version information and exit",
+)
+def main(filename: Sequence[pathlib.Path]) -> None:
+    """Make landscape images portrait."""
+
+    asyncio.run(amain(filename))
+
+
 if __name__ == "__main__":
-    asyncio.run(main(sys.argv[1:]))
+    main()
