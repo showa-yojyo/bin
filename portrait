@@ -6,7 +6,9 @@ Make landscape images portrait by using PIL (asyncio version)
 
 from __future__ import annotations
 import asyncio
+import logging
 import pathlib
+import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -16,7 +18,8 @@ import click
 from PIL import Image
 
 
-__version__ = "1.2"
+__version__ = "1.3"
+logger = logging.getLogger(__name__)
 
 
 async def generate_images(
@@ -28,7 +31,7 @@ async def generate_images(
     for f in filename:
         await queue.put(f)
 
-    click.echo("All task requests sent")
+    logger.info("All task requests sent")
 
 
 async def rotate_image(queue: asyncio.Queue) -> None:
@@ -36,19 +39,22 @@ async def rotate_image(queue: asyncio.Queue) -> None:
 
     while True:
         filename: str = await queue.get()
-        click.echo(f"Working on {filename}", err=True)
+        logger.info(f"Working on {filename}")
         try:
             image = Image.open(filename)
             if image.width <= image.height:
                 # already portrait
-                click.echo(f"Skip {filename}", err=True)
+                logger.info(f"Skip {filename}")
                 continue
 
             image_new = image.rotate(-90, expand=True)
-            click.echo(f"Saving {filename}", err=True)
+            logger.info(f"Saving {filename}")
             image_new.save(filename)
         except Exception as e:
-            click.secho(f"Error: {e}", err=True, fg="red")
+            # PIL.UnidentifiedImageError: The image cannot be opened and identified.
+            # ValueError: The output format could not be determined from the file name.
+            # OSError: The file may have been created, and may contain partial data.
+            logger.warning(f"Warning: {e}")
         finally:
             queue.task_done()
 
@@ -72,7 +78,7 @@ async def amain(filename: Sequence[pathlib.Path], num_consumers: int) -> None:
 
     # block until all tasks are done
     await queue.join()
-    click.echo("All work completed")
+    logger.info("All work completed")
 
     await terminate_consumers(consumers)
 
@@ -94,15 +100,29 @@ async def amain(filename: Sequence[pathlib.Path], num_consumers: int) -> None:
     help="output version information and exit",
 )
 @click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="output a diagnostic for every file processed",
+)
+@click.option(
     "-n",
     "--num-consumers",
     type=int,
     default=3,
     help="the number of consumers",
 )
-def main(filename: Sequence[pathlib.Path], num_consumers: int) -> None:
+def main(
+    filename: Sequence[pathlib.Path],
+    num_consumers: int,
+    verbose: bool,
+) -> None:
     """Make landscape images portrait."""
 
+    logger.addHandler(logging.StreamHandler(sys.stderr))
+    if verbose:
+        logger.setLevel(logging.DEBUG)
     asyncio.run(amain(filename, num_consumers))
 
 
