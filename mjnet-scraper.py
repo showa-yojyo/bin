@@ -25,7 +25,7 @@ from scrapy.shell import inspect_response
 import yaml  # type: ignore
 
 
-__version__ = "2.0"
+__version__ = "2.0.1"
 
 APP_NAME = "mjnet-scraper"
 
@@ -301,7 +301,7 @@ def configure(
     "--config",
     type=click.Path(exists=True, path_type=pathlib.Path),
     default=None,
-    metavar="FILE",
+    metavar="PATH",
     callback=configure,
     is_eager=True,
     expose_value=False,
@@ -315,7 +315,10 @@ def configure(
     metavar="NAME",
     help="your user name for MJ.NET account",
 )
-@click.password_option(help="your password for MJ.NET account")
+@click.password_option(
+    metavar="PASSWORD",
+    help="your password for MJ.NET account",
+)
 @click.option(
     "-g",
     "--game-mode",
@@ -342,7 +345,7 @@ def main(user: str, password: str, game_mode: str) -> None:
         f"password={password}",
         "-a",
         f"game_mode={game_mode}",
-        "--nolog"
+        "--nolog",
     ]
 
     cmdline.execute(command)
