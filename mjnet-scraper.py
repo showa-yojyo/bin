@@ -4,25 +4,39 @@
 Sign in MJ.NET and scrape today's result.
 """
 
-from collections.abc import MutableMapping
-from getpass import getpass
+from __future__ import annotations
 import os.path
+import pathlib
+from string import Template
 import sys
-from typing import Any, Iterator, Self
+from typing import TYPE_CHECKING
 
-from scrapy import cmdline, Request, Spider, FormRequest  # type: ignore
-from scrapy.http import Response  # type: ignore
-from scrapy.linkextractors import LinkExtractor  # type: ignore
-from scrapy.selector import Selector  # type: ignore
-from scrapy.shell import inspect_response  # type: ignore
-import yaml
+if TYPE_CHECKING:
+    from collections.abc import MutableMapping
+    from typing import Any, Iterator, Self
+
+import click
+
+from scrapy import cmdline, Request, Spider, FormRequest
+from scrapy.http import Response, TextResponse
+from scrapy.linkextractors import LinkExtractor
+from scrapy.selector import Selector
+from scrapy.shell import inspect_response
+import yaml  # type: ignore
+
+
+__version__ = "2.0"
+
+APP_NAME = "mjnet-scraper"
 
 DEFAULT_CREDENTIALS_PATH = (
-    "$XDG_CONFIG_HOME/mjnet_auto/mjnet_auto.yaml",
-    "$HOME/.config/mjnet_auto/mjnet_auto.yaml",
-    "$HOME/.mjnet_auto/mjnet_auto.yaml",
-    "$HOME/mjnet_auto.yaml",
+    f"$XDG_CONFIG_HOME/{APP_NAME}/{APP_NAME}.yaml",
+    f"$HOME/.config/{APP_NAME}/{APP_NAME}.yaml",
+    f"$HOME/.{APP_NAME}/{APP_NAME}.yaml",
+    f"$HOME/{APP_NAME}.yaml",
 )
+
+HEADING_COLOR = "bright_green"
 
 MJ_NET_URL = "https://www.sega-mj.net/mjac_p"
 MJ_NET_URL_SIGN_IN = f"{MJ_NET_URL}/mjlogin/login.jsp"
@@ -45,12 +59,14 @@ GAME_MODE_PROFESSIONAL = "professional"
 class MjscoreSpider(Spider):
     """MJ.NET"""
 
-    name = "mjnet"
+    name = APP_NAME
     allowed_domains = ["www.sega-mj.net"]
     start_urls = [MJ_NET_URL_SIGN_IN]
 
     def parse(self: Self, response: Response, **kwargs) -> FormRequest:
         """Pass the login page of MJ.NET"""
+
+        assert isinstance(response, TextResponse)
 
         return FormRequest.from_response(
             response,
@@ -80,6 +96,8 @@ class MjscoreSpider(Spider):
     def _play_data(self: Self, response: Response) -> Iterator[Request]:
         """Navigate to the page 一般卓東風戦 or プロ卓東風戦"""
 
+        assert isinstance(response, TextResponse)
+
         ext = LinkExtractor(restrict_text="東風戦")
         links = ext.extract_links(response)
         if len(links) == 1:
@@ -97,6 +115,8 @@ class MjscoreSpider(Spider):
     def _tompu_games(self: Self, response: Response) -> Iterator[Request]:
         """Navigate to the daily record page"""
 
+        assert isinstance(response, TextResponse)
+
         ext = LinkExtractor(restrict_text="デイリー戦績")
         links = ext.extract_links(response)
         yield response.follow(links[0].url, self.parse_daily_score)
@@ -104,7 +124,9 @@ class MjscoreSpider(Spider):
     def parse_daily_score(self: Self, response: Response) -> Iterator[Request]:
         """Scraping method"""
 
-        item: MutableMapping[str, str] = {}
+        assert isinstance(response, TextResponse)
+
+        item: MutableMapping[str, str] = {}  # TODO: typing
         selector: Selector = response.selector
         parse_score(selector, item)
         parse_recent_level(selector, item)
@@ -113,7 +135,7 @@ class MjscoreSpider(Spider):
         parse_stats(selector, item)
         parse_best(selector, item)
 
-        yield item
+        yield item  # type: ignore[misc]
 
         if link := response.xpath(XPATH_BEST_MAHJONG).get():
             yield response.follow(link, self.parse_best_mahjong)
@@ -135,11 +157,11 @@ def parse_score(selector: Selector, item: MutableMapping[str, str]) -> None:
     """Parse 【SCORE】"""
 
     value = selector.xpath('//font[text() = "【SCORE】"]/following::text()').get()
-    item["score"] = value.strip()
+    item["score"] = value.strip() if value else ""
 
-    print("【SCORE】")
-    print(item["score"])
-    print()
+    click.secho("【SCORE】", fg=HEADING_COLOR)
+    click.echo(item["score"])
+    click.echo()
 
 
 # 【最終段位】
@@ -148,11 +170,11 @@ def parse_recent_level(selector: Selector, item: MutableMapping[str, str]) -> No
     """Parse 【最終段位】"""
 
     value = selector.xpath('//font[text() = "【最終段位】"]/following::text()').get()
-    item["recent_level"] = value.strip()
+    item["recent_level"] = value.strip() if value else ""
 
-    print("【最終段位】")
-    print(item["recent_level"])
-    print()
+    click.secho("【最終段位】", fg=HEADING_COLOR)
+    click.echo(item["recent_level"])
+    click.echo()
 
 
 # 【3/9の最新8試合の履歴】
@@ -165,7 +187,8 @@ def parse_recent_level(selector: Selector, item: MutableMapping[str, str]) -> No
 def parse_history(selector: Selector, item: MutableMapping[str, str]) -> None:
     """Parse 【m/dの最新8試合の履歴】"""
 
-    title = selector.xpath('//font[contains(.,"履歴")]/text()').get().strip()
+    xp = selector.xpath('//font[contains(.,"履歴")]/text()').get()
+    title = xp.strip() if xp else ""
 
     values = selector.xpath(
         '//text()[preceding::font[contains(.,"履歴")]][following::font[text()="【順位】"]]'
@@ -174,9 +197,9 @@ def parse_history(selector: Selector, item: MutableMapping[str, str]) -> None:
         istripped for i in values if (istripped := i.strip())
     ).replace("\nE", "E")
 
-    print(title)
-    print(item["history"])
-    print()
+    click.secho(title, fg=HEADING_COLOR)
+    click.echo(item["history"])
+    click.echo()
 
 
 # 【順位】
@@ -195,9 +218,9 @@ def parse_ranks(selector: Selector, item: MutableMapping[str, str]) -> None:
     ).getall()
     item["rank"] = "\n".join(i.strip() for i in values)
 
-    print("【順位】")
-    print(item["rank"])
-    print()
+    click.secho("【順位】", fg=HEADING_COLOR)
+    click.echo(item["rank"])
+    click.echo()
 
 
 # 【打ち筋】
@@ -213,9 +236,9 @@ def parse_stats(selector: Selector, item: MutableMapping[str, str]) -> None:
     ).getall()
     item["stats"] = "\n".join(istripped for i in values if (istripped := i.strip()))
 
-    print("【打ち筋】")
-    print(item["stats"])
-    print()
+    click.secho("【打ち筋】", fg=HEADING_COLOR)
+    click.echo(item["stats"])
+    click.echo()
 
 
 # 【3/9の最高役】--> //font[contains(.,"最高役")]/following-sibling::text()
@@ -223,7 +246,8 @@ def parse_stats(selector: Selector, item: MutableMapping[str, str]) -> None:
 def parse_best(selector: Selector, item: MutableMapping[str, str]) -> None:
     """Parse 【m/dの最高役】"""
 
-    title = selector.xpath('//font[contains(.,"最高役")]/text()').get().strip()
+    xp = selector.xpath('//font[contains(.,"最高役")]/text()').get()
+    title = xp.strip() if xp else ""
 
     # TODO: まだよくわからない
     # values = selector.xpath('//font[contains(.,"最高役")]/following-sibling::text()').getall()
@@ -234,59 +258,93 @@ def parse_best(selector: Selector, item: MutableMapping[str, str]) -> None:
         istripped for i in values if (istripped := i.strip())
     ).replace("・\n", "・")
 
-    print(title)
-    print(item["best"])
-    print()
+    click.secho(title, fg=HEADING_COLOR)
+    click.echo(item["best"])
+    click.echo()
 
 
-def read_credentials() -> Any:
-    """Try to read the ID and password from
+def configure(
+    ctx: click.Context,
+    param: click.Parameter,
+    value: Any,
+) -> Any:
+    """Try to read the ID and password."""
 
-    #. `$XDG_CONFIG_HOME/mjnet_auto/mjnet_auto.yaml`,
-    #. `$HOME/.config/mjnet_auto/mjnet_auto.yaml`,
-    #. `$HOME/.mjnet_auto/mjnet_auto.yaml` or
-    #. `$HOME/mjnet_auto.yaml`.
+    if value:
+        assert isinstance(value, pathlib.Path)
+        with open(value, mode="r") as fin:
+            ctx.default_map = yaml.safe_load(fin)
+        return value
 
-    When PyYAML is not available, this function siliently exits and returns
-    none.
-    """
-
-    for path in DEFAULT_CREDENTIALS_PATH:
+    for p in DEFAULT_CREDENTIALS_PATH:
+        path = Template(p).substitute(os.environ)
         try:
-            path = os.path.expandvars(path)
             with open(path, mode="r") as fin:
-                return yaml.safe_load(fin)
+                ctx.default_map = yaml.safe_load(fin)
+                return value
         except OSError:
             pass
 
+    return value
 
-def main() -> None:
-    """Receive account information and run spider"""
 
-    game_mode = GAME_MODE_PROFESSIONAL
-    if len(sys.argv) == 2 and sys.argv[1] == "--standard":
-        game_mode = GAME_MODE_STANDARD
-
-    if credentials := read_credentials():
-        user_id = credentials["uid"]
-        password = credentials["password"]
-    else:
-        user_id = input("Enter user id for MJ.NET: ")
-        password = getpass("Enter password: ")
+@click.command()
+@click.help_option(
+    help="display this message and exit",
+)
+@click.version_option(
+    __version__,
+    help="output version information and exit",
+)
+@click.option(
+    "-c",
+    "--config",
+    type=click.Path(exists=True, path_type=pathlib.Path),
+    default=None,
+    metavar="FILE",
+    callback=configure,
+    is_eager=True,
+    expose_value=False,
+    help="path to config file",
+)
+@click.option(
+    "-u",
+    "--user",
+    prompt=True,
+    hide_input=False,
+    metavar="NAME",
+    help="your user name for MJ.NET account",
+)
+@click.password_option(help="your password for MJ.NET account")
+@click.option(
+    "-g",
+    "--game-mode",
+    type=click.Choice(
+        (
+            "professional",
+            "standard",
+        ),
+        case_sensitive=False,
+    ),
+    default="professional",
+    help="which mode to scrape プロ卓東風 or 一般卓東風",
+)
+def main(user: str, password: str, game_mode: str) -> None:
+    """Sign in MJ.NET and scrape my stats of last games."""
 
     command = [
         "scrapy",
         "runspider",
         sys.argv[0],
         "-a",
-        f"uid={user_id}",
+        f"uid={user}",
         "-a",
         f"password={password}",
         "-a",
         f"game_mode={game_mode}",
+        "--nolog"
     ]
 
-    # To suppress log text from scrapy, use 2>/dev/null redirection
     cmdline.execute(command)
 
 
