@@ -13,7 +13,7 @@ from urllib import parse, request
 from bs4 import BeautifulSoup, Tag  # type: ignore
 import click
 
-__version__ = "1.4"
+__version__ = "1.4.1"
 
 CSV_HEADER = (
     "名前",
@@ -52,10 +52,17 @@ def parse_item(item: Tag) -> Sequence[str]:
     laundry: str = "1" if has_laundry(item) else "0"
     office_hours: str = get_column_value(item, "営業時間")
 
-    return [name, location, access, holidays, laundry, office_hours]
+    return (
+        name,
+        location,
+        access,
+        holidays,
+        laundry,
+        office_hours,
+    )
 
 
-async def fetch(ku: str, page: int):
+async def fetch(ku: str, page: int) -> list[None]:
     """Fetch all the data"""
 
     click.echo(SEP.join(CSV_HEADER))
@@ -64,7 +71,7 @@ async def fetch(ku: str, page: int):
     )
 
 
-async def scrape(url) -> None:
+async def scrape(url: str) -> None:
     """Scrape the page located in url"""
 
     soup: BeautifulSoup
