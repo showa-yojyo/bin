@@ -16,7 +16,7 @@ import click
     "-f",
     "--format",
     type=click.Choice(
-        ["json", "jsonline", "xml", "csv"],
+        ("json", "jsonline", "xml", "csv"),
         case_sensitive=False,
     ),
     default="json",

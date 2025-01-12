@@ -1,10 +1,10 @@
-"""__init__.py: Language-dependent features.
-"""
+"""__init__.py: Language-dependent features."""
 
 from importlib import import_module
 from types import ModuleType
 
 module_cache: dict[str, ModuleType] = {}
+
 
 def get_language(lang_code: str) -> ModuleType:
     """Return module with language localizations.
@@ -17,9 +17,10 @@ def get_language(lang_code: str) -> ModuleType:
         return module_cache[lang_code]
 
     try:
-        module = import_module('.' + lang_code, __name__)
+        module = import_module("." + lang_code, __name__)
     except ImportError:
         from . import en
+
         module = en
 
     module_cache[lang_code] = module
