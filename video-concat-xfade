@@ -6,17 +6,17 @@
 # <https://gist.github.com/royshil/369e175960718b5a03e40f279b131788>
 from __future__ import annotations
 
-from argparse import ArgumentParser, Namespace
 import itertools
+import pathlib
 import subprocess
-import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
-    from typing import Never
 
-__version__ = "1.9.0"
+import click
+
+__version__ = "1.10.0"
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -38,98 +38,91 @@ AUDIO_NORMALIZE = "aresample=async=1:first_pts=0,asetpts=PTS,asettb=AVTB,apad"
 AUDIO_REDUCE_NOISE = "highpass=f=200,lowpass=f=3000"
 
 
-def parse_args(args: Sequence[str]) -> Namespace:
-    """Parse the command line parameters.
-
-    Returns:
-        An instance of argparse.ArgumentParser that stores the command line
-        parameters.
-    """
-
-    parser = ArgumentParser(
-        description='Concatenate videos with FFMPEG, add "xfade" between segments.'
-    )
-    parser.add_argument("--version", action="version", version=__version__)
-    parser.add_argument(
-        "--segments_file",
-        "-f",
-        metavar="Segments file",
-        type=str,
-        nargs=1,
-        help='Segments text file for concatenating. e.g. "segments.txt"',
-    )
-    parser.add_argument(
-        "--output",
-        "-o",
-        dest="output_filename",
-        type=str,
-        default="out.mp4",
-        help='output filename to provide to ffmpeg. default="out.mp4"',
-    )
-    parser.add_argument(
-        "--concat-audio-path",
-        dest="concat_audio_path",
-        type=str,
-        default=CONCAT_AUDIO_PATH,
-        help=f'default="{CONCAT_AUDIO_PATH}"',
-    )
-    parser.add_argument(
-        "--concat-video-path",
-        dest="concat_video_path",
-        type=str,
-        default=CONCAT_VIDEO_PATH,
-        help=f'default="{CONCAT_VIDEO_PATH}"',
-    )
-    parser.add_argument(
-        "--command-audio-path",
-        dest="command_audio_path",
-        type=str,
-        default=COMMAND_AUDIO_PATH,
-        help=f'default="{COMMAND_AUDIO_PATH}"',
-    )
-    parser.add_argument(
-        "--command-video-path",
-        dest="command_video_path",
-        type=str,
-        default=COMMAND_VIDEO_PATH,
-        help=f'default="{COMMAND_VIDEO_PATH}"',
-    )
-    parser.add_argument(
-        "--overlay-image-path",
-        dest="overlay_path",
-        type=str,
-        default=OVERLAY_IMAGE_PATH,
-        help=f'default="{OVERLAY_IMAGE_PATH}"',
-    )
-    parser.add_argument(
-        "--overlay-style",
-        dest="overlay_style",
-        type=str,
-        choices=[
+@click.command()
+@click.argument(
+    "source",
+    type=click.Path(exists=True, path_type=pathlib.Path),
+    nargs=-1,
+    metavar="source",
+)
+@click.help_option(help="show this message and exit")
+@click.version_option(__version__, help="show the version and exit")
+@click.option(
+    "-f",
+    "--segments-file",
+    metavar="file",
+    type=click.Path(exists=True, path_type=pathlib.Path),
+    nargs=1,
+    help='segments text file for concatenating. e.g. "segments.txt"',
+)
+@click.option(
+    "--concat-audio-path",
+    type=click.Path(writable=True, path_type=pathlib.Path),
+    default=CONCAT_AUDIO_PATH,
+    show_default=True,
+    help="path to output audio-only file",
+)
+@click.option(
+    "--concat-video-path",
+    type=click.Path(writable=True, path_type=pathlib.Path),
+    default=CONCAT_VIDEO_PATH,
+    show_default=True,
+    help="path to output video-only file",
+)
+@click.option(
+    "--command-audio-path",
+    type=click.Path(writable=True, path_type=pathlib.Path),
+    default=COMMAND_AUDIO_PATH,
+    show_default=True,
+    help="path to output script file to concat audio files",
+)
+@click.option(
+    "--command-video-path",
+    type=click.Path(writable=True, path_type=pathlib.Path),
+    default=COMMAND_VIDEO_PATH,
+    show_default=True,
+    help="path to output script file to concat video files",
+)
+@click.option(
+    "--overlay-image-path",
+    type=click.Path(exists=True, path_type=pathlib.Path),
+    default=OVERLAY_IMAGE_PATH,
+    show_default=True,
+    help="path to overlaying image file",
+)
+@click.option(
+    "--overlay-style",
+    type=click.Choice(
+        (
             "overlay",
             "softlight",
-        ],
-        default="overlay",
-        help='default="overlay"',
-    )
-    parser.add_argument("segments", nargs="+")
+        ),
+        case_sensitive=False,
+    ),
+    default="overlay",
+    help='default="overlay"',
+)
+def main(
+    source: Sequence[pathlib.Path],
+    segments_file: pathlib.Path,
+    concat_audio_path: pathlib.Path,
+    concat_video_path: pathlib.Path,
+    command_audio_path: pathlib.Path,
+    command_video_path: pathlib.Path,
+    overlay_image_path: pathlib.Path,
+    overlay_style: str,
+) -> None:
+    """Concatenate videos with FFMPEG, add "xfade" between segments."""
 
-    return parser.parse_args(args or ["--help"])
-
-
-def run(args: Namespace):
-    """The main function"""
-
-    if args.segments_file:
-        with open(args.segments_file[0], "r") as seg_file:
+    segments = source
+    if segments_file:
+        with segments_file.open("r") as fp:
             # cut the `file '` prefix and `'` postfix
             segments = [
-                line[6:-2]
-                for line in seg_file.readlines()
+                pathlib.Path(line[6:-2])
+                for line in fp.readlines()
                 if len(line.strip()) > 0 and line[0] != "#"
             ]
-    else:
-        segments = args.segments
 
     # Get the lengths of the videos in seconds
     file_lengths = [
@@ -143,7 +136,7 @@ def run(args: Namespace):
                     "format=duration",
                     "-of",
                     "default=noprint_wrappers=1:nokey=1",
-                    f,
+                    f.as_posix(),
                 ],
                 capture_output=True,
             ).stdout.splitlines()[0]
@@ -189,7 +182,7 @@ def run(args: Namespace):
 
     # overlay a still image (e.g. -i title.png)
     video_fades += f"[{last_fade_output}]fade=t=out:st={video_length:.4f}:d={XFADE_DURATION}[vv];\n"
-    match args.overlay_style:
+    match overlay_style:
         case "overlay":
             video_fades += f"[vv][v{i_overlay}]overlay=enable='between(t,0,10)'"
         case "softlight":
@@ -198,7 +191,7 @@ def run(args: Namespace):
     # Assemble the FFMPEG command arguments
 
     # File inputs from the list
-    files_input = [["-i", f] for f in segments]
+    files_input = [["-i", f.as_posix()] for f in segments]
 
     # Audio
     audio_fades += f"[{last_audio_output}]afade=t=out:st={video_length:.4f}:d={ACROSSFADE_DURATION}"
@@ -215,9 +208,9 @@ def run(args: Namespace):
         "44100",
         "-ac",
         "2",
-        args.concat_audio_path,
+        concat_audio_path.as_posix(),
     ]
-    write_command_line(command, args.command_audio_path)
+    write_command_line(command, command_audio_path)
 
     # Video
     command = [
@@ -225,7 +218,7 @@ def run(args: Namespace):
         "-y",
         *itertools.chain(*files_input),
         "-i",
-        args.overlay_path,
+        overlay_image_path.as_posix(),
         "-filter_complex",
         f'"{video_normalizer}{video_fades}"',
         "-c:v",
@@ -241,50 +234,16 @@ def run(args: Namespace):
         "-bufsize",
         "1M",
         "-an",
-        args.concat_video_path,
+        concat_video_path.as_posix(),
     ]
-    write_command_line(command, args.command_video_path)
-
-    # Final command
-
-    command = [
-        FFMPEG_PATH,
-        "-y",
-        "-i",
-        args.concat_video_path,
-        "-i",
-        args.concat_audio_path,
-        "-c:v",
-        "copy",
-        "-c:a",
-        "aac",
-        "-map",
-        "0:v:0",
-        "-map",
-        "1:a:0",
-        "-movflags",
-        "+faststart",
-        args.output_filename,
-    ]
-    print(" ".join(command))
-
-    # Run FFMPEG
-    ##subprocess.run(command)
+    write_command_line(command, command_video_path)
 
 
-def write_command_line(command_line: Iterable[str], path: str) -> None:
+def write_command_line(command_line: Iterable[str], path: pathlib.Path) -> None:
     """TBD"""
 
-    with open(path, "w") as fout:
-        print(" ".join(command_line), file=fout)
-        print(file=fout)
-
-    # Run FFMPEG
-    ##subprocess.run(command_line)
-
-
-def main(args: Sequence[str] = sys.argv[1:]) -> Never:
-    sys.exit(run(parse_args(args)))
+    with path.open("w") as fout:
+        fout.write(f"{' '.join(command_line)}\n")
 
 
 if __name__ == "__main__":
