@@ -5,7 +5,7 @@ myscrapy.py: a wrapper module of Scrapy
 from __future__ import annotations
 import sys
 
-from scrapy import cmdline  # type: ignore
+from scrapy import cmdline
 
 import click
 

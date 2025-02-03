@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 
+from __future__ import annotations
 from hashlib import md5
 from os import remove, rename
 import pathlib
-from typing import Iterable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Iterable
 
 import click
 
@@ -26,11 +30,11 @@ def newname(data: bytes, path: pathlib.Path) -> pathlib.Path:
     is_flag=True,
     help="Don't actually rename; just print them.",
 )
-def main(paths: Iterable[click.Path], dry_run: bool) -> None:
+def main(paths: Iterable[pathlib.Path], dry_run: bool) -> None:
     """Rename files to their hash values."""
 
     for old_path in paths:
-        with open(old_path, mode="rb") as input:
+        with old_path.open(mode="rb") as input:
             data = input.read()
         try:
             if dry_run:

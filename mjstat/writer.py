@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 from itertools import product
-from jinja2 import Environment
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from collections.abc import Collection
@@ -11,7 +10,8 @@ if TYPE_CHECKING:
 
 from types import ModuleType
 
-from docutils.io import Output  # type: ignore
+from docutils.io import Output  # type: ignore[import-untyped]
+from jinja2 import Environment
 
 from .languages import get_language
 from .model import YakuTable
@@ -50,7 +50,7 @@ class MJScoreWriter(object):
         self.destination = destination
 
         self.translate()
-        return self.destination.write(self.output)
+        return cast(str, self.destination.write(self.output))
 
     def translate(self: Self) -> None:
         """Translate `self.game_data` into `self.output`."""
@@ -81,15 +81,13 @@ class MJScoreWriter(object):
 
         evaluators: list[EvaluatorType] = []
         if settings.fundamental:
-            evaluators.extend(
-                (
-                    evaluate_placing,
-                    evaluate_winning,
-                    evaluate_losing,
-                    evaluate_riichi,
-                    evaluate_melding,
-                )
-            )
+            evaluators.extend((
+                evaluate_placing,
+                evaluate_winning,
+                evaluate_losing,
+                evaluate_riichi,
+                evaluate_melding,
+            ))
         if settings.yaku:
             evaluators.append(evaluate_yaku_frequency)
 
@@ -116,7 +114,10 @@ def format_percentage(val: float) -> str:
 
 
 def fill_template(
-    player_data: Sequence[PlayerData], lang: ModuleType, fundamental: bool, yaku: bool
+    player_data: Sequence[PlayerData],
+    lang: ModuleType,
+    fundamental: bool,
+    yaku: bool,
 ) -> str:
     """Build long text which shows the statistics of the target
     player(s).

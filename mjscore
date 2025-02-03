@@ -13,16 +13,17 @@ from __future__ import annotations
 from argparse import Namespace
 from configparser import ConfigParser
 import pathlib
+#from typing import TYPE_CHECKING
 
 import click
 
-from docutils.io import StringInput, FileInput, FileOutput, Input  # type: ignore
+from docutils.io import StringInput, FileInput, FileOutput, Input  # type: ignore[import-untyped]
 from mjstat.reader import MJScoreReader
 from mjstat.parser import MJScoreParser
 from mjstat.writer import MJScoreWriter
 from mjstat.model import apply_transforms, merge_games
 
-__version__ = "1.1"
+__version__ = "1.1.1"
 
 APP_NAME = "mjscore"
 
@@ -113,7 +114,7 @@ def read_settings(
     help="path to config file",
 )
 @click.pass_context
-def main(ctx: click.Context, *args, **kwargs) -> int:
+def main(ctx: click.Context, /, *args: str, **kwargs: str) -> int:
     """A simple parser for mjscore.txt.
 
     \b
@@ -161,12 +162,12 @@ def main(ctx: click.Context, *args, **kwargs) -> int:
     parser = MJScoreParser()
     reader = MJScoreReader()
 
-    game_data_list = tuple(reader.read(src, parser, nskwargs) for src in sources)  # type: ignore[arg-type]
+    game_data_list = tuple(reader.read(src, parser, nskwargs) for src in sources)
     game_data = merge_games(game_data_list)
     apply_transforms(game_data)
 
     writer = MJScoreWriter()
-    writer.write(game_data, FileOutput(None))  # type: ignore[arg-type]
+    writer.write(game_data, FileOutput(None))
     return 0
 
 

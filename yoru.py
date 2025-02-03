@@ -8,12 +8,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterator, Mapping, Self
+    from typing import Any, Iterator, Mapping, Self
 
-from scrapy import Request  # type: ignore
-from scrapy.http import Response  # type: ignore
-from scrapy.linkextractors import LinkExtractor  # type: ignore
-from scrapy.spiders import CrawlSpider, Rule  # type: ignore
+from scrapy.linkextractors import LinkExtractor  # type: ignore[attr-defined]
+from scrapy.spiders import CrawlSpider, Rule  # type: ignore[attr-defined]
+
+if TYPE_CHECKING:
+    from scrapy import Request
+    from scrapy.http import Response  # type: ignore[attr-defined]
 
 import myscrapy
 
@@ -45,7 +47,7 @@ class EromangaYoruSpider(CrawlSpider):
         url = f"https://{TARGET_DOMAIN}/tag/{self.tag}"  # type: ignore[attr-defined]
         yield Request(url, dont_filter=True)
 
-    def parse_article(self: Self, response: Response) -> Iterator[Mapping]:
+    def parse_article(self: Self, response: Response) -> Iterator[Mapping[str, Any]]:
         """No description"""
 
         post_url = response.url

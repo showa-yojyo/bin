@@ -405,7 +405,7 @@ def evaluate_yaku_frequency(player_data: PlayerData) -> None:
     )
 
     # Class collections.Counter is useful here.
-    yaku_counter: Counter = Counter()
+    yaku_counter = Counter[list[Any]]()
     for i in yaku_lists:
         yaku_counter.update(i)
 

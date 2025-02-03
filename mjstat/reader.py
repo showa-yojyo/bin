@@ -7,16 +7,16 @@ if TYPE_CHECKING:
     from argparse import Namespace
     from typing import Any, Self
 
-from docutils.readers import Reader  # type: ignore
+from docutils.readers import Reader  # type: ignore[import-untyped]
 from .model import create_score_records
 
 
-class MJScoreReader(Reader):
+class MJScoreReader(Reader):  # type: ignore[misc]
     """Read and parse the content of mjscore.txt."""
 
     def __init__(self: Self) -> None:
         super().__init__()
-        self.document = None  # type: ignore[assignment]
+        self.document = None
 
     def get_transforms(self: Self) -> None:
         pass
@@ -30,5 +30,5 @@ class MJScoreReader(Reader):
         parser.parse(self.input, document)
 
     def new_document(self: Self) -> dict[str, Any]:
-        settings: Namespace = self.settings  # type: ignore[attr-defined]
+        settings: Namespace = self.settings
         return create_score_records(settings)

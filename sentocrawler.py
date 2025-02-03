@@ -13,11 +13,11 @@ if TYPE_CHECKING:
     from typing import Iterator, Mapping, Self
 
 from scrapy import cmdline
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor  # type: ignore[attr-defined]
+from scrapy.spiders import CrawlSpider, Rule  # type: ignore[attr-defined]
 
 if TYPE_CHECKING:
-    from scrapy.http import Response
+    from scrapy.http import Response  # type: ignore[attr-defined]
 
 import click
 
@@ -40,7 +40,7 @@ class SentoListSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_xpaths='//div[@class="wp-pagenavi"]/a')),
     )
 
-    def parse_entry(self: Self, response: Response) -> Iterator[Mapping]:
+    def parse_entry(self: Self, response: Response) -> Iterator[Mapping[str, str]]:
         """No descrpition"""
 
         def safe_xpath(xpath: str) -> str:
