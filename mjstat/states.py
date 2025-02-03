@@ -24,19 +24,17 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Any, Self
 
-from docutils.statemachine import State  # type: ignore
+from docutils.statemachine import State  # type: ignore[import-untyped]
 from .model import create_game_record, create_hand_record, YAKU_MAP
 
 type Context = dict[str, Any]
-type TransitionResult = tuple[Any, str, list]
+type TransitionResult = tuple[Any, str, list[Any]]
 
 # pylint: disable=unused-argument, no-self-use
 
 
-class MJScoreState(State):
+class MJScoreState(State):  # type: ignore[misc]
     """Base class of state classes."""
-
-    pass
 
 
 class GameOpening(MJScoreState):

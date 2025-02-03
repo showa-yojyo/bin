@@ -16,14 +16,13 @@ from __future__ import annotations
 
 import calendar
 import datetime
-import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterator, Self, Sequence
+    from typing import Iterator, Self
 
 import click
-import jpholiday  # type: ignore
+import jpholiday  # type: ignore[import-untyped]
 
 ONEDAY = datetime.timedelta(days=1)
 
@@ -41,19 +40,19 @@ def last_business_day(year: int) -> Iterator[datetime.datetime]:
         yield d
 
 
-class TestHoliday(jpholiday.OriginalHoliday):
+class TestHoliday(jpholiday.OriginalHoliday):  # type: ignore[misc]
     def _is_holiday(self: Self, d: datetime.datetime) -> bool:
         match d.month:
             case calendar.JANUARY:
-                return d.day in (2, 3)
+                return d.day in {2, 3}
             case calendar.DECEMBER:
-                return d.day in (29, 30, 31)
+                return d.day in {29, 30, 31}
             case _:
                 return False
 
 
 def is_holiday(d: datetime.datetime) -> bool:
-    return jpholiday.is_holiday(d)
+    return jpholiday.is_holiday(d)  # type: ignore[no-any-return]
 
 
 @click.command()

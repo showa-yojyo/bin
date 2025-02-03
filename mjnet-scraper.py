@@ -5,7 +5,7 @@ Sign in MJ.NET and scrape today's result.
 """
 
 from __future__ import annotations
-import os.path
+import os
 import pathlib
 from string import Template
 import sys
@@ -13,19 +13,21 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
-    from typing import Any, Iterator, Self
+    from typing import Any, Self
 
 import click
 
-from scrapy import cmdline, Request, Spider, FormRequest
-from scrapy.http import Response, TextResponse
-from scrapy.linkextractors import LinkExtractor
-from scrapy.selector import Selector
+from scrapy import cmdline, FormRequest, Spider
+from scrapy.http import TextResponse  # type: ignore[attr-defined]
+from scrapy.linkextractors import LinkExtractor  # type: ignore[attr-defined]
 from scrapy.shell import inspect_response
-import yaml  # type: ignore
+import yaml  # type: ignore[import-untyped]
 
+if TYPE_CHECKING:
+    from scrapy.http import Response  # type: ignore[attr-defined]
+    from scrapy.selector import Selector  # type: ignore[attr-defined]
 
-__version__ = "2.0.1"
+__version__ = "2.1.0"
 
 APP_NAME = "mjnet-scraper"
 
@@ -56,14 +58,14 @@ GAME_MODE_STANDARD = "standard"
 GAME_MODE_PROFESSIONAL = "professional"
 
 
-class MjscoreSpider(Spider):
+class MJScoreSpider(Spider):
     """MJ.NET"""
 
     name = APP_NAME
     allowed_domains = ["www.sega-mj.net"]
     start_urls = [MJ_NET_URL_SIGN_IN]
 
-    def parse(self: Self, response: Response, **kwargs) -> FormRequest:
+    def parse(self: Self, response: Response, **_kwargs: Any) -> Any:
         """Pass the login page of MJ.NET"""
 
         assert isinstance(response, TextResponse)
@@ -77,23 +79,47 @@ class MjscoreSpider(Spider):
             callback=self._after_login,
         )
 
-    def _after_login(self: Self, response: Response) -> Iterator[Request]:
+    def _after_login(
+        self: Self,
+        response: Response,
+        *_args: Any,
+        **_kwargs: Any,
+    ) -> Any:
         """Nagivate to the top page"""
 
         self.logger.info("_after_login")
         self.logger.info(response.url)
 
         if response.url == MJ_NET_URL_SIGN_IN_DO:
-            yield response.follow(MJ_NET_URL_TOP_PAGE, self._top_page)
+            yield response.follow(
+                MJ_NET_URL_TOP_PAGE,
+                self._top_page,  # type: ignore[arg-type]
+            )
         else:
-            yield response.follow(MJ_NET_URL_SIGN_IN_DO, self._after_login)
+            yield response.follow(
+                MJ_NET_URL_SIGN_IN_DO,
+                self._after_login,  # type: ignore[arg-type]
+            )
 
-    def _top_page(self: Self, response: Response) -> Iterator[Request]:
+    def _top_page(
+        self: Self,
+        response: Response,
+        *_args: Any,
+        **_kwargs: Any,
+    ) -> Any:
         """Navigate to the player data page"""
 
-        yield response.follow(MJ_NET_URL_PLAYER_DATA_PAGE, self._play_data)
+        yield response.follow(
+            MJ_NET_URL_PLAYER_DATA_PAGE,
+            self._play_data,  # type: ignore[arg-type]
+        )
 
-    def _play_data(self: Self, response: Response) -> Iterator[Request]:
+    def _play_data(
+        self: Self,
+        response: Response,
+        *_args: Any,
+        **_kwargs: Any,
+    ) -> Any:
         """Navigate to the page 一般卓東風戦 or プロ卓東風戦"""
 
         assert isinstance(response, TextResponse)
@@ -105,28 +131,39 @@ class MjscoreSpider(Spider):
             inspect_response(response, self)
             return
 
-        game_mode = getattr(self, "game_mode")
-        if game_mode == GAME_MODE_PROFESSIONAL:
-            link_index = -1
-        else:
-            link_index = 0
-        yield response.follow(links[link_index].url, self._tompu_games)
+        link_index = -1 if getattr(self, "game_mode") == GAME_MODE_PROFESSIONAL else 0
+        yield response.follow(
+            links[link_index].url,
+            self._tompu_games,  # type: ignore[arg-type]
+        )
 
-    def _tompu_games(self: Self, response: Response) -> Iterator[Request]:
+    def _tompu_games(
+        self: Self,
+        response: Response,
+        *_args: Any,
+        **_kwargs: Any,
+    ) -> Any:
         """Navigate to the daily record page"""
 
-        assert isinstance(response, TextResponse)
+        if isinstance(response, TextResponse):
+            ext = LinkExtractor(restrict_text="デイリー戦績")
+            links = ext.extract_links(response)
+            yield response.follow(
+                links[0].url,
+                self.parse_daily_score,  # type: ignore[arg-type]
+            )
 
-        ext = LinkExtractor(restrict_text="デイリー戦績")
-        links = ext.extract_links(response)
-        yield response.follow(links[0].url, self.parse_daily_score)
-
-    def parse_daily_score(self: Self, response: Response) -> Iterator[Request]:
+    def parse_daily_score(
+        self: Self,
+        response: Response,
+        *_args: Any,
+        **_kwargs: Any,
+    ) -> Any:
         """Scraping method"""
 
         assert isinstance(response, TextResponse)
 
-        item: MutableMapping[str, str] = {}  # TODO: typing
+        item: MutableMapping[str, str] = {}
         selector: Selector = response.selector
         parse_score(selector, item)
         parse_recent_level(selector, item)
@@ -135,20 +172,7 @@ class MjscoreSpider(Spider):
         parse_stats(selector, item)
         parse_best(selector, item)
 
-        yield item  # type: ignore[misc]
-
-        if link := response.xpath(XPATH_BEST_MAHJONG).get():
-            yield response.follow(link, self.parse_best_mahjong)
-        else:
-            self.logger.debug("倍満以上なし終了")
-
-    def parse_best_mahjong(self: Self, response: Response) -> None:
-        """TODO: 跳満以上のアガリがある場合にはリンク先のスクリーンショットを保存する (very hard)"""
-        pass
-        # inspect_response(response, self)
-        # 不正なアクセスを検知しました
-        # import webbrowser
-        # webbrowser.open(response.url)
+        yield item
 
 
 # 【SCORE】
@@ -272,14 +296,13 @@ def configure(
 
     if value:
         assert isinstance(value, pathlib.Path)
-        with open(value, mode="r") as fin:
+        with value.open(mode="r") as fin:
             ctx.default_map = yaml.safe_load(fin)
         return value
 
     for p in DEFAULT_CREDENTIALS_PATH:
-        path = Template(p).substitute(os.environ)
         try:
-            with open(path, mode="r") as fin:
+            with pathlib.Path(Template(p).substitute(os.environ)).open(mode="r") as fin:
                 ctx.default_map = yaml.safe_load(fin)
                 return value
         except OSError:

@@ -7,10 +7,10 @@ Usage:
 
 import sys
 import OpenGL.GL as GL  # type: ignore
-import OpenGL.GLUT as GLUT  # type: ignore
+import OpenGL.GLUT as GLUT  # type: ignore[import-untyped]
 
 
-def main():
+def main() -> None:
     """Show the current OpenGL connection strings."""
 
     GLUT.glutInit(sys.argv)
