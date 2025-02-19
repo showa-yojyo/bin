@@ -5,10 +5,11 @@ No description.
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Any, Iterator, Mapping, Self
+    from typing import Iterator, Mapping
 
 from scrapy.linkextractors import LinkExtractor  # type: ignore[attr-defined]
 from scrapy.spiders import CrawlSpider, Rule  # type: ignore[attr-defined]
@@ -39,13 +40,13 @@ class Crawler(CrawlSpider):
         Rule(LinkExtractor(restrict_xpaths='//ul[@class="pagination"]/li/a')),
     )
 
-    def start_requests(self: Self) -> Iterator[Request]:
+    def start_requests(self) -> Iterator[Request]:
         """No descrpition"""
 
         url = f"https://{TARGET_DOMAIN}/tag/{self.tag}"  # type: ignore[attr-defined]
         yield Request(url, dont_filter=True)
 
-    def parse_entry(self: Self, response: Response) -> Iterator[Mapping[str, Any]]:
+    def parse_entry(self, response: Response) -> Iterator[Mapping[str, object]]:
         """No descrpition"""
 
         if images := response.xpath(

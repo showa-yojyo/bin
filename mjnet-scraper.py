@@ -5,23 +5,22 @@ Sign in MJ.NET and scrape today's result.
 """
 
 from __future__ import annotations
+
 import os
 import pathlib
-from string import Template
 import sys
+from string import Template
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
-    from typing import Any, Self
 
 import click
-
-from scrapy import cmdline, FormRequest, Spider
+import yaml  # type: ignore[import-untyped]
+from scrapy import FormRequest, Spider, cmdline
 from scrapy.http import TextResponse  # type: ignore[attr-defined]
 from scrapy.linkextractors import LinkExtractor  # type: ignore[attr-defined]
 from scrapy.shell import inspect_response
-import yaml  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
     from scrapy.http import Response  # type: ignore[attr-defined]
@@ -65,7 +64,7 @@ class MJScoreSpider(Spider):
     allowed_domains = ["www.sega-mj.net"]
     start_urls = [MJ_NET_URL_SIGN_IN]
 
-    def parse(self: Self, response: Response, **_kwargs: Any) -> Any:
+    def parse(self, response: Response, **_kwargs: object) -> object:
         """Pass the login page of MJ.NET"""
 
         assert isinstance(response, TextResponse)
@@ -80,11 +79,11 @@ class MJScoreSpider(Spider):
         )
 
     def _after_login(
-        self: Self,
+        self,
         response: Response,
-        *_args: Any,
-        **_kwargs: Any,
-    ) -> Any:
+        *_args: object,
+        **_kwargs: object,
+    ) -> object:
         """Nagivate to the top page"""
 
         self.logger.info("_after_login")
@@ -102,11 +101,11 @@ class MJScoreSpider(Spider):
             )
 
     def _top_page(
-        self: Self,
+        self,
         response: Response,
-        *_args: Any,
-        **_kwargs: Any,
-    ) -> Any:
+        *_args: object,
+        **_kwargs: object,
+    ) -> object:
         """Navigate to the player data page"""
 
         yield response.follow(
@@ -115,11 +114,11 @@ class MJScoreSpider(Spider):
         )
 
     def _play_data(
-        self: Self,
+        self,
         response: Response,
-        *_args: Any,
-        **_kwargs: Any,
-    ) -> Any:
+        *_args: object,
+        **_kwargs: object,
+    ) -> object:
         """Navigate to the page 一般卓東風戦 or プロ卓東風戦"""
 
         assert isinstance(response, TextResponse)
@@ -138,11 +137,11 @@ class MJScoreSpider(Spider):
         )
 
     def _tompu_games(
-        self: Self,
+        self,
         response: Response,
-        *_args: Any,
-        **_kwargs: Any,
-    ) -> Any:
+        *_args: object,
+        **_kwargs: object,
+    ) -> object:
         """Navigate to the daily record page"""
 
         if isinstance(response, TextResponse):
@@ -154,11 +153,11 @@ class MJScoreSpider(Spider):
             )
 
     def parse_daily_score(
-        self: Self,
+        self,
         response: Response,
-        *_args: Any,
-        **_kwargs: Any,
-    ) -> Any:
+        *_args: object,
+        **_kwargs: object,
+    ) -> object:
         """Scraping method"""
 
         assert isinstance(response, TextResponse)
@@ -290,8 +289,8 @@ def parse_best(selector: Selector, item: MutableMapping[str, str]) -> None:
 def configure(
     ctx: click.Context,
     param: click.Parameter,
-    value: Any,
-) -> Any:
+    value: object,
+) -> object:
     """Try to read the ID and password."""
 
     if value:

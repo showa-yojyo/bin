@@ -6,11 +6,12 @@ $ ./sentocrawler.py -f json
 """
 
 from __future__ import annotations
+
 import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterator, Mapping, Self
+    from typing import Iterator, Mapping
 
 from scrapy import cmdline
 from scrapy.linkextractors import LinkExtractor  # type: ignore[attr-defined]
@@ -40,7 +41,7 @@ class SentoListSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_xpaths='//div[@class="wp-pagenavi"]/a')),
     )
 
-    def parse_entry(self: Self, response: Response) -> Iterator[Mapping[str, str]]:
+    def parse_entry(self, response: Response) -> Iterator[Mapping[str, str]]:
         """No descrpition"""
 
         def safe_xpath(xpath: str) -> str:
