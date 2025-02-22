@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 import click
 
-__version__ = "1.10.0"
+__version__ = "1.11.0"
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -94,7 +94,10 @@ AUDIO_REDUCE_NOISE = "highpass=f=200,lowpass=f=3000"
     "--overlay-style",
     type=click.Choice(
         (
+            "hardlight",
+            "hardoverlay",
             "overlay",
+            "screen",
             "softlight",
         ),
         case_sensitive=False,
@@ -185,8 +188,8 @@ def main(
     match overlay_style:
         case "overlay":
             video_fades += f"[vv][v{i_overlay}]overlay=enable='between(t,0,10)'"
-        case "softlight":
-            video_fades += f"[vv][v{i_overlay}]blend=all_mode=softlight"
+        case _:
+            video_fades += f"[vv][v{i_overlay}]blend=all_mode={overlay_style}"
 
     # Assemble the FFMPEG command arguments
 
