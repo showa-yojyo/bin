@@ -10,22 +10,31 @@ Usage:
 """
 
 from __future__ import annotations
+
+import pathlib
 from argparse import Namespace
 from configparser import ConfigParser
-import pathlib
-#from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import click
-
-from docutils.io import StringInput, FileInput, FileOutput, Input  # type: ignore[import-untyped]
-from mjstat.reader import MJScoreReader
+from docutils.io import (  # type: ignore[import-untyped]
+    FileInput,
+    FileOutput,
+    Input,
+    StringInput,
+)
+from mjstat.model import ScoreSheet, apply_transforms, merge_games
 from mjstat.parser import MJScoreParser
+from mjstat.reader import MJScoreReader
 from mjstat.writer import MJScoreWriter
-from mjstat.model import apply_transforms, merge_games
 
-__version__ = "1.1.1"
+if TYPE_CHECKING:
+    from typing import Final
 
-APP_NAME = "mjscore"
+
+__version__: Final[str] = "1.2.0"
+APP_NAME: Final[str] = "mjscore"
+
 
 def get_default_config_path() -> pathlib.Path:
     """Return the path of default configuration file."""
@@ -35,7 +44,8 @@ def get_default_config_path() -> pathlib.Path:
 def read_settings(
     ctx: click.Context,
     param: click.Option,
-    conf_path: None | pathlib.Path) -> pathlib.Path:
+    conf_path: pathlib.Path | None,
+) -> pathlib.Path:
     """Read mjscore.conf to configure."""
 
     conf_parser = ConfigParser()
@@ -133,11 +143,11 @@ def main(ctx: click.Context, /, *args: str, **kwargs: str) -> int:
 
     mjscore = args or kwargs.get("input", "")
     nskwargs = Namespace(**kwargs)
-
     sources: list[Input] = []
 
     if nskwargs.debug:
         from mjstat.testdata import TEST_INPUT
+
         sources.append(StringInput(source=TEST_INPUT))
     else:
         # XXX
@@ -159,17 +169,23 @@ def main(ctx: click.Context, /, *args: str, **kwargs: str) -> int:
                 )
             )
 
+    if not sources:
+        click.echo("No source provided.", err=True)
+        return 1
+
     parser = MJScoreParser()
     reader = MJScoreReader()
 
-    game_data_list = tuple(reader.read(src, parser, nskwargs) for src in sources)
-    game_data = merge_games(game_data_list)
-    apply_transforms(game_data)
+    sheet_list = tuple[ScoreSheet](
+        reader.read(src, parser, nskwargs) for src in sources
+    )
+    sheet = merge_games(sheet_list)
+    apply_transforms(sheet)
 
     writer = MJScoreWriter()
-    writer.write(game_data, FileOutput(None))
+    writer.write(sheet, FileOutput(None))
     return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

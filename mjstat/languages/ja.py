@@ -51,7 +51,7 @@ yaku_names = (
 tmpl_summary = """集計期間           {{started_at}} - {{finished_at}}
 プレイヤー         {% for p in data %}{{p.name}} {% endfor %}
 ゲーム数           {{count_games}}
-局数               {{data[0].count_hands}}
+局数               {{data[0].count_rounds}}
 
 """
 

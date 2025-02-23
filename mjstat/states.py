@@ -4,12 +4,12 @@ Summary of the transitions::
 
     (1) GameOpening
     -> (2) GameInitialCondition
-    -> (3) HandState
-    -> (4) HandClosing or (9) GamePlayerPlace
-    (4) HandClosing
-    -> (5) HandStartHands
-    -> (6) HandDoraSet
-    -> (7) HandActionHistory
+    -> (3) RoundState
+    -> (4) RoundClosing or (9) GamePlayerPlace
+    (4) RoundClosing
+    -> (5) RoundStartHands
+    -> (6) RoundDoraSet
+    -> (7) RoundActionHistory
     -> return to (3)
     (8) GamePlayerPlace
     -> (9) GameClosing
@@ -18,17 +18,15 @@ Summary of the transitions::
 """
 
 from __future__ import annotations
-import re
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from typing import Any, Self
+import re
+from typing import Final, cast
 
 from docutils.statemachine import State  # type: ignore[import-untyped]
-from .model import create_game_record, create_hand_record, YAKU_MAP
 
-type Context = dict[str, Any]
-type TransitionResult = tuple[Any, str, list[Any]]
+from .model import YAKU_MAP, ScoreSheet, create_game_record, create_round_record
+
+type TransitionResult = tuple[object, str, list[object]]
 
 # pylint: disable=unused-argument, no-self-use
 
@@ -38,9 +36,9 @@ class MJScoreState(State):  # type: ignore[misc]
 
 
 class GameOpening(MJScoreState):
-    """(1) Parse the first line of a game."""
+    """(1) Parse the first line of a match."""
 
-    game_opening_re = re.compile(
+    game_opening_re: Final = re.compile(
         r"""
         =*\s
         東風戦：ランキング卓\s64卓\s開始\s
@@ -52,43 +50,45 @@ class GameOpening(MJScoreState):
         re.VERBOSE,
     )
 
-    patterns = dict(
+    patterns: Final = dict(
         handle_game_opening=game_opening_re,
     )
-    initial_transitions = [
+    initial_transitions: Final = [
         "handle_game_opening",
     ]
 
     def handle_game_opening(
-        self: Self, match: re.Match[str], context: Context, next_state: str
+        self,
+        match: re.Match[str],
+        context: ScoreSheet,
+        next_state: str,
     ) -> TransitionResult:
-        """Parse the beginning of a game."""
+        """Parse a match header."""
 
-        # Determine whether to parse this game or not.
-        started_at: str = match.group("timestamp")
-
-        since_date = context["since"]
+        # Determine whether to parse this match or not.
+        started_at: Final[str] = match.group("timestamp")
+        since_date: Final[str] = context["since"]
         if since_date and started_at < since_date:
             return context, next_state, []
 
-        until_date = context["until"]
+        until_date: Final[str] = context["until"]
         if until_date and until_date <= started_at:
             return context, next_state, []
 
         game = create_game_record(context)
         game["started_at"] = started_at
 
-        assert "started_at" in game
         return context, "GameInitialCondition", []
 
 
 class GameInitialCondition(MJScoreState):
-    """(2) Parse initial points and players."""
+    """(2) Parse amount of point a player have before the start of the match, and the
+    four players."""
 
     # Regex for parsing players information, their names and ratings.
-    initial_condition_re = re.compile(
+    initial_condition_re: Final = re.compile(
         r"""
-        持点\d+\s*      # 25000
+        持点\d+\s*      # e.g. 25000
         \[1\](.+)\sR(?:\d+)\s*   # Player #1
         \[2\](.+)\sR(?:\d+)\s*   # Player #2
         \[3\](.+)\sR(?:\d+)\s*   # Player #3
@@ -97,31 +97,31 @@ class GameInitialCondition(MJScoreState):
         re.VERBOSE,
     )
 
-    patterns = dict(handle_initial_condition=initial_condition_re)
-    initial_transitions = ["handle_initial_condition"]
+    patterns: Final = dict(handle_initial_condition=initial_condition_re)
+    initial_transitions: Final = ["handle_initial_condition"]
 
     def handle_initial_condition(
-        self: Self, match: re.Match[str], context: Context, next_state: str
+        self,
+        match: re.Match[str],
+        context: ScoreSheet,
+        next_state: str,
     ) -> TransitionResult:
         """Parse initial points and players."""
 
         game = context["games"][-1]
-        game["players"] = match.groups()
+        game["players"] = cast(tuple[str, str, str, str], match.groups())
 
-        return context, "HandState", []
+        return context, "RoundState", []
 
 
-class HandState(MJScoreState):
-    """(3) State for the opening of a hand OR the closing of the final
-    hand.
-    """
+class RoundState(MJScoreState):
+    """(3) State for a round of the opening or closing of the final round."""
 
-    # 場 = a round
-    # 局 = a hand
+    # 場 = east/south round
+    # 局 = a round
     # 本場 = counter(s)
-    # E.g. 東一局三本場 is translated to
-    #   East round, 1st hand (or rotation) [with 0 counters]
-    hand_header_re = re.compile(
+    # E.g. 東一局三本場 is translated to East, 1st round [with 0 counters].
+    hand_header_re: Final = re.compile(
         r"""
         (?P<title>[東南][1-4]局\s\d本場)
         \(リーチ\d\)
@@ -136,53 +136,55 @@ class HandState(MJScoreState):
         re.VERBOSE,
     )
 
-    game_result_re = re.compile(r"[-]+\s*試合結果\s*[-]+")
+    game_result_re: Final = re.compile(r"[-]+\s*試合結果\s*[-]+")
 
-    patterns = dict(
+    patterns: Final = dict(
         handle_summary=hand_header_re,
         handle_game_result=game_result_re,
     )
-    initial_transitions = [
+    initial_transitions: Final = [
         "handle_summary",
         "handle_game_result",
     ]
 
     def handle_summary(
-        self: Self, match: re.Match[str], context: Context, next_state: str
+        self,
+        match: re.Match[str],
+        context: ScoreSheet,
+        next_state: str,
     ) -> TransitionResult:
-        """Parse the header of a hand."""
+        """Parse the header of a round."""
 
-        hand = create_hand_record(context)
-        hand["title"] = match.group("title")
+        round = create_round_record(context)
+        round["title"] = match.group("title")
+        if player_balance := match.group("balance").strip().split():
+            round["balance"].update([
+                (
+                    player_balance[i],
+                    int(player_balance[i + 1]),
+                )
+                for i in range(0, len(player_balance), 2)
+            ])
 
-        player_balance = match.group("balance").strip().split()
-        if player_balance:
-            hand["balance"].update(
-                [
-                    (
-                        player_balance[i],
-                        int(player_balance[i + 1]),
-                    )
-                    for i in range(0, len(player_balance), 2)
-                ]
-            )
-
-        return context, "HandClosing", []
+        return context, "RoundClosing", []
 
     def handle_game_result(
-        self: Self, match: re.Match[str], context: Context, next_state: str
+        self,
+        match: re.Match[str],
+        context: ScoreSheet,
+        next_state: str,
     ) -> TransitionResult:
         """---- game result ----"""
 
         return context, "GamePlayerPlace", []
 
 
-class HandClosing(MJScoreState):
-    """(4) Parse the line that informs the winner's hand or
-    exhaustive/abortive draw.
+class RoundClosing(MJScoreState):
+    """(4) Parse the line that contains the winner's hand or exhaustive/abortive
+    draw.
     """
 
-    winning_re = re.compile(
+    winning_re: Final = re.compile(
         r"""
         (?P<winning_value>.+)
         (?P<winning_decl>(ロン|ツモ))
@@ -198,63 +200,67 @@ class HandClosing(MJScoreState):
         re.VERBOSE,
     )
 
-    draw_re = re.compile(r"(流局|九種公九牌倒牌|三家和|四風連打|四槓開|四家リーチ)")
+    draw_re: Final = re.compile(
+        r"(流局|九種公九牌倒牌|三家和|四風連打|四槓開|四家リーチ)"
+    )
 
-    patterns = dict(
+    patterns: Final = dict(
         handle_winning=winning_re,
         handle_draw=draw_re,
     )
 
-    initial_transitions = [
+    initial_transitions: Final = [
         "handle_winning",
         "handle_draw",
     ]
 
     def handle_winning(
-        self: Self, match: re.Match[str], context: Context, next_state: str
+        self,
+        match: re.Match[str],
+        context: ScoreSheet,
+        next_state: str,
     ) -> TransitionResult:
         """Parse the line that includes ロン or ツモ."""
 
         # Get the current hand from context.
         game = context["games"][-1]
-        hand = game["hands"][-1]
+        round = game["rounds"][-1]
 
-        hand["ending"] = match.group("winning_decl")
-        hand["winning_value"] = match.group("winning_value")
+        round["ending"] = match.group("winning_decl")
+        round["winning_value"] = match.group("winning_value")
 
-        dora = match.group("winning_dora")
-        if dora:
+        if dora := match.group("winning_dora"):
             yaku_list = match.group("winning_yaku_with_dora")
-            hand["winning_dora"] = int(dora)
+            round["winning_dora"] = int(dora)
         else:
             yaku_list = match.group("winning_yaku_without_dora")
-            hand["winning_dora"] = 0
-        hand["winning_yaku_list"] = [YAKU_MAP[i] for i in yaku_list.split()]
+            round["winning_dora"] = 0
+        round["winning_yaku_list"] = [YAKU_MAP[i] for i in yaku_list.split()]
 
-        return context, "HandStartHands", []
+        return context, "RoundStartHands", []
 
     def handle_draw(
-        self: Self, match: re.Match[str], context: Context, next_state: str
+        self,
+        match: re.Match[str],
+        context: ScoreSheet,
+        next_state: str,
     ) -> TransitionResult:
-        """Parse the line that includes 流局, etc."""
+        """Parse the line that contains 流局, etc."""
 
         # Get the current hand from context.
         game = context["games"][-1]
-        hand = game["hands"][-1]
+        round = game["rounds"][-1]
 
-        hand["ending"] = match.group()
+        round["ending"] = match.group()
 
-        return context, "HandStartHands", []
+        return context, "RoundStartHands", []
 
 
-class HandStartHands(MJScoreState):
-    """(5) State for parsing start hands (dealt tiles to players)
-    of a hand.
-    """
+class RoundStartHands(MJScoreState):
+    """(5) State for parsing start hands (dealt tiles to players) of a round."""
 
-    # Regex for a start hand, or a players' dealt tiles at the
-    # beginning of a hand.
-    start_hand_re = re.compile(
+    # Regex for a start hand, or a players' dealt tiles at the beginning of a hand.
+    start_hand_re: Final = re.compile(
         r"""
         \[
           (?P<id>[1-4])                 # player id
@@ -275,39 +281,42 @@ class HandStartHands(MJScoreState):
         re.VERBOSE,
     )
 
-    patterns = dict(handle_start_hands=start_hand_re)
-    initial_transitions = ["handle_start_hands"]
+    patterns: Final = dict(handle_start_hands=start_hand_re)
+    initial_transitions: Final = ["handle_start_hands"]
 
     def handle_start_hands(
-        self: Self, match: re.Match[str], context: Context, next_state: str
+        self,
+        match: re.Match[str],
+        context: ScoreSheet,
+        next_state: str,
     ) -> TransitionResult:
         """Handle lines of start hands."""
 
         # current hand
         game = context["games"][-1]
-        hand = game["hands"][-1]
+        round = game["rounds"][-1]
 
         player, seat, start_hand = match.group("id", "seat", "start_hand")
         index = int(player) - 1
-        hand["seat_table"][index] = seat
-        hand["start_hand_table"][index] = start_hand
+        round["seat_table"][index] = seat
+        round["start_hand_table"][index] = start_hand
 
         for _ in range(3):
             id_seat = self.start_hand_re.match(self.state_machine.next_line())
             assert id_seat
             player, seat, start_hand = id_seat.group("id", "seat", "start_hand")
             index = int(player) - 1
-            hand["seat_table"][index] = seat
-            hand["start_hand_table"][index] = start_hand
+            round["seat_table"][index] = seat
+            round["start_hand_table"][index] = start_hand
 
-        return context, "HandDoraSet", []
+        return context, "RoundDoraSet", []
 
 
-class HandDoraSet(MJScoreState):
+class RoundDoraSet(MJScoreState):
     """(6) State for parsing dora set of a hand."""
 
     # Regex for the line that indicates all of dora tiles.
-    dora_set_re = re.compile(
+    dora_set_re: Final = re.compile(
         r"""
         \[表ドラ\](?P<dora>[^\s]+)
         (\s*\[裏ドラ\](?P<uradora>.+))?      # XXX: dot matches any of tiles
@@ -315,30 +324,33 @@ class HandDoraSet(MJScoreState):
         re.VERBOSE,
     )
 
-    patterns = dict(handle_dora_set=dora_set_re)
-    initial_transitions = ["handle_dora_set"]
+    patterns: Final = dict(handle_dora_set=dora_set_re)
+    initial_transitions: Final = ["handle_dora_set"]
 
     def handle_dora_set(
-        self: Self, match: re.Match[str], context: Context, next_state: str
+        self,
+        match: re.Match[str],
+        context: ScoreSheet,
+        next_state: str,
     ) -> TransitionResult:
         """Handle the line of dora tiles."""
 
         # current hand
         game = context["games"][-1]
-        hand = game["hands"][-1]
-        dora_table = hand["dora_table"]
+        round = game["rounds"][-1]
+        dora_table = round["dora_table"]
 
         dora_table.extend(match.group("dora", "uradora"))
 
-        return context, "HandActionHistory", []
+        return context, "RoundActionHistory", []
 
 
-class HandActionHistory(MJScoreState):
+class RoundActionHistory(MJScoreState):
     """(7) State for parsing the action history of a hand."""
 
     # Regex for lines e.g. ``* 1G3s 1d1p 2G2s 2d9p ...``
     # Do not make regex so complicated here.
-    actions_re = re.compile(
+    actions_re: Final = re.compile(
         r"""
         \A
         \*\s*
@@ -348,18 +360,21 @@ class HandActionHistory(MJScoreState):
         re.VERBOSE,
     )
 
-    patterns = dict(handle_actions=actions_re)
-    initial_transitions = ["handle_actions"]
+    patterns: Final = dict(handle_actions=actions_re)
+    initial_transitions: Final = ["handle_actions"]
 
     def handle_actions(
-        self: Self, match: re.Match[str], context: Context, next_state: str
+        self,
+        match: re.Match[str],
+        context: ScoreSheet,
+        next_state: str,
     ) -> TransitionResult:
         """Handle all the lines that describe actions."""
 
         # current hand
         game = context["games"][-1]
-        hand = game["hands"][-1]
-        action_table = hand["action_table"]
+        round = game["rounds"][-1]
+        action_table = round["action_table"]
 
         actions = match.group("actions").split()
         action_table.extend(actions)
@@ -373,13 +388,13 @@ class HandActionHistory(MJScoreState):
             actions = match.group("actions").split()
             action_table.extend(actions)
 
-        return context, "HandState", []
+        return context, "RoundState", []
 
 
 class GamePlayerPlace(MJScoreState):
-    """(8) State for parsing player's place after a game."""
+    """(8) State for parsing player's place after a match."""
 
-    player_place_re = re.compile(
+    player_place_re: Final = re.compile(
         r"""
         (?P<rank>[1-4])位
         \s+
@@ -390,11 +405,14 @@ class GamePlayerPlace(MJScoreState):
         re.VERBOSE,
     )
 
-    patterns = dict(handle_player_place=player_place_re)
-    initial_transitions = ["handle_player_place"]
+    patterns: Final = dict(handle_player_place=player_place_re)
+    initial_transitions: Final = ["handle_player_place"]
 
     def handle_player_place(
-        self: Self, match: re.Match[str], context: Context, next_state: str
+        self,
+        match: re.Match[str],
+        context: ScoreSheet,
+        next_state: str,
     ) -> TransitionResult:
         """Parse a rank line of the ranking list in a game."""
 
@@ -402,10 +420,9 @@ class GamePlayerPlace(MJScoreState):
         ranking = game["result"]
 
         for i in range(4):
-            rank = int(match.group("rank"))
-            player = match.group("player")
-            points = int(match.group("points"))
-            ranking[rank - 1] = dict(player=player, points=points)
+            pos = int(match.group("rank")) - 1
+            ranking[pos]["player"] = match.group("player")
+            ranking[pos]["points"] = int(match.group("points"))
             if i < 3:
                 line = self.state_machine.next_line()
                 next_match = self.player_place_re.match(line)
@@ -416,9 +433,9 @@ class GamePlayerPlace(MJScoreState):
 
 
 class GameClosing(MJScoreState):
-    """(9) Parse the last line of a game."""
+    """(9) Parse the last line of a match."""
 
-    game_closing_re = re.compile(
+    game_closing_re: Final = re.compile(
         r"""
         [-]*\s64卓\s終了\s
         (?P<timestamp>
@@ -430,18 +447,20 @@ class GameClosing(MJScoreState):
         re.VERBOSE,
     )
 
-    patterns = dict(handle_game_closing=game_closing_re)
-    initial_transitions = [
+    patterns: Final = dict(handle_game_closing=game_closing_re)
+    initial_transitions: Final = [
         "handle_game_closing",
     ]
 
     def handle_game_closing(
-        self: Self, match: re.Match[str], context: Context, next_state: str
+        self,
+        match: re.Match[str],
+        context: ScoreSheet,
+        next_state: str,
     ) -> TransitionResult:
-        """Parse the ending of a game."""
+        """Parse the ending of a match."""
 
         game = context["games"][-1]
         game["finished_at"] = match.group("timestamp")
 
-        assert "finished_at" in game
         return context, "GameOpening", []
