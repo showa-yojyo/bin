@@ -1,0 +1,21 @@
+#!/bin/bash
+# backup-ssd: WIP
+
+# Requires sudo
+
+declare -r rsync-options=-azvh  # -n
+declare -r mount-dest=/mnt/d
+
+declare -r src="/mnt/c/Users/$USER"
+declare -r dest="${mount-dest}/Users/$USER"
+
+mkdir -p "${mount-dest}"
+mount -t drvfs D: "${mount-dest}"
+
+rsync ${rsync-options} "${src}/devel" "${dest}" --exclude=dotfiles/
+rsync ${rsync-options} "${src}/Documents" "${dest}"
+rsync ${rsync-options} "${src}/Pictures" "${dest}" --exclude=tmp/
+rsync ${rsync-options} "${src}/Music" "${dest}"
+rsync ${rsync-options} "${src}/Videos" "${dest}"
+
+#rsync -azvh -n /mnt/c/Users/work/AppData/Roaming ${dest}/AppData
