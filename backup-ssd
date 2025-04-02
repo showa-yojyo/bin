@@ -1,18 +1,25 @@
 #!/bin/bash
-# backup-ssd: WIP
+# backup-ssd: Back up important contents of my PC's SSD to an external HHD.
+#
+# Usage:
+# sudo ./backp-ssd
 
-# Requires sudo
+if [ "$(whoami)" != "root" ] ; then
+    echo "Run this script with sudo" >&2
+    exit 1
+fi
 
-declare -r rsync-options=-azvh  # -n
-declare -r mount-dest=/mnt/d
+declare -r target_user="${SUDO_USER}"  # "${SUDO_USER:-$USER}"
+declare -r rsync_options="-azvh"  # -n
+declare -r mount_dest="/mnt/d"
 
-declare -r src="/mnt/c/Users/$USER"
-declare -r dest="${mount-dest}/Users/$USER"
+declare -r src="/mnt/c/Users/${target_user}"
+declare -r dest="${mount_dest}/Users/${target_user}"
 
-mkdir -p "${mount-dest}"
-mount -t drvfs D: "${mount-dest}"
+mkdir -p "${mount_dest}"
+mount -t drvfs D: "${mount_dest}"
 
-rsync ${rsync-options} --exclude={dotfiles/,tmp/} \
+rsync ${rsync_options} --exclude={dotfiles/,tmp/} \
     "${src}/devel" \
     "${src}/Documents" \
     "${src}/Music" \
