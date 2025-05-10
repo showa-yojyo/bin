@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 import click
 
-__version__ = "1.11.0"
+__version__ = "1.12.0"
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -25,6 +25,7 @@ FFMPEG_PATH = "ffmpeg"
 FFPROBE_PATH = "ffprobe"
 
 OVERLAY_IMAGE_PATH = "./title.png"
+OVERLAY_OPACITY = 0.5
 
 CONCAT_AUDIO_PATH = "./audio-only.m4a"
 CONCAT_VIDEO_PATH = "./video-only.mp4"
@@ -36,7 +37,6 @@ ACROSSFADE_DURATION = XFADE_DURATION
 
 AUDIO_NORMALIZE = "aresample=async=1:first_pts=0,asetpts=PTS,asettb=AVTB,apad"
 AUDIO_REDUCE_NOISE = "highpass=f=200,lowpass=f=3000"
-
 
 @click.command()
 @click.argument(
@@ -187,7 +187,8 @@ def main(
     video_fades += f"[{last_fade_output}]fade=t=out:st={video_length:.4f}:d={XFADE_DURATION}[vv];\n"
     match overlay_style:
         case "overlay":
-            video_fades += f"[vv][v{i_overlay}]overlay=enable='between(t,0,10)'"
+            video_fades += f"[v{i_overlay}]format=argb,colorchannelmixer=aa={OVERLAY_OPACITY}[z];\n"
+            video_fades += f"[vv][z]overlay"
         case _:
             video_fades += f"[vv][v{i_overlay}]blend=all_mode={overlay_style}"
 
