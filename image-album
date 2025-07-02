@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Convert images for the full screen mode of my viewer.
+
+declare -r usage="Usage: ${0##*/} IMAGE_PATH [...]"
+declare -r input="${1:?${usage}}"
+
+# Rotate the source image only if its width is less than the height.
+declare -r angle=-90\<
+
+# Resize the image to the resolution of my laptop monitor.
+declare -r size=1366x768
+
+declare -ar magick_args=(-rotate ${angle} -resize ${size})
+
+magick mogrify ${magick_args[@]} "$@"
