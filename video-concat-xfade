@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 import click
 
-__version__ = "1.12.0"
+__version__ = "1.13.0"
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -25,7 +25,7 @@ FFMPEG_PATH = "ffmpeg"
 FFPROBE_PATH = "ffprobe"
 
 OVERLAY_IMAGE_PATH = "./title.png"
-OVERLAY_OPACITY = 0.5
+OVERLAY_OPACITY = 1.0
 
 CONCAT_AUDIO_PATH = "./audio-only.m4a"
 CONCAT_VIDEO_PATH = "./video-only.mp4"
