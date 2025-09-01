@@ -19,12 +19,16 @@ declare -r dest="${mount_dest}/Users/${target_user}"
 mkdir -p "${mount_dest}"
 mount -t drvfs D: "${mount_dest}"
 
-rsync ${rsync_options} --exclude={dotfiles/,tmp/} \
-    "${src}/devel" \
-    "${src}/Documents" \
-    "${src}/Music" \
-    "${src}/Pictures" \
-    "${src}/Videos" \
-    "${dest}"
+declare -ar backup_dirs=(
+    "${src}/AppData/Roaming/GIMP/3.0"
+    "${src}/AppData/Roaming/inkscape"
+    "${src}/AppData/Roaming/LibreOffice/4/user"
+    "${src}/devel"
+    "${src}/Documents"
+    "${src}/Music"
+    "${src}/Pictures"
+    "${src}/Videos")
+
+rsync ${rsync_options} --exclude={dotfiles/,tmp/} "${backup_dirs[@]}" "${dest}"
 
 #rsync -azvh -n /mnt/c/Users/work/AppData/Roaming ${dest}/AppData
