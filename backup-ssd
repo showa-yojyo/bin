@@ -2,7 +2,11 @@
 # backup-ssd: Back up important contents of my PC's SSD to an external HHD.
 #
 # Usage:
-# sudo ./backp-ssd
+# sudo ./backup-ssd
+
+set -o errexit
+set -o nounset
+set -o pipefail
 
 if [ "$(whoami)" != "root" ] ; then
     echo "Run this script with sudo" >&2

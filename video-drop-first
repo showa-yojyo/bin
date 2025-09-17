@@ -2,6 +2,10 @@
 
 # Drop first seconds from a video
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 declare -r input="${1:?Usage: ${0##*/} SOURCE SECONDS}"
 declare -r seconds="${2:-1}"
 declare -r output="${input%.*}-drop-first.${input##*.}"

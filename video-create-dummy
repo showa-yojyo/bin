@@ -9,6 +9,10 @@
 # * FFmpeg Creating test video
 #   <https://www.bogotobogo.com/FFMpeg/ffmpeg_video_test_patterns_src.php>
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 declare -r input="color=color=black:duration=10:r=30:size=640x480"
 declare -r output="${1:?Usage: ${0##*/} OUTPUT_VIDEO_PATH}"
 

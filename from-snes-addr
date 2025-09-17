@@ -8,6 +8,10 @@
 # $ printf "0x%06X\n" $(from-snes-addr Lo 0x238000)
 # 0x118000
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 declare -r usage="Usage: ${0##*/} (HI|LO) ADDRESS"
 declare -r mode="${1:?$usage}"
 declare -r cpu_addr="${2:?$usage}"

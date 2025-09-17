@@ -2,6 +2,10 @@
 #
 # Extract a frame to a JPEG file by specifying its frame index
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 declare -r usage="${0##*/} INPUT_VIDEO_PATH FRAME_INDEX"
 declare -r input="${1:?Usage: $usage}"
 declare -r frame_index="${2:?Usage: $usage}"

@@ -6,6 +6,10 @@
 # * Reduce PDF File Size in Linux
 #   <https://www.digitalocean.com/community/tutorials/reduce-pdf-file-size-in-linux>
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 declare -r input="${1:?Usage: ${0##*/} INPUT_PDF_PATH}"
 declare -r workpath="$(mktemp XXXXXXXX.pdf)"
 declare -r gs_options="-sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dNOPAUSE -dBATCH"

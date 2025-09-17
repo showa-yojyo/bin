@@ -6,6 +6,10 @@
 # Example:
 # $ gh-star showa-yojyo/dqbook
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 if [[ $# -lt 1 ]] ; then
     echo Usage: ${0##*/} ACCOUNT/REPO >&2
     exit 2

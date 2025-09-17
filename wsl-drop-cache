@@ -2,6 +2,10 @@
 
 # wsl-drop-cache: WIP
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 grep -q 'swap=0' /mnt/c/Users/$USER/.wslconfig
 sudo sync; echo 3 | sudo tee /proc/sys/vm/drop_caches
 if [ $? -ne 0 ] ; then

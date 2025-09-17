@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 declare -ar ffprobe_options=(
     -hide_banner
     -v error

@@ -2,6 +2,10 @@
 
 # Example: myhd /path/to/DQ3.smc 0x030900 0x09 0x34
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 declare -r rom_image_path="$1"
 declare -r offset="$2"
 declare -r len="$3"

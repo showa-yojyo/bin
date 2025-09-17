@@ -1,6 +1,10 @@
 #!/bin/bash
 # https://superuser.com/questions/268985/remove-audio-from-video-file-with-ffmpeg
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 declare -r input="${1:?Usage: ${0##*/} SOURCE_PATH}"
 declare -r output="${input%.*}-mute.${input#*.}"
 declare -r ffmpeg_global_options=(-loglevel error -y)

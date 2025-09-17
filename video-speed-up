@@ -4,6 +4,10 @@
 # Referenece: Is it possible to speed up video with audio using ffmpeg, without
 # changing audio pitch? <https://superuser.com/questions/1324525/>
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 declare -r input="${1:?Usage: ${0##*/} INPUT_VIDEO_PATH SPEED_FACTOR}"
 declare -r speed="${2:-1}"
 declare -r output="${input%.*}-${speed}x-speed.${input#*.}"

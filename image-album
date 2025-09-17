@@ -2,6 +2,10 @@
 
 # Convert images for the full screen mode of my viewer.
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 declare -r usage="Usage: ${0##*/} IMAGE_PATH [...]"
 declare -r input="${1:?${usage}}"
 

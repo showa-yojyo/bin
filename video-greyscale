@@ -1,6 +1,10 @@
 #!/bin/bash
 # <https://stackoverflow.com/questions/32384057/ffmpeg-black-and-white-conversion>
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 declare -r input="${1:?Usage: ${0##*/} INPUT_VIDEO_PATH}"
 declare -r output="${input%.*}-greyscale.${input#*.}"
 declare -ar ffmpeg_global_options=(-loglevel error -y)

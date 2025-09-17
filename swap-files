@@ -2,6 +2,10 @@
 
 # See <https://tldp.org/LDP/abs/html/sample-bashrc.html>
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 script=${0##*/}
 
 [ $# -ne 2 ] && echo "$script: specify two paths" && exit 1

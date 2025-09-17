@@ -2,6 +2,10 @@
 
 # Rename files sequentially
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 declare -ar input=(${@})
 declare -ir num_video=${#input[@]}
 

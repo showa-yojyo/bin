@@ -1,6 +1,10 @@
 #!/bin/bash
 # Concatenate video files with exactly the same codec and codec parameters.
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 if [[ $# -le 2 ]] ; then
     echo Usage: ${0##*/} INPUT_VIDEO_PATH... OUTPUT_VIDEO_PATH >&2
     exit 2
