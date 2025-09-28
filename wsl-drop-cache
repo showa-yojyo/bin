@@ -1,14 +1,24 @@
 #!/bin/bash
 
-# wsl-drop-cache: WIP
+# wsl-drop-cache: try to reclaim more memory.
+# Usage:
+# sudo ./wsl-drop-cache
 
 set -o errexit
 set -o nounset
 set -o pipefail
 
-grep -q 'swap=0' /mnt/c/Users/$USER/.wslconfig
-sudo sync; echo 3 | sudo tee /proc/sys/vm/drop_caches
-if [ $? -ne 0 ] ; then
-    sudo swapoff -a
-    sudo swapon -a
+if [ "$(whoami)" != "root" ] ; then
+    echo "Run this script with sudo" >&2
+    exit 1
 fi
+
+# Flush writes and drop file system caches.
+sync
+echo 3 | tee /proc/sys/vm/drop_caches
+
+# Disable all swaps from /proc/swaps.
+swapoff -a
+
+# Enable all swaps from /etc/fstab.
+swapon -a
