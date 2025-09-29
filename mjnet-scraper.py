@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from scrapy.http import Response  # type: ignore[attr-defined]
     from scrapy.selector import Selector  # type: ignore[attr-defined]
 
-__version__ = "2.1.0"
+__version__ = "2.1.1"
 
 APP_NAME = "mjnet-scraper"
 
@@ -333,11 +333,13 @@ def configure(
     "-u",
     "--user",
     prompt=True,
+    prompt_required=False,
     hide_input=False,
     metavar="NAME",
     help="your user name for MJ.NET account",
 )
 @click.password_option(
+    prompt_required=False,
     metavar="PASSWORD",
     help="your password for MJ.NET account",
 )
