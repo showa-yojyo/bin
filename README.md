@@ -10,8 +10,8 @@ files are written in Bash or Python so far.
 First, clone this repository to your `$HOME/.local/bin` directory (recommended).
 
 ```console
-$ mkdir -p ~/.local/bin && cd $_ # optional
-$ git clone https://github.com/showa-yojyo/bin.git .
+mkdir -p ~/.local/bin && cd $_ # optional
+git clone https://github.com/showa-yojyo/bin.git .
 ```
 
 And make sure the `PATH` environment variable includes this directory. For
@@ -32,8 +32,7 @@ done
 ## Dependencies
 
 * [GNU Bash]
-* [Python 3.x][Python]: Additionally, some scripts use some third party
-  packages:
+* [Python 3.x][Python]: Additionally, some scripts use some third party packages:
   * [Beautiful Soup]
   * [Click]
   * [dateutil]
@@ -43,12 +42,13 @@ done
   * [PyYaml]
   * [JPHoliday]
   * [Pillow]
+  * [python-stdnum]
 * [ImageMagick]
 * [FFmpeg]
 
 ## Bug Reporting
 
-Please do not report any issues you find to me.
+If you find any issues in programs here, please miss them.
 
 [GNU Bash]: <https://www.gnu.org/software/bash/>
 [Python]: <https://www.python.org/>
@@ -63,3 +63,4 @@ Please do not report any issues you find to me.
 [JPHoliday]: <https://github.com/Lalcs/jpholiday>
 [Click]: <https://click.palletsprojects.com/en/stable/>
 [Pillow]: <https://pillow.readthedocs.io/en/stable/>
+[python-stdnum]: <https://arthurdejong.org/python-stdnum/doc/>

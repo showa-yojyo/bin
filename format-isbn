@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+"""Reformat ISBNs and print the reformatted numbers to stdout.
+
+Note: This program requires stdnum_ package as ISBN converter.
+
+_stdnum: https://github.com/arthurdejong/python-stdnum
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import click
+from stdnum import isbn
+
+if TYPE_CHECKING:
+    from typing import Iterable
+
+__version__ = "1.0.0"
+
+
+@click.command()
+@click.argument(
+    "numbers",
+    metavar="<ISBN...>",
+    nargs=-1,
+)
+@click.help_option(
+    help="display this message and exit",
+)
+@click.version_option(
+    __version__,
+    help="output version information and exit",
+)
+def main(numbers: Iterable[str]) -> None:
+    """Reformat ISBNs and print the reformatted numbers in stdout."""
+    for num in numbers:
+        click.echo(isbn.format(num))
+
+
+if __name__ == "__main__":
+    main()
