@@ -13,16 +13,20 @@ if [ "$(whoami)" != "root" ] ; then
     exit 1
 fi
 
-declare -r target_user="${SUDO_USER}"  # "${SUDO_USER:-$USER}"
-declare -r rsync_options="-azvh"  # -n
-declare -r mount_dest="/mnt/d"
+declare -r target_user="${SUDO_USER:-$USER}"
+declare -r mount_dest_drive_letter="E"
+declare -r mount_dest="/mnt/${mount_dest_drive_letter,,}"
+declare -r dest="${mount_dest}/backup"
 
-declare -r src="/mnt/c/Users/${target_user}"
-declare -r dest="${mount_dest}/Users/${target_user}"
+declare -r uid=$(id -u $target_user)
+declare -r gid=$(id -g $target_user)
 
 mkdir -p "${mount_dest}"
-mount -t drvfs D: "${mount_dest}"
+chown -R ${uid}:${gid} "${mount_dest}"
+chmod -R 777 "${mount_dest}"
+mount -t drvfs "${mount_dest_drive_letter^^}:" "${mount_dest}" -o metadata,uid=${uid},gid=${gid}
 
+declare -r src="/mnt/c/Users/${target_user}"
 declare -ar backup_dirs=(
     "${src}/AppData/Roaming/GIMP/3.0"
     "${src}/AppData/Roaming/inkscape"
@@ -33,6 +37,7 @@ declare -ar backup_dirs=(
     "${src}/Pictures"
     "${src}/Videos")
 
+declare -r rsync_options="-azvh"  # -n
 rsync ${rsync_options} --exclude={dotfiles/,tmp/} "${backup_dirs[@]}" "${dest}"
 
-#rsync -azvh -n /mnt/c/Users/work/AppData/Roaming ${dest}/AppData
+umount "${mount_dest}"
