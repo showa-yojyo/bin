@@ -24,7 +24,7 @@ declare -r gid=$(id -g $target_user)
 mkdir -p "${mount_dest}"
 chown -R ${uid}:${gid} "${mount_dest}"
 chmod -R 777 "${mount_dest}"
-mount -t drvfs "${mount_dest_drive_letter^^}:" "${mount_dest}" -o metadata,uid=${uid},gid=${gid}
+mount -t drvfs "${mount_dest_drive_letter^^}:" "${mount_dest}" -o metadata,uid=${uid},gid=${gid},umask=022,fmask=011
 
 declare -r src="/mnt/c/Users/${target_user}"
 declare -ar backup_dirs=(
@@ -35,9 +35,10 @@ declare -ar backup_dirs=(
     "${src}/Documents"
     "${src}/Music"
     "${src}/Pictures"
-    "${src}/Videos")
+    "${src}/Videos"
+    )
 
 declare -r rsync_options="-azvh"  # -n
-rsync ${rsync_options} --exclude={dotfiles/,tmp/} "${backup_dirs[@]}" "${dest}"
+rsync ${rsync_options[@]} --exclude={dotfiles/,tmp/} "${backup_dirs[@]}" "${dest}"
 
 umount "${mount_dest}"
