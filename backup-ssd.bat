@@ -1,7 +1,9 @@
 @echo off
 @rem A backup script of robocopy version.
+@rem Usage: backup-ssd.bat
 
-set DRY_RUN=
+@rem Note: To perform a real backup, comment out the DRY_RUN line.
+set DRY_RUN=/L
 
 @rem Back up %APPDATA% packages.
 
