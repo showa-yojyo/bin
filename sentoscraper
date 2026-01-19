@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 """
+A simple scraper for sento (public bathhouses) in Japan.
+
 Usage:
 $ sentoscraper.py ID1 ID2 ...
 """
@@ -9,36 +11,56 @@ from __future__ import annotations
 import asyncio
 import pathlib
 import re
-from collections import namedtuple
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, NamedTuple
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import Sequence
 
 from urllib.request import urlopen
+from urllib.error import URLError
 
 import click
 from bs4 import BeautifulSoup
 
-__version__ = "2.1.2"
+__version__ = "2.2"
 
+CSV_HEADER = (
+    "ID",
+    "名前",
+    "所在地",
+    "アクセス",
+    "定休日",
+    "コインランドリー",
+    "営業時間",
+)
 SEP = "|"
-URL_PATTERN = "http://www.1010.or.jp/map/item/item-cnt-{id}"
+CACHE_PATH_PATTERN = "item-cnt-{id}.html"
+URL_PATTERN = "https://www.1010.or.jp/map/item/item-cnt-{id}"
 
 
-class Sento(
-    namedtuple(
-        "Sento",
-        ["id", "name", "address", "access", "holidays", "has_laundry", "office_hours"],
-    )
-):
-    """TODO: docstring"""
+class Sento(NamedTuple):
+    """
+    Attributes:
+    0: id
+    1: name
+    2: address
+    3: access
+    4: holidays
+    5: has_laundry
+    6: office_hours
+    """
 
-    __slots__ = ()
+    id: str
+    name: str
+    address: str
+    access: str
+    holidays: str
+    has_laundry: bool
+    office_hours: str
 
     def __str__(self) -> str:
-        return f"{SEP.join(self[:5])}{SEP}{self.has_laundry}{SEP}{self[-1]}"
+        return f"{SEP.join(self[:5])}{SEP}{self.has_laundry:d}{SEP}{self[-1]}"
 
 
 async def fetch(
@@ -46,45 +68,77 @@ async def fetch(
     sem_count: int,
     cache_dir: pathlib.Path,
 ) -> list[Sento]:
-    """TODO: docstring"""
-    semaphore = asyncio.Semaphore(sem_count)
+    """
+    Fetch sento information for the given IDs.
 
-    async def scrape_with_semaphore(i: str) -> Sento:
-        async with semaphore:
-            return await scrape(i, cache_dir)
+    :param id: Iterable of sento identifiers
+    :param sem_count: Number of concurrent tasks
+    :param cache_dir: Directory in which cache files are stored
+    :return: List of Sento information
+    """
 
-    return await asyncio.gather(*[scrape_with_semaphore(i) for i in id])
+    results: list[asyncio.Task[Sento]] = []
+    async with asyncio.TaskGroup() as tg:
+        semaphore = asyncio.Semaphore(sem_count)
+        for i in id:
+            async with semaphore:
+                results.append(tg.create_task(scrape(i, cache_dir)))
+
+    return [t.result() for t in results]
 
 
-def get_source_path(id: str) -> pathlib.Path:
-    return pathlib.Path(URL_PATTERN.format(id=id))
+def get_source_path(id: str) -> str:
+    """
+    Get the source URL for the given sento ID.
+
+    :param id: Sento identifier
+    :return: Source URL for the sento
+    """
+    return URL_PATTERN.format(id=id)
 
 
-def get_cache_path(url: pathlib.Path) -> pathlib.Path:
-    return pathlib.Path(url.with_suffix(".html").name)
+def get_cache_path(id: str) -> pathlib.Path:
+    """
+    Get the cache path for the given sento ID.
+
+    :param id: Sento identifier
+    :return: Path object representing the cache file path
+    """
+    return pathlib.Path(CACHE_PATH_PATTERN.format(id=id))
 
 
+# Translation table for full-width to half-width characters
 TABLE = str.maketrans("０１２３４５６７８９：−", "0123456789:-")
 
 
 async def scrape(id: str, cache_dir: pathlib.Path) -> Sento:
-    """TODO: docstring"""
+    """
+    Scrape the sento information from the given ID.
+
+    :param id: Sento identifier
+    :param cache_dir: Directory in which cache files are stored
+    :return: Sento information
+    """
 
     url = get_source_path(id)
-    localpath = get_cache_path(url)
+    localpath = get_cache_path(id)
     if cache_dir:
         localpath = cache_dir / localpath
 
     try:
         with localpath.open(mode="rb") as fin:
             data = fin.read()
-    except (IOError, FileNotFoundError):
-        with urlopen(str(url)) as fin:
-            data = fin.read()
-        with localpath.open(mode="wb") as fout:
-            fout.write(data)
+    except OSError, FileNotFoundError:
+        try:
+            with urlopen(f"{url}") as fin:
+                data = fin.read()
+            with localpath.open(mode="wb") as fout:
+                fout.write(data)
+        except URLError:
+            raise ValueError(f"Cannot fetch <{url}>")
 
     def sanitize(text: str) -> str:
+        """Remove whitespace and convert full-width characters to half-width"""
         return re.sub(r"\s+", "", text.strip()).translate(TABLE)
 
     def process_address(text: str) -> str:
@@ -94,14 +148,21 @@ async def scrape(id: str, cache_dir: pathlib.Path) -> Sento:
     bs = BeautifulSoup(data, "lxml")
 
     def get_name_from_heading() -> str:
+        """Get the sento name from the heading tag"""
         if heading := bs.find("h2"):
             return cast(str, heading.text)
         raise ValueError
 
     def has_laundry() -> bool:
-        return bool(bs.find("a", string="コインランドリー"))
+        """Check if the sento has laundry facilities"""
+        return bool(bs.find("a", string="ランドリー"))  # type: ignore[call-overload]
 
     def get_column_value(propname: str) -> str:
+        """Get the value of the specified property from the table
+
+        :param propname: Property name to search for
+        :return: Corresponding value from the table
+        """
         if not (tag := bs.find(string=propname)):
             raise ValueError
         if not (column := tag.find_next("td")):
@@ -111,7 +172,7 @@ async def scrape(id: str, cache_dir: pathlib.Path) -> Sento:
     return Sento(
         id=id,
         name=get_name_from_heading(),
-        has_laundry=1 if has_laundry() else 0,
+        has_laundry=has_laundry(),
         address=process_address(get_column_value("住所")),
         access=sanitize(get_column_value("アクセス")),
         holidays=sanitize(get_column_value("休日")),
@@ -147,13 +208,14 @@ def main(id: Sequence[str], semaphore: int, cache_dir: pathlib.Path) -> None:
 
     \b
     Example:
-    $ sentoscraper.py $(seq 590 592)
-    590|さくら湯 [板橋区]|板橋区板橋3-39-12|都営三田線「板橋区役所前」駅下車、徒歩5分|月曜、木曜|0|15:30-21:00
-    591|金松湯 [板橋区]|板橋区大山東町55-3|東武東上線「大山」駅下車、徒歩2分|火曜|0|15:30-23:30
-    592|第二富士見湯 [板橋区]|板橋区幸町20-5|東武東上線「大山」駅下車、徒歩7分|土曜|0|16:00-24:00日曜、 祝日は15時から営業
+    $ sentoscraper $(seq 590 592)
+    590|さくら湯 [板橋区]|板橋区板橋3-39-12|都営三田線「板橋区役所前」駅下車、徒歩5分|月曜、木曜|1|15:30-20:30
+    591|金松湯 [板橋区]|板橋区大山東町55-3|東武東上線「大山」駅下車、徒歩2分|火曜|1|15:30-23:30
+    592|第二富士見湯 [板橋区]|板橋区幸町20-5|東武東上線「大山」駅下車、徒歩7分|土曜|1|16:00-24:00日曜、祝日は15時から営業
     """
 
     results = asyncio.run(fetch(id, semaphore, cache_dir))
+    click.echo(SEP.join(CSV_HEADER))
     for i in sorted(results):
         click.echo(i)
 
