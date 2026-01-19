@@ -18,69 +18,45 @@ import click
 from PIL import Image
 
 
-__version__ = "1.3.1"
+__version__ = "1.4"
 logger = logging.getLogger(__name__)
 
 
-async def generate_images(
-    queue: asyncio.Queue[pathlib.Path],
-    filename: Iterable[pathlib.Path],
-) -> None:
-    """Producer coroutine"""
-
-    for f in filename:
-        await queue.put(f)
-
-    logger.info("All task requests sent")
-
-
-async def rotate_image(queue: asyncio.Queue[pathlib.Path]) -> None:
+async def rotate_image(filename: pathlib.Path) -> None:
     """Consumer coroutine"""
 
-    while True:
-        filename: pathlib.Path = await queue.get()
-        logger.info(f"Working on {filename}")
-        try:
-            image = Image.open(filename)
-            if image.width <= image.height:
-                # already portrait
-                logger.info(f"Skip {filename}")
-                continue
-
-            image_new = image.rotate(-90, expand=True)
-            logger.info(f"Saving {filename}")
-            image_new.save(filename)
-        except Exception as e:
-            # PIL.UnidentifiedImageError: The image cannot be opened and identified.
-            # ValueError: The output format could not be determined from the file name.
-            # OSError: The file may have been created, and may contain partial data.
-            logger.warning(f"Warning: {e}")
-        finally:
-            queue.task_done()
-
-
-async def terminate_consumers(consumers: Iterable[asyncio.Task[None]]) -> None:
-    """Clean up consumers"""
-
-    for consumer in consumers:
-        consumer.cancel()
-
-    await asyncio.gather(*consumers, return_exceptions=True)
+    logger.info(f"Working on {filename}")
+    try:
+        image = Image.open(filename)
+        if image.width <= image.height:
+            # already portrait
+            logger.info(f"Skip {filename}")
+            return
+        image_new = image.rotate(-90, expand=True)
+        logger.info(f"Saving {filename}")
+        image_new.save(filename)
+    except Exception as e:
+        # PIL.UnidentifiedImageError: The image cannot be opened and identified.
+        # ValueError: The output format could not be determined from the file name.
+        # OSError: The file may have been created, and may contain partial data.
+        logger.warning(f"Warning: {e}")
 
 
 async def amain(filename: Sequence[pathlib.Path], num_consumers: int) -> None:
-    # Producer/consumer pattern
-    queue: asyncio.Queue[pathlib.Path] = asyncio.Queue()
+    """
+    Asynchronous main coroutine.
 
-    # turn on the rotate_image thread
-    consumers = [asyncio.create_task(rotate_image(queue)) for _ in range(num_consumers)]
-    await generate_images(queue, filename)
+    :param filename: Iterable of image filenames
+    :param num_consumers: Number of consumers
+    """
 
-    # block until all tasks are done
-    await queue.join()
+    async with asyncio.TaskGroup() as tg:
+        semaphore = asyncio.Semaphore(num_consumers)
+        for img in filename:
+            async with semaphore:
+                tg.create_task(rotate_image(img))
+        logger.info("All task requests sent")
     logger.info("All work completed")
-
-    await terminate_consumers(consumers)
 
 
 @click.command()
