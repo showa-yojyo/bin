@@ -8,11 +8,13 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+# Ensure script is run as root.
 if [ "$(whoami)" != "root" ] ; then
     echo "Run this script with sudo" >&2
     exit 1
 fi
 
+# Determine target user and mount destination.
 declare -r target_user="${SUDO_USER:-$USER}"
 declare -r mount_dest_drive_letter="E"
 declare -r mount_dest="/mnt/${mount_dest_drive_letter,,}"
@@ -21,12 +23,16 @@ declare -r dest="${mount_dest}/backup"
 declare -r uid=$(id -u $target_user)
 declare -r gid=$(id -g $target_user)
 
+# Mount the drive.
 mkdir -p "${mount_dest}"
 chown -R ${uid}:${gid} "${mount_dest}"
 chmod -R 777 "${mount_dest}"
 mount -t drvfs "${mount_dest_drive_letter^^}:" "${mount_dest}" -o metadata,uid=${uid},gid=${gid},umask=022,fmask=011
 
-declare -r src="/mnt/c/Users/${target_user}"
+# Define source directories to back up.
+declare -r src="wslpath $(wslvar -s USERPROFILE)"
+
+# Define directories to back up.
 declare -ar backup_dirs=(
     "${src}/AppData/Roaming/GIMP/3.0"
     "${src}/AppData/Roaming/inkscape"
@@ -38,6 +44,7 @@ declare -ar backup_dirs=(
     "${src}/Videos"
     )
 
+# Perform the backup using rsync.
 declare -r rsync_options="-azvh"  # -n
 rsync ${rsync_options[@]} --exclude={dotfiles/,tmp/} "${backup_dirs[@]}" "${dest}"
 
