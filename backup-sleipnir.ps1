@@ -6,7 +6,7 @@
 $DRY_RUN = "/L"
 
 $SLEIPNIR = "Fenrir Inc\Sleipnir5"
-$SRC_ROOT = "$env:APPDATA\${SLEIPNIR}%"
+$SRC_ROOT = "$env:APPDATA\${SLEIPNIR}"
 $DEST_ROOT = "E:\backup\AppData\Roaming\${SLEIPNIR}"
 
 $ITEMS_TO_BACKUP = @(

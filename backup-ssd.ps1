@@ -3,16 +3,16 @@
 
 # Note: To perform a real backup, manually set the $DRY_RUN variable to an empty
 # string.
-$DRY_RUN = "/L"
+$DRY_RUN = ""
 
 # Back up %APPDATA% packages.
 
-$TARGETS = @(GIMP/3.0, inkscape, LibreOffice/4/user)
+$TARGETS = @("GIMP/3.0", "inkscape", "LibreOffice/4/user")
 $SRC_ROOT = $env:APPDATA
 $BACKUP_DEST_ROOT = "E:\backup"
 $DEST_ROOT = "${BACKUP_DEST_ROOT}\AppData\Roaming"
 
-foreach (i in $TARGETS){
+foreach ($i in $TARGETS){
     robocopy "${SRC_ROOT}\$i" "${DEST_ROOT}\$i" $DRY_RUN /MIR /E /ZB /COPYALL /DCOPY:t /XJ /R:0 /W:1
 }
 
@@ -22,7 +22,7 @@ robocopy "$env:USERPROFILE" "${BACKUP_DEST_ROOT}" $DRY_RUN /LEV:1 /R:1 /W:1 /ZB 
 
 # Back up %USERPROFILE% folders.
 
-$TARGETS = @(devel, Documents, Music, Pictures)
-foreach (i in $TARGETS){
+$TARGETS = @("devel", "Documents", "Music", "Pictures")
+foreach ($i in $TARGETS){
     robocopy "$env:USERPROFILE\$i" "${BACKUP_DEST_ROOT}\$i" $DRY_RUN /E /ZB /COPYALL /DCOPY:t /XJ /R:0 /W:1
 }
