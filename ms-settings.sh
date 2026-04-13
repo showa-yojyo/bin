@@ -1,7 +1,8 @@
 #!/bin/bash
 
-echo '
-about
+# ms-settings.sh: A simple launcher of Windows Settings App.
+
+echo 'about
 activation
 appsfeatures
 appsforwebsites
@@ -43,8 +44,7 @@ gaming-gamebar
 gaming-gamedvr
 gaming-gamemode
 keyboard
-lockscreen
-maps
+lockscreemaps
 mobile-devices
 mousetouchpad
 multitasking
@@ -115,4 +115,9 @@ windowsupdate-history
 windowsupdate-optionalupdates
 workplace
 yourinfo
-' | fzf --bind 'enter:become(wslview ms-settings:{})'
+' | fzf --height=40% \
+    --border --border-label "Windows Settings" --border-label-pos=3 \
+    --color hl:underline,hl+:underline \
+    --no-hscroll \
+    --layout=reverse \
+    --bind 'enter:become(wslview ms-settings:{})'
