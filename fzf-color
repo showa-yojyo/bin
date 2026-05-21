@@ -1,0 +1,36 @@
+#!/bin/bash
+# fzf-color: CLI color-picker powered by fzf.
+
+# Resources:
+# - <https://man.archlinux.org/man/fzf.1.en>
+# - <https://stackoverflow.com/questions/74589665/how-to-print-rgb-colour-to-the-terminal>
+# - <https://developer.mozilla.org/en-US/docs/Web/CSS/color_value>
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+declare -r SCRIPT_DIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+
+# aliceblue #f0f8ff
+# antiquewhite #faebd7
+# aqua #00ffff
+# aquamarine #7fffd4
+# ...
+declare -r COLOR_TABLE_SOURCE="$SCRIPT_DIR/colors.txt"
+
+awk '{
+    name = $1
+    value = $2
+    r = strtonum("0x" substr(value, 2, 2))
+    g = strtonum("0x" substr(value, 4, 2))
+    b = strtonum("0x" substr(value, 6, 2))
+    printf "\033[38;2;%d;%d;%dm■■■■\033[0m %s %s\n", r, g, b, name, value
+}
+' "$COLOR_TABLE_SOURCE" | column -t -s ' ' | \
+    fzf --ansi \
+        --border --border-label=" CSS named colors " --border-label-pos=4 \
+        --header="TODO: provide useful actions" --header-border horizontal \
+        --layout=reverse \
+        --preview='echo TODO: fancy preview of {2}' \
+        --preview-window=right:50%:nowrap \

@@ -2,7 +2,6 @@
 bat
 tmp*
 *.cache
-*.txt
 *.bak
 
 # General rules
