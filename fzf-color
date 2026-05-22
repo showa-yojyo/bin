@@ -4,6 +4,7 @@
 # Resources:
 # - <https://man.archlinux.org/man/fzf.1.en>
 # - <https://stackoverflow.com/questions/74589665/how-to-print-rgb-colour-to-the-terminal>
+# - <https://askubuntu.com/questions/558280/changing-colour-of-text-and-background-of-terminal>
 # - <https://developer.mozilla.org/en-US/docs/Web/CSS/color_value>
 
 set -o errexit
@@ -19,18 +20,29 @@ declare -r SCRIPT_DIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 # ...
 declare -r COLOR_TABLE_SOURCE="$SCRIPT_DIR/colors.txt"
 
+declare -r preview='echo TODO: fancy preview of {2}'
+
+declare -r open_color_hex='
+color_code={2}
+code_without_hash_sign=${color_code#\#}
+xdg-open https://www.color-hex.com/color/${code_without_hash_sign}
+'
+
 awk '{
     name = $1
-    value = $2
-    r = strtonum("0x" substr(value, 2, 2))
-    g = strtonum("0x" substr(value, 4, 2))
-    b = strtonum("0x" substr(value, 6, 2))
-    printf "\033[38;2;%d;%d;%dm■■■■\033[0m %s %s\n", r, g, b, name, value
+    color_code = $2
+    r = strtonum("0x" substr(color_code, 2, 2))
+    g = strtonum("0x" substr(color_code, 4, 2))
+    b = strtonum("0x" substr(color_code, 6, 2))
+    printf "\033[48;2;%d;%d;%dm \033[0m %s %s\n", r, g, b, name, color_code
 }
 ' "$COLOR_TABLE_SOURCE" | column -t -s ' ' | \
     fzf --ansi \
+        --accept-nth=1,2 \
+        --bind='enter:become:echo {1} {2}' \
+        --bind="ctrl-o:execute-silent:$open_color_hex" \
         --border --border-label=" CSS named colors " --border-label-pos=4 \
-        --header="TODO: provide useful actions" --header-border horizontal \
+        --header="Ctrl+O: Open www.Color-Hex.com" --header-border horizontal \
         --layout=reverse \
-        --preview='echo TODO: fancy preview of {2}' \
+        --preview="$preview" \
         --preview-window=right:50%:nowrap \
