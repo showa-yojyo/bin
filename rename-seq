@@ -7,10 +7,11 @@ set -o nounset
 set -o pipefail
 
 declare -ar input=(${@})
-declare -ir num_video=${#input[@]}
+declare -ir num_files=${#input[@]}
 
-for (( i=0; i<$num_video; i++ ));
+# TODO: Rewrite without using a for loop, in order to avoid the need for the
+# temporary variable i.
+for (( i=0; i<$num_files; i++ ));
 do
-    extension="${input##*.}"
-    mv "${input[i]}" ${i}."${extension}"
+    mv -- "${input[i]}" "${i}.${input##*.}"
 done
