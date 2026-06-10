@@ -13,7 +13,7 @@ declare -r input="${1:?${usage}}"
 declare -r angle=-90\<
 
 # Resize the image to the resolution of my laptop monitor.
-declare -r size=1366x768
+declare -r size=1920x1080
 
 declare -ar magick_args=(-rotate ${angle} -resize ${size})
 
