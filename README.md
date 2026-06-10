@@ -1,6 +1,11 @@
+---
+author: プレハブ小屋 <2386769+showa-yojyo@users.noreply.github.com>
+title: README
+---
+
 # README
 
-## What is this?
+## What this repository is
 
 This repository contains various script files for my use. Most of the script
 files are written in Bash or Python so far.
@@ -14,15 +19,13 @@ mkdir -p ~/.local/bin && cd $_ # optional
 git clone https://github.com/showa-yojyo/bin.git .
 ```
 
-And make sure the `PATH` environment variable includes this directory. For
-example, in `.bash_profile`, set it as below:
+And make sure the `PATH` environment variable includes this directory. If you
+use Bash, modify the variable in `.bashrc` as below:
 
 ```shell
-# in .bash_profile or .profile
-
-# set PATH so it includes user's private bin if it exists
+# change PATH so it includes one of your private bin directores
 for dir in "$HOME/.local/bin" "$HOME/bin"; do
-    if [ -d "$dir" ] ; then
+    if [[ -d "$dir" ]] ; then
         PATH="$dir:$PATH"
         break
     fi
@@ -45,10 +48,11 @@ done
   * [python-stdnum]
 * [ImageMagick]
 * [FFmpeg]
+* [fzf]
 
-## Bug Reporting
+## How to file issues
 
-If you find any issues in programs here, please miss them.
+If you find any issues in programs this repository, please miss them.
 
 [GNU Bash]: <https://www.gnu.org/software/bash/>
 [Python]: <https://www.python.org/>
@@ -59,6 +63,7 @@ If you find any issues in programs here, please miss them.
 [Scrapy]: <https://scrapy.org/>
 [PyYAML]: <https://pyyaml.org/>
 [FFmpeg]: <https://ffmpeg.org/>
+[fzf]: <https://junegunn.github.io/fzf/> "fzf"
 [ImageMagick]: <https://imagemagick.org/>
 [JPHoliday]: <https://github.com/Lalcs/jpholiday>
 [Click]: <https://click.palletsprojects.com/en/stable/>
