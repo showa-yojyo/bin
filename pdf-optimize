@@ -11,10 +11,17 @@ set -o nounset
 set -o pipefail
 
 declare -r input="${1:?Usage: ${0##*/} INPUT_PDF_PATH}"
-declare -r workpath="$(mktemp XXXXXXXX.pdf)"
-declare -r gs_options="-sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dNOPAUSE -dBATCH"
+workpath="$(mktemp XXXXXXXX.pdf)"
+declare -r workpath
+declare -ar gs_options=(
+    "-sDEVICE=pdfwrite"
+    "-dCompatibilityLevel=1.4"
+    "-dPDFSETTINGS=/printer"
+    "-dNOPAUSE"
+    "-dBATCH"
+)
 
-gs $gs_options -sOutputFile="$workpath" "$input"
-chmod =rw "$workpath"
+gs "${gs_options[@]}" -sOutputFile="$workpath" "$input"
+chmod "=rw" "$workpath"
 touch -r "$input" "$workpath"
 mv -f "$workpath" "$input"

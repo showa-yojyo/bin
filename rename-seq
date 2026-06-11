@@ -6,12 +6,12 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-declare -ar input=(${@})
+declare -ar input=("${@}")
 declare -ir num_files=${#input[@]}
 
 # TODO: Rewrite without using a for loop, in order to avoid the need for the
 # temporary variable i.
-for (( i=0; i<$num_files; i++ ));
+for (( i=0; i<num_files; i++ ));
 do
     mv -- "${input[i]}" "${i}.${input##*.}"
 done

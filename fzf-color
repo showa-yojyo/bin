@@ -11,17 +11,19 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-declare -r SCRIPT_DIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+script_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
+declare -r script_dir
 
 # aliceblue #f0f8ff
 # antiquewhite #faebd7
 # aqua #00ffff
 # aquamarine #7fffd4
 # ...
-declare -r COLOR_TABLE_SOURCE="$SCRIPT_DIR/colors.txt"
+declare -r color_table_source="$script_dir/colors.txt"
 
 declare -r preview='echo TODO: fancy preview of {2}'
 
+# shellcheck disable=SC2016
 declare -r open_color_hex='
 color_code={2}
 code_without_hash_sign=${color_code#\#}
@@ -36,7 +38,7 @@ awk '{
     b = strtonum("0x" substr(color_code, 6, 2))
     printf "\033[48;2;%d;%d;%dm \033[0m %s %s\n", r, g, b, name, color_code
 }
-' "$COLOR_TABLE_SOURCE" | column -t -s ' ' | \
+' "$color_table_source" | column -t -s ' ' | \
     fzf --ansi \
         --accept-nth=1,2 \
         --bind='enter:become:echo {1} {2}' \

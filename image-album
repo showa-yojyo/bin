@@ -6,15 +6,17 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-declare -r usage="Usage: ${0##*/} IMAGE_PATH [...]"
-declare -r input="${1:?${usage}}"
+if [[ -z "$1" ]]; then
+  echo "Usage: ${0##*/} IMAGE_PATH [...]" >&2
+  exit 2
+fi
 
 # Rotate the source image only if its width is less than the height.
-declare -r angle=-90\<
+declare -r angle='-90\<'
 
 # Resize the image to the resolution of my laptop monitor.
 declare -r size=1920x1080
 
-declare -ar magick_args=(-rotate ${angle} -resize ${size})
+declare -ar magick_args=(-rotate "${angle}" -resize "${size}")
 
-magick mogrify ${magick_args[@]} "$@"
+magick mogrify "${magick_args[@]}" "$@"
