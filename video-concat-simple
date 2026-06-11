@@ -6,14 +6,14 @@ set -o nounset
 set -o pipefail
 
 if [[ $# -le 2 ]] ; then
-    echo Usage: ${0##*/} INPUT_VIDEO_PATH... OUTPUT_VIDEO_PATH >&2
+    "echo Usage: ${0##*/} INPUT_VIDEO_PATH... OUTPUT_VIDEO_PATH" >&2
     exit 2
 fi
 
 declare -ar ffmpeg_global_options=(-loglevel error -y)
 declare -ar ffmpeg_input_options=(-f concat -safe 0)
 declare -ar ffmpeg_output_options=(-c copy)
-declare -r output="${@: -1}"
+declare -r output="${*: -1}"
 
 ffmpeg "${ffmpeg_global_options[@]}" \
     "${ffmpeg_input_options[@]}" -i \

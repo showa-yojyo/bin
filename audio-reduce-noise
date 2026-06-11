@@ -10,7 +10,7 @@ declare -r output="${input%.*}-reduce-noise.${input#*.}"
 declare -ar ffmpeg_global_options=(-loglevel error -y)
 declare -ar ffmpeg_output_options=(
     -c:v copy
-    -af highpass=f=200,lowpass=f=3000)
+    -af "highpass=f=200,lowpass=f=3000")
 
 ffmpeg "${ffmpeg_global_options[@]}" \
     -i "$input" \

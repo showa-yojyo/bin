@@ -6,7 +6,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-declare -r script_dir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+script_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
+declare -r script_dir
 declare -r settings_table_source="$script_dir/ms-settings.txt"
 
 fzf --height=40% \

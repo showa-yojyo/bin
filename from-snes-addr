@@ -19,13 +19,13 @@ declare -r cpu_addr="${2:?$usage}"
 declare rom_addr
 case "${mode^^}" in
     HI)
-        rom_addr="$((0x003FFFFF & $cpu_addr))";;
+        rom_addr="$((0x003FFFFF & cpu_addr))";;
     LO)
-        rom_addr="$(( ($cpu_addr & 0x007FFF) \
-                   | (($cpu_addr & 0x007F0000) >> 1) ))";;
+        rom_addr="$(( (cpu_addr & 0x007FFF) \
+                   | ((cpu_addr & 0x007F0000) >> 1) ))";;
     *)
-        echo $usage >&2
-        exit 1
+        echo "$usage" >&2
+        exit 2
 esac
 
-echo $rom_addr
+echo "$rom_addr"

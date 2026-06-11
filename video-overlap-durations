@@ -13,12 +13,13 @@ declare -ar ffprobe_options=(
 IFS=$'\t\n'
 declare -a durations
 for i in *.mp4 ; do
-    durations+=($(ffprobe "${ffprobe_options[@]}" "$i"))
+    video_length=$(ffprobe "${ffprobe_options[@]}" "$i")
+    durations+=("$video_length")
 done
 
-declare sum=$(echo ${durations[0]} - 1 | bc)
-echo $sum
+sum=$(echo "${durations[0]} - 1"| bc)
+echo "$sum"
 for ((i=1; i<${#durations[@]}; i++)); do
-    sum=$(echo $sum + ${durations[i]} - 1 | bc)
-    echo $sum
+    sum=$(echo "$sum + ${durations[i]} - 1" | bc)
+    echo "$sum"
 done

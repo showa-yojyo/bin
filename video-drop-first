@@ -11,7 +11,7 @@ declare -r seconds="${2:-1}"
 declare -r output="${input%.*}-drop-first.${input##*.}"
 
 declare -ar ffmpeg_global_options=(-loglevel error -y)
-declare -ar ffmpeg_input_options=(-ss $seconds)
+declare -ar ffmpeg_input_options=(-ss "$seconds")
 declare -ar ffmpeg_output_options=(-c copy)
 
 ffmpeg "${ffmpeg_global_options[@]}" \
