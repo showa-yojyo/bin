@@ -22,7 +22,7 @@ robocopy "$env:USERPROFILE" "${BACKUP_DEST_ROOT}" $DRY_RUN /LEV:1 /R:1 /W:1 /ZB 
 
 # Back up %USERPROFILE% folders.
 
-$TARGETS = @("devel", "Documents", "Music", "Pictures")
+$TARGETS = @("devel", "Documents", "Music", "Pictures", "Videos")
 foreach ($i in $TARGETS){
     robocopy "$env:USERPROFILE\$i" "${BACKUP_DEST_ROOT}\$i" $DRY_RUN /E /ZB /COPYALL /DCOPY:t /XJ /R:0 /W:1
 }

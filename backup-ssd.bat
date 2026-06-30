@@ -20,7 +20,7 @@ robocopy "%USERPROFILE%" "E:\backup" %DRY_RUN% /LEV:1 /R:1 /W:1 /ZB /XF "NTUSER*
 
 @rem Back up %USERPROFILE% folders.
 
-set TARGETS=devel Documents Music Pictures
+set TARGETS=devel Documents Music Pictures Videos
 for %%i in (%TARGETS%) do (
     Robocopy "%USERPROFILE%\%%i" "E:\backup\%%i" %DRY_RUN% /E /ZB /COPYALL /DCOPY:t /XJ /R:0 /W:1
 )
