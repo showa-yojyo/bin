@@ -1,0 +1,24 @@
+#!/bin/bash
+# xdg-open: in WSL, xdg-open is provided by user because wslview is deprecated.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+declare -r target="${1:?Usage: ${0##*/} <file|URL>}"
+
+# Check if target is a URL or URI scheme
+if [[ $target =~ ^[a-zA-Z][a-zA-Z0-9+.-]*:// ]] || [[ $target =~ ^(mailto|tel|sms): ]]; then
+    arg=$target
+else
+    # Convert Linux path to Windows absolute path.
+    arg=$(wslpath -w -- "$target")
+fi
+
+# Single quotes must escaped for PowerShell execution.
+escaped=${arg//\'/\'\'}
+
+# Call Win32 API ShellExecute via PowerShell Start-Process.
+exec '/mnt/c/Program Files/PowerShell/7/pwsh.exe' \
+  -NoProfile -NonInteractive -NoLogo -Command \
+  "Start-Process -FilePath '$escaped'"
