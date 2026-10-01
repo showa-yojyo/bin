@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Description: Run this script before `wsl --export`.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+# JavaScript
+find ~/devel -name node_modules -type d -prune -exec rm -rf '{}' +
+
+# Python
+mamba -n python-3.14 run pip cache --purge
+mamba clean --all
+
+# Ruby
+gem cleanup
+bundle clean --force
+
+# General cache
+rm -rf ~/.cache/*

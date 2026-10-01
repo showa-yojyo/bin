@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Description: Run this script with sudo before `wsl --export`.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+if [[ $EUID != 0 ]]; then
+    echo "Error: Run this script with sudo." >&2
+    exit 1
+fi
+
+docker system prune -a --volumes
+rm -rf /tmp/*
+rm -rf /var/tmp/*
