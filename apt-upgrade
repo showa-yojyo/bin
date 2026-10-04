@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Description: Run this script with sudo.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+if [[ $EUID != 0 ]]; then
+    echo "Error: Run this script with sudo." >&2
+    exit 1
+fi
+
+declare -r apt_opts=--yes
+apt-get update ${apt_opts}
+DEBIAN_FRONTEND=noninteractive apt-get upgrade ${apt_opts}
+apt-get autoremove
