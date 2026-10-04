@@ -1,0 +1,29 @@
+#!/bin/bash
+# Description: run `bundle update` and commit Gemfile.lock if it is updated.
+
+set -o errexit -o nounset -o pipefail
+
+declare -r dir=${1:?Usage: ${0##*/} PROJECT_DIRECTORY}
+declare -r target=Gemfile.lock
+
+if ! git -C "$dir" diff --cached --quiet; then
+    echo "There are files staged for commit." >&2
+    exit 1
+fi
+
+# bundle(1) does not have any option to change directory.
+cd "$dir" && bundle update
+
+# Test if Gemfile.lock has been changed.
+if git -C "$dir" diff --quiet "$target"; then
+    echo "No changes" >&2
+    exit 0
+fi
+
+git -C "$dir" add -u "$target"
+git -C "$dir" commit -m "${target}: update vendored gems"
+
+# If there is an unpushed commit, not to push.
+if [[ $(git -C "$dir" rev-list "@{u}.." --count) -le 1 ]]; then
+    git push && git push --force-with-lease
+fi
