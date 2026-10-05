@@ -4,13 +4,11 @@
 # Usage:
 # sudo ./wsl-drop-cache
 
-set -o errexit
-set -o nounset
-set -o pipefail
+set -o errexit -o nounset -o pipefail
 
-if [[ "$(whoami)" != "root" ]] ; then
+if [[ $EUID != 0 ]]; then
     echo "Run this script with sudo" >&2
-    exit 2
+    exit 1
 fi
 
 # Flush writes and drop file system caches.
