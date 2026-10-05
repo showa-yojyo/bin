@@ -1,0 +1,19 @@
+#!/bin/bash
+# Description: Demonstrate git fetch over SSH
+
+set -o errexit -o nounset -o pipefail
+
+if [[ $EUID == 0 ]]; then
+    echo "This script must not be run as root" >&2
+    exit 1
+fi
+
+declare -r dir=${1:?Usage: ${0##*/} GIT_LOCAL_REPOSITORY_DIRECTORY}
+
+# export GIT_SSH_COMMAND="ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+
+builtin cd "${dir}" || exit 1
+
+declare -r git=/usr/bin/git
+
+"$git" fetch --prune --tags --verbose
