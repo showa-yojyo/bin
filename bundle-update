@@ -6,24 +6,45 @@ set -o errexit -o nounset -o pipefail
 declare -r dir=${1:?Usage: ${0##*/} PROJECT_DIRECTORY}
 declare -r target=Gemfile.lock
 
-if ! git -C "$dir" diff --cached --quiet; then
+builtin cd "$dir" || exit 1
+
+# Address run from cron(8)
+if [[ ! -v SSH_AGENT_PID || ! -v SSH_AUTH_SOCK ]]; then
+    echo "Load SSH variables" >&2
+    source ~/.keychain/$(hostname)-sh || exit 1
+fi
+
+declare -r git=/usr/bin/git
+if ! "$git" diff --staged --quiet; then
     echo "There are files staged for commit." >&2
     exit 1
 fi
 
-# bundle(1) does not have any option to change directory.
-cd "$dir" && bundle update
+if [[ ! -v GEM_HOME ]]; then
+    export GEM_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/gem"
+fi
+
+if [[ ! -v GEM_SPEC_CACHE ]]; then
+    export GEM_SPEC_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/gem"
+fi
+
+"$GEM_HOME/bin/bundle" update
 
 # Test if Gemfile.lock has been changed.
-if git -C "$dir" diff --quiet "$target"; then
+if "$git" diff --quiet "$target"; then
     echo "No changes" >&2
     exit 0
 fi
 
-git -C "$dir" add -u "$target"
-git -C "$dir" commit -m "${target}: update vendored gems"
+# There must be no staged file now.
+"$git" switch --quiet master
+"$git" add --update "$target"
 
-# If there is an unpushed commit, not to push.
-if [[ $(git -C "$dir" rev-list "@{u}.." --count) -le 1 ]]; then
-    git push && git push --force-with-lease
+# There must be Gemfile.lock staged.
+"$git" commit --message "${target}: update vendored gems" --quiet
+echo "Update Gemfile.lock" >&2
+
+# XXX
+if (( $("$git" rev-list --count "origin/master..HEAD") == 1 )); then
+    "$git" push origin master
 fi
