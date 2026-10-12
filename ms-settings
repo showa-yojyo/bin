@@ -2,17 +2,17 @@
 
 # ms-settings: A simple launcher of Windows Settings App.
 
-set -o errexit
-set -o nounset
-set -o pipefail
+set -o errexit -o nounset set -o pipefail
 
 script_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 declare -r script_dir
 declare -r settings_table_source="$script_dir/ms-settings.txt"
+
+declare -r pwsh="/mnt/c/Program\ Files/PowerShell/7/pwsh.exe -NoProfile -NonInteractive -NoLogo"
 
 fzf --height=40% \
     --border --border-label "Windows Settings" --border-label-pos=3 \
     --color hl:underline,hl+:underline \
     --no-hscroll \
     --layout=reverse \
-    --bind 'enter:become(wslview ms-settings:{})' < "$settings_table_source"
+    --bind "enter:become($pwsh -Command start ms-settings:{})" < "$settings_table_source"

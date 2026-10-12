@@ -10,7 +10,10 @@ fi
 
 declare -r dir=${1:?Usage: ${0##*/} GIT_LOCAL_REPOSITORY_DIRECTORY}
 
-# export GIT_SSH_COMMAND="ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+if [[ ! -v SSH_AGENT_PID || ! -v SSH_AUTH_SOCK ]]; then
+    echo "Load SSH variables" >&2
+    source ~/.keychain/$(hostname)-sh || exit 1
+fi
 
 builtin cd "${dir}" || exit 1
 
