@@ -1,28 +1,80 @@
 # A backup script of robocopy version.
 # Usage: backup-ssd.ps1
 
-# Note: To perform a real backup, manually set the $DRY_RUN variable to an empty
-# string.
-$DRY_RUN = ""
+$BACKUP_DEST_ROOT = "E:\backup"
+$BACKUP_SRC_ROOT = $env:APPDATA
 
 # Back up %APPDATA% packages.
 
-$TARGETS = @("GIMP/3.0", "inkscape", "LibreOffice/4/user")
-$SRC_ROOT = $env:APPDATA
-$BACKUP_DEST_ROOT = "E:\backup"
-$DEST_ROOT = "${BACKUP_DEST_ROOT}\AppData\Roaming"
+$robo_opts = @(
+    "/L"
+    "/MIR"
+    "/R:0"
+    "/W:1"
+)
 
-foreach ($i in $TARGETS){
-    robocopy "${SRC_ROOT}\$i" "${DEST_ROOT}\$i" $DRY_RUN /MIR /E /ZB /COPYALL /DCOPY:t /XJ /R:0 /W:1
+$targets = @(
+    "DeepL_SE"
+    "draw.io"
+    #"FastStone"
+    "GIMP\3.2"
+    "inkscape"
+    "LibreOffice\4\user"
+    #"Microsoft"
+    "Mozilla"
+    "NuGet"
+    #"obs-studio"
+    "Thunderbird\Profiles"
+    #"vlc"
+    #"Zoom"
+)
+$exclude_dirs = @(
+    "*Cache*"
+    "logs"
+)
+$dest_root = "${BACKUP_DEST_ROOT}\AppData\Roaming"
+foreach ($dir in $targets){
+    robocopy "${BACKUP_SRC_ROOT}\$dir" "${dest_root}\$dir" /XD @exclude_dirs $robo_opts
 }
 
-# Back up %USERPROFILE% without folders.
+## Back up %USERPROFILE% without folders.
 
-robocopy "$env:USERPROFILE" "${BACKUP_DEST_ROOT}" $DRY_RUN /LEV:1 /R:1 /W:1 /ZB /XF "NTUSER*" "*.lnk"
+$robo_opts = @(
+    "/L"
+    "/S"
+    "/XO"
+    "/XX"
+    "/R:0"
+    "/W:1"
+)
+$exclude_files = @(
+    "NTUSER*"
+    "*.lnk"
+)
+
+robocopy "$env:USERPROFILE" "${BACKUP_DEST_ROOT}" /LEV:1 /XF @exclude_files $robo_opts
 
 # Back up %USERPROFILE% folders.
 
-$TARGETS = @("devel", "Documents", "Music", "Pictures", "Videos")
-foreach ($i in $TARGETS){
-    robocopy "$env:USERPROFILE\$i" "${BACKUP_DEST_ROOT}\$i" $DRY_RUN /E /ZB /COPYALL /DCOPY:t /XJ /R:0 /W:1
+$robo_opts = @(
+    "/L"
+    "/S"
+    "/XO"
+    "/XX"
+    "/R:0"
+    "/W:1"
+)
+$targets = @(
+    ".ssh"
+    #".vscode"
+    "devel"
+    "Documents"
+    "Music"
+    "Pictures"
+    "Saved Games"
+    #"Videos"
+)
+
+foreach ($dir in $targets){
+    robocopy "$env:USERPROFILE\$dir" "${BACKUP_DEST_ROOT}\$dir" /XD @exclude_dirs $robo_opts
 }

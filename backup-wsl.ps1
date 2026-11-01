@@ -5,6 +5,7 @@
 # backup location.
 
 wsl --shutdown
+Start-Sleep -Seconds 8;
 
 # yyyymmdd format for the filename
 $today = Get-Date -Format "yyyy-MM-dd"
