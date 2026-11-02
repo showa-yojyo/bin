@@ -1,0 +1,26 @@
+#!/bin/bash
+# Description: Get Micromamba environments up-to-date
+
+set -o errexit -o nounset -o pipefail
+
+# cron-conpatible
+PATH=/usr/bin:/bin
+
+export MAMBA_EXE="/home/linuxbrew/.linuxbrew/bin/mamba"
+export MAMBA_ROOT_PREFIX="$HOME/.local/share/mamba/"
+if __mamba_setup="$("$MAMBA_EXE" shell hook --shell bash --root-prefix "$MAMBA_ROOT_PREFIX" 2> /dev/null)" ; then
+    eval "$__mamba_setup"
+    unset __mamba_setup
+fi
+
+declare -ar envs=(
+    base
+    hatch
+    pipenv
+    scrapy
+)
+
+for env in "${envs[@]}"; do
+    mamba activate "$env" && mamba update --all
+done
+mamba clean --all
