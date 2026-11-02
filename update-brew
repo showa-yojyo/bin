@@ -1,0 +1,10 @@
+#!/bin/bash
+# Description: Get Homebrew files up-to-date.
+
+set -o errexit -o nounset -o pipefail
+
+declare -r BREW=/home/linuxbrew/.linuxbrew/bin/brew
+
+$BREW update && $BREW upgrade --yes
+$BREW cleanup --prune=all
+$BREW autoremove
