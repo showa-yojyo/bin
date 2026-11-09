@@ -1,10 +1,16 @@
 #!/usr/bin/env python
-
+#
+# /// script
+# requires-python = ">=3.14"
+# dependencies = [
+#     "click",
+#     "pyyaml",
+#     "scrapy",
+# ]
+# ///
 """
 Sign in MJ.NET and scrape today's result.
 """
-
-from __future__ import annotations
 
 import os
 import pathlib
@@ -26,7 +32,7 @@ if TYPE_CHECKING:
     from scrapy.http import Response  # type: ignore[attr-defined]
     from scrapy.selector import Selector  # type: ignore[attr-defined]
 
-__version__ = "2.1.1"
+__version__ = "2.2"
 
 APP_NAME = "mjnet-scraper"
 
