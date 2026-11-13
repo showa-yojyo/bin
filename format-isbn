@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+# /// script
+# requires-python = ">=3.15"
+# dependencies = [
+#     "click",
+#     "python-stdnum",
+# ]
+# ///
 
 """Reformat ISBNs and print the reformatted numbers to stdout.
 
@@ -6,8 +13,6 @@ Note: This program requires stdnum_ package as ISBN converter.
 
 _stdnum: https://github.com/arthurdejong/python-stdnum
 """
-
-from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
@@ -17,7 +22,7 @@ from stdnum import isbn
 if TYPE_CHECKING:
     from typing import Iterable
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 
 @click.command()
