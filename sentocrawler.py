@@ -1,11 +1,17 @@
 #!/usr/bin/env python
 
+# /// script
+# requires-python = ">=3.15"
+# dependencies = [
+#     "click",
+#     "scrapy",
+# ]
+# ///
+
 """
 Example:
 $ ./sentocrawler.py -f json
 """
-
-from __future__ import annotations
 
 import sys
 from typing import TYPE_CHECKING

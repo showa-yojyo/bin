@@ -1,7 +1,15 @@
 #!/usr/bin/env python
 
+# /// script
+# requires-python = ">=3.15"
+# dependencies = [
+#     "click",
+#     "jpholiday>=1.0.3",
+# ]
+# ///
+
 # Synopsys:
-#   Output all last business days of the year.
+#   Output all last business days of a year.
 # References:
 #   * Generate last business day of the month variable in Python for US Calendar - Stack Overflow
 #     <https://stackoverflow.com/questions/62557373/generate-last-business-day-of-the-month-variable-in-python-for-us-calendar>
@@ -9,10 +17,6 @@
 #     <https://stackoverflow.com/questions/42950/get-the-last-day-of-the-month>
 #   * Lalcs/jpholiday: 日本の祝日を取得するライブラリ
 #     <https://github.com/Lalcs/jpholiday>
-# Requirements:
-#   * jpholiday (pip install jpholiday)
-
-from __future__ import annotations
 
 import calendar
 import datetime
@@ -23,6 +27,7 @@ if TYPE_CHECKING:
 
 import click
 import jpholiday  # type: ignore[import-untyped]
+from jpholiday.checker.interface import OriginalHolidayCheckerInterface as OriginalHoliday
 
 ONEDAY = datetime.timedelta(days=1)
 
@@ -40,8 +45,8 @@ def last_business_day(year: int) -> Iterator[datetime.datetime]:
         yield d
 
 
-class TestHoliday(jpholiday.OriginalHoliday):  # type: ignore[misc]
-    def _is_holiday(self, d: datetime.datetime) -> bool:
+class TestHoliday(OriginalHoliday):  # type: ignore[misc]
+    def is_holiday(self, d: datetime.datetime) -> bool:
         match d.month:
             case calendar.JANUARY:
                 return d.day in {2, 3}
@@ -62,19 +67,19 @@ def main(year: int) -> None:
 
     \b
     Example:
-    $ last-business-days 2024
-    2024-01-31
-    2024-02-29
-    2024-03-29
-    2024-04-30
-    2024-05-31
-    2024-06-28
-    2024-07-31
-    2024-08-30
-    2024-09-30
-    2024-10-31
-    2024-11-29
-    2024-12-27
+    $ last-business-days 2026
+    2026-01-30
+    2026-02-27
+    2026-03-31
+    2026-04-30
+    2026-05-29
+    2026-06-30
+    2026-07-31
+    2026-08-31
+    2026-09-30
+    2026-10-30
+    2026-11-30
+    2026-12-31
     """
 
     for d in last_business_day(year):
