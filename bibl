@@ -14,6 +14,7 @@ controlled in my reading notes <https://github.com/showa-yojyo/notebook/>.
 """
 
 import csv
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import click
@@ -22,13 +23,22 @@ from jinja2 import Environment
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 # TODO: Treat dict keys case-insensitive (especially ISBN).
 TEMPLATE = """\
+================================================================================
+読書目録 {{ year }} 年
+================================================================================
+
+* おおむね読み始めた順に排列する。書名順や出版順ではない。
+* 読了していないが、いずれ全部読む気がある本は遠慮なくこの一覧に記す。
+
+.. contents:: 見出し一覧
+   :local:
 {% for book in bibliography %}
 {{ book["title"] }}
-======================================================================
+================================================================================
 
 :著者: {{ book["authors"] }}
 {%- if "translators" in book %}
@@ -69,7 +79,8 @@ def parse(input: tuple[dict[str, str]]) -> Iterator[str]:
             del i["url"]
 
     return (
-        Environment(autoescape=False).from_string(TEMPLATE).generate(bibliography=input)
+        Environment(autoescape=False).from_string(TEMPLATE).generate(
+            bibliography=input, year=datetime.today().year)
     )
 
 
