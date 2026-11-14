@@ -5,10 +5,13 @@
 # dependencies = [
 #     "bs4",
 #     "click",
+#     "httpx",
 # ]
 # ///
 
 """sento.py: List bath houses in KU of Tokyo"""
+
+from __future__ import annotations
 
 import asyncio
 from typing import TYPE_CHECKING, cast
@@ -16,12 +19,13 @@ from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-from urllib import parse, request
+from urllib import parse
 
-from bs4 import BeautifulSoup, Tag
 import click
+import httpx
+from bs4 import BeautifulSoup, Tag
 
-__version__ = "1.5"
+__version__ = "1.5.1"
 
 CSV_HEADER = (
     "名前",
@@ -45,6 +49,9 @@ def parse_item(item: Tag) -> Iterable[str]:
                 return cast(str, column.text).strip()
         raise ValueError
 
+    # BUG
+    def has_laundry(item: Tag) -> bool:
+        return False
 
     info = item.find("div", class_="info")
     if isinstance(info, Tag) and (a := info.select_one("div[class=info]>h2>a")):
@@ -76,9 +83,10 @@ async def scrape(url: str) -> None:
     """Scrape the page located in url"""
 
     soup: BeautifulSoup
-    with request.urlopen(url) as html:
-        soup = BeautifulSoup(html, "html.parser")
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url)
 
+    soup = BeautifulSoup(resp.text, "html.parser")
     for j in soup.find_all("div", attrs={"class": "item"}):
         click.echo(SEP.join(parse_item(j)))
 

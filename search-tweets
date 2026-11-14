@@ -33,7 +33,7 @@ def version(
         return
 
     click.echo(f"search_tweets.py: {__version__}")
-    click.echo(f"Click: {mversion("click")}")
+    click.echo(f"Click: {mversion('click')}")
     click.echo(f"Python: {sys.version}")
     ctx.exit()
 
@@ -53,11 +53,12 @@ def version(
 def main(query: tuple[str]) -> None:
     """Output the URL for search Twitter tweets."""
 
-    url = f"https://twitter.com/search?{urlencode(
-        {
-            "q": " ".join(query),
-            "f": "tweets",
-        })}"
+    url = f"https://twitter.com/search?{
+        urlencode({
+            'q': ' '.join(query),
+            'f': 'tweets',
+        })
+    }"
     click.echo(url)
 
 

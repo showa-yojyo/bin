@@ -14,13 +14,15 @@ Note: This program requires stdnum_ package as ISBN converter.
 _stdnum: https://github.com/arthurdejong/python-stdnum
 """
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import click
 from stdnum import isbn
 
 if TYPE_CHECKING:
-    from typing import Iterable
+    from collections.abc import Iterable
 
 __version__ = "1.1.0"
 

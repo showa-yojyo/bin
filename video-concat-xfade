@@ -12,6 +12,8 @@
 # (with the `xfade` filter) · GitHub
 # <https://gist.github.com/royshil/369e175960718b5a03e40f279b131788>
 
+from __future__ import annotations
+
 import itertools
 import pathlib
 import subprocess
@@ -22,7 +24,7 @@ if TYPE_CHECKING:
 
 import click
 
-__version__ = "1.14.0"
+__version__ = "1.14.1"
 
 # TODO: Make these constants below configurable via command line arguments,
 # configuration files, environment variables, etc.
@@ -43,6 +45,7 @@ ACROSSFADE_DURATION = XFADE_DURATION
 
 AUDIO_NORMALIZE = "aresample=async=1:first_pts=0,asetpts=PTS,asettb=AVTB,apad"
 AUDIO_REDUCE_NOISE = "highpass=f=200,lowpass=f=3000"
+
 
 @click.command()
 @click.argument(
@@ -147,6 +150,7 @@ def main(
                     "default=noprint_wrappers=1:nokey=1",
                     f.as_posix(),
                 ],
+                check=True,
                 capture_output=True,
             ).stdout.splitlines()[0]
         )
@@ -194,7 +198,7 @@ def main(
     match overlay_style:
         case "overlay":
             video_fades += f"[v{i_overlay}]format=argb,colorchannelmixer=aa={OVERLAY_OPACITY}[z];\n"
-            video_fades += f"[vv][z]overlay"
+            video_fades += "[vv][z]overlay"
         case _:
             video_fades += f"[vv][v{i_overlay}]blend=all_mode={overlay_style}"
 

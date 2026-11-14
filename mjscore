@@ -20,6 +20,7 @@ Usage:
     [-c | --config <FILE>]
 """
 
+from __future__ import annotations
 
 import pathlib
 from argparse import Namespace
@@ -33,6 +34,7 @@ from docutils.io import (  # type: ignore[import-untyped]
     Input,
     StringInput,
 )
+
 from mjstat.model import ScoreSheet, apply_transforms, merge_games
 from mjstat.parser import MJScoreParser
 from mjstat.reader import MJScoreReader

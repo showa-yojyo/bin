@@ -13,11 +13,13 @@ Example:
 $ ./sentocrawler.py -f json
 """
 
+from __future__ import annotations
+
 import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterator, Mapping
+    from collections.abc import Iterator, Mapping
 
 from scrapy import cmdline
 from scrapy.linkextractors import LinkExtractor  # type: ignore[attr-defined]
@@ -34,13 +36,11 @@ class SentoListSpider(CrawlSpider):
 
     name = "sentolist"
     allowed_domains = ("www.1010.or.jp",)
-    start_urls = [
+    start_urls = (
         "https://www.1010.or.jp/map/item/",
         "https://www.1010.or.jp/map/item/page/2",
-    ]
-    custom_settings = {
-        "DOWNLOAD_DELAY": 1,
-    }
+    )
+    custom_settings = frozendict(DOWNLOAD_DELAY=1)
 
     rules = (
         Rule(LinkExtractor(restrict_xpaths="//h2/a[1]"), callback="parse_entry"),

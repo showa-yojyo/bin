@@ -7,13 +7,15 @@
 # ]
 # ///
 
+from __future__ import annotations
+
+import pathlib
 from hashlib import md5
 from os import remove, rename
-import pathlib
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable
+    from collections.abc import Iterable
 
 import click
 

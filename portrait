@@ -13,6 +13,7 @@ Make landscape images portrait by using PIL (asyncio version)
 """
 
 from __future__ import annotations
+
 import asyncio
 import logging
 import pathlib
@@ -20,13 +21,12 @@ import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Sequence
 
 import click
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
-
-__version__ = "1.4.1"
+__version__ = "1.4.2"
 logger = logging.getLogger(__name__)
 
 
@@ -43,7 +43,7 @@ async def rotate_image(filename: pathlib.Path) -> None:
         image_new = image.rotate(-90, expand=True)
         logger.info(f"Saving {filename}")
         image_new.save(filename)
-    except Exception as e:
+    except (UnidentifiedImageError, ValueError, OSError) as e:
         # PIL.UnidentifiedImageError: The image cannot be opened and identified.
         # ValueError: The output format could not be determined from the file name.
         # OSError: The file may have been created, and may contain partial data.

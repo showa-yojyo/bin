@@ -18,16 +18,20 @@
 #   * Lalcs/jpholiday: 日本の祝日を取得するライブラリ
 #     <https://github.com/Lalcs/jpholiday>
 
+from __future__ import annotations
+
 import calendar
 import datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterator
+    from collections.abc import Iterator
 
 import click
 import jpholiday  # type: ignore[import-untyped]
-from jpholiday.checker.interface import OriginalHolidayCheckerInterface as OriginalHoliday
+from jpholiday.checker.interface import (
+    OriginalHolidayCheckerInterface as OriginalHoliday,
+)
 
 ONEDAY = datetime.timedelta(days=1)
 

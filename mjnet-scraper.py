@@ -12,6 +12,8 @@
 Sign in MJ.NET and scrape today's result.
 """
 
+from __future__ import annotations
+
 import os
 import pathlib
 import sys
@@ -67,8 +69,8 @@ class MJScoreSpider(Spider):
     """MJ.NET"""
 
     name = APP_NAME
-    allowed_domains = ["www.sega-mj.net"]
-    start_urls = [MJ_NET_URL_SIGN_IN]
+    allowed_domains = ("www.sega-mj.net",)
+    start_urls = (MJ_NET_URL_SIGN_IN,)
 
     def parse(self, response: Response, **_kwargs: object) -> object:
         """Pass the login page of MJ.NET"""
@@ -78,8 +80,8 @@ class MJScoreSpider(Spider):
         return FormRequest.from_response(
             response,
             formdata={
-                "uid": getattr(self, "uid"),
-                "password": getattr(self, "password"),
+                "uid": self.uid,
+                "password": self.password,
             },
             callback=self._after_login,
         )
@@ -136,7 +138,7 @@ class MJScoreSpider(Spider):
             inspect_response(response, self)
             return
 
-        link_index = -1 if getattr(self, "game_mode") == GAME_MODE_PROFESSIONAL else 0
+        link_index = -1 if self.game_mode == GAME_MODE_PROFESSIONAL else 0
         yield response.follow(
             links[link_index].url,
             self._tompu_games,  # type: ignore[arg-type]
