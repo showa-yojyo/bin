@@ -5,6 +5,7 @@
 # dependencies = [
 #     "bs4",
 #     "click",
+#     "httpx",
 # ]
 # ///
 
@@ -15,8 +16,6 @@ Usage:
 $ sentoscraper.py ID1 ID2 ...
 """
 
-from __future__ import annotations
-
 import asyncio
 import pathlib
 import re
@@ -26,12 +25,12 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
 from urllib.error import URLError
-from urllib.request import urlopen
 
 import click
+import httpx
 from bs4 import BeautifulSoup
 
-__version__ = "2.3"
+__version__ = "2.4"
 
 CSV_HEADER = (
     "ID",
@@ -138,10 +137,11 @@ async def scrape(id: str, cache_dir: pathlib.Path) -> Sento:
             data = fin.read()
     except OSError, FileNotFoundError:
         try:
-            with urlopen(f"{url}") as fin:
-                data = fin.read()
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(url)
+
             with localpath.open(mode="wb") as fout:
-                fout.write(data)
+                fout.write(resp.text)
         except URLError:
             raise ValueError(f"Cannot fetch <{url}>")
 

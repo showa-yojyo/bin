@@ -14,8 +14,6 @@ Note: This program requires stdnum_ package as ISBN converter.
 _stdnum: https://github.com/arthurdejong/python-stdnum
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 import click
