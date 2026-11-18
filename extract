@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -o errexit -o nounset -o pipefail
+
+main ()
+{
+    local -r archive="$1";
+    case $archive in
+        *.tar.bz2 | *.tbz2)
+            tar xvjf "$archive"
+        ;;
+        *.tar.gz | *.tgz)
+            tar xvzf "$archive"
+        ;;
+        *.tar)
+            tar xvf "$archive"
+        ;;
+        *.bz2)
+            bunzip2 "$archive"
+        ;;
+        *.rar)
+            unrar x "$archive"
+        ;;
+        *.gz)
+            gunzip "$archive"
+        ;;
+        *.zip)
+            unzip "$archive"
+        ;;
+        *.xz)
+            unxz "$archive"
+        ;;
+        *.Z)
+            uncompress "$archive"
+        ;;
+        *.7z)
+            7z x "$archive"
+        ;;
+        *)
+            echo "$archive cannot be extracted via $BASH_ARGV0" 1>&2;
+            return 1
+        ;;
+    esac
+}
+
+main "$@"

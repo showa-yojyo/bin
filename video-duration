@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -o errexit -o nounset -o pipefail
+
+function main
+{
+    local -r input="${1:?Usage: $BASH_ARGV0 INPUT_VIDEO_PATH}"
+
+    local -ar ffprobe_options=(
+        -v error -show_entries format=duration
+        -of default=noprint_wrappers=1:nokey=1
+    )
+
+    ffprobe "${ffprobe_options[@]}" "$input"
+}
+
+main "$@"

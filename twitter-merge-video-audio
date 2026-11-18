@@ -1,0 +1,24 @@
+#!/bin/bash
+# description: a variant of video-optimize
+
+set -o errexit -o nounset -o pipefail
+
+function main
+{
+    local -r usage="Usage: $BASH_ARGV0 VIDEO_PATH AUDIO_PATH OUTPUT_PATH"
+    local -r input_video="${1:?$usage}"
+    local -r input_audio="${2:?$usage}"
+    local -r output="${3:?$usage}"
+
+    local -ar ffmpeg_global_options=(-loglevel error -y)
+    local -ar ffmpeg_output_options=(
+        -c:v libx264 -pix_fmt yuv420p
+        -c:a aac -vb 1M -minrate 1M -maxrate 1M -bufsize 1M
+        -ar 44100 -ac 2 -r 30)
+
+    ffmpeg "${ffmpeg_global_options[@]}" \
+        -i "$input_video" -i "$input_audio" \
+        -map 0:v -map 1:a "${ffmpeg_output_options[@]}" "$output"
+}
+
+main "$@"

@@ -1,0 +1,19 @@
+#!/bin/bash
+# description: show summary of all items in a play list
+
+set -o errexit -o nounset -o pipefail
+
+function main
+{
+    local -r playlist_url="${1:?Usage: $BASH_ARGV0 PLAYLIST_URL}"
+    local -ar options=(
+        --flat-playlist
+        --yes-playlist
+        -J
+    )
+
+    yt-dlp "${options[@]}" "$playlist_url" |
+        jq -r '.entries[] | ["https://www.youtube.com/watch?v=" + .id, .title, .duration] | @tsv'
+}
+
+main "$@"

@@ -1,0 +1,32 @@
+#!/bin/bash
+# description: for uploading to Twitter
+
+set -o errexit -o nounset -o pipefail
+
+function main
+{
+    local -r input="${1:?Usage: $BASH_ARGV0 INPUT_VIDEO_PATH}"
+
+    local -ar ffmpeg_global_options=(-loglevel error -y)
+    local -ar ffmpeg_input_options=()
+    local -ar ffmpeg_output_options=(
+        -c:v libx264 -pix_fmt yuv420p
+        -c:a aac -vb 1M -minrate 1M -maxrate 1M -bufsize 1M
+        -ar 44100 -ac 2 -r 30
+    )
+
+    output="$(mktemp --tmpdir -u --suffix=.mp4 XXXXXXXXX)"
+    local -r output
+    if ! ffmpeg "${ffmpeg_global_options[@]}" \
+        -i "$input" "${ffmpeg_output_options[@]}" "$output" ; then
+        echo "Error: $input conversion failed" >&2
+        rm -f "$output"
+        return 1
+    fi
+
+    touch -r "$input" "$output"
+    rm -f "$input"
+    mv "$output" "$input"
+}
+
+main "$@"

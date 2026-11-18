@@ -1,0 +1,38 @@
+#!/bin/bash
+# description: Fade out the last second of the video.
+
+set -o errexit -o nounset -o pipefail
+
+function main
+{
+    local input="${1:?Usage: $BASH_ARGV0 INPUT_VIDEO_PATH}"
+
+    # duration of fade out
+    local fade_duration=${2:-1}
+
+    local ffmpeg_global_options=(-loglevel error -y)
+
+    video_duration=$(video-duration "${input}")
+    local -r video_duration
+    local -r output="${input%.*}-faded.${input#*.}"
+
+    # from where to fade out
+    st=$(echo "$video_duration - $fade_duration" | bc)
+    local -r st
+
+    local -ar ffmpeg_input_options=()
+    local -ar ffmpeg_output_options=(
+         -c:v libx264 -pix_fmt yuv420p
+         -c:a aac -vb 1M -minrate 1M -maxrate 1M -bufsize 1M
+         -ar 44100 -ac 2 -r 30
+         -vf "fade=t=out:st=$st:d=$fade_duration"
+         -af "afade=t=out:st=$st:d=$fade_duration"
+        -vf "fade=t=out:st=$st:d=$fade_duration"
+        -af "afade=t=out:st=$st:d=$fade_duration"
+    )
+
+    ffmpeg "${ffmpeg_global_options[@]}" -i "$input" "${ffmpeg_output_options[@]}" "$output"
+    touch -r "$input" "$output"
+}
+
+main "$@"

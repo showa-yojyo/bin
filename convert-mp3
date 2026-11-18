@@ -1,0 +1,33 @@
+#!/bin/bash
+# description: convert MP4 video to MP3 audio
+
+set -o errexit -o nounset -o pipefail
+
+function main
+{
+    if ! command -v ffmpeg &> /dev/null; then
+        echo 'Error: ffmpeg is not available.' >&2
+        return
+    fi
+
+    local -ar ffmpeg_global_options=(-loglevel error -y)
+    local -ar ffmpeg_input_options=()
+    local -ar ffmpeg_output_options=(-qscale:a 0 -map a)
+
+    for i in "$@";
+    do
+        local -r input="$i"
+        local -r output="${input%.*}.mp3"
+        echo "Processing ${input}..." >&2
+        if ! ffmpeg "${ffmpeg_global_options[@]}" \
+            "${ffmpeg_input_options[@]}" -i "$input" \
+            "${ffmpeg_output_options[@]}" "$output" ; then
+            echo "Error: $output is not generated" >&2
+            continue
+        fi
+        touch -r "$input" "$output"
+        rm -f "$input"
+    done
+}
+
+main "$@"

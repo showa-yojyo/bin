@@ -1,0 +1,20 @@
+#!/bin/bash
+# description: convert Markdown to reStructuredText
+
+set -o errexit -o nounset -o pipefail
+
+function main
+{
+    local -r input="${1:?Usage: $BASH_ARGV0 MARKDOWN_PATH}"
+    local -r output="${input%.md}.rst"
+    local -ar pandoc_opts=(
+        --strip-comments
+        --shift-heading-level-by=-1
+        --columns=80
+        --wrap=preserve
+        --to rst
+    )
+    pandoc "${pandoc_opts[@]}" -o "$output" "$input"
+}
+
+main "$@"

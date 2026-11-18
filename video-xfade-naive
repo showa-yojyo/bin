@@ -1,0 +1,47 @@
+#!/bin/bash
+# description: XXX
+
+set -o errexit -o nounset -o pipefail
+
+# How to fade from one video to another in ffmpeg, both audio and video - Super User
+# https://superuser.com/questions/1739162/how-to-fade-from-one-video-to-another-in-ffmpeg-both-audio-and-video
+function main
+{
+    local -r usage="Usage: $BASH_ARGV0 [-d DURATION] INPUT_VIDEO_PATH0 INPUT_VIDEO_PATH1"
+
+    local duration=1
+    local OPTIND
+    local opt
+
+    while getopts ":d" opt; do
+      case $opt in
+         d)
+           duration="${OPTARG}"
+           ;;
+         *)
+           echo "$usage"
+           return 1
+           ;;
+      esac
+    done
+    shift $((OPTIND-1))
+
+    local -r input0="${1:?${usage}}"
+    local -r input1="${2:?${usage}}"
+    local -r output=xfade.mp4
+
+    local -ar ffmpeg_global_options=(-v error -y -hide_banner)
+    local -r trim="$(video-duration "${input0}")"
+    local -r offset="$(echo "$trim" - "$duration" | bc)"
+
+    ffmpeg "${ffmpeg_global_options[@]}" \
+        -i "${input0}" -i "${input1}" -filter_complex "
+        [0:v]setpts=PTS,settb=AVTB,fps=30[0v];
+        [1:v]setpts=PTS,settb=AVTB,fps=30[1v];
+        [0v][1v]xfade=transition=fade:duration=${duration}:offset=${offset}[video];
+        [0:a]asetpts=PTS,asettb=AVTB,atrim=0:${trim}[a0];
+        [a0][1:a]acrossfade=d=${duration}[audio]" \
+        -map "[video]" -map "[audio]" "$output"
+}
+
+main "$@"
