@@ -5,10 +5,10 @@ set -o errexit -o nounset -o pipefail
 
 function main
 {
-    local -r video_url="${1:?Usage: $BASH_ARGV0 VIDEO_URL}"
-    local -ar options=(-q --no-playlist -t mp3 --js-runtimes node)
+    local -r url="${1:?Usage: $BASH_ARGV0 URL}"
+    local -ar options=(-q --no-playlist -t mp3)
 
-    yt-dlp "${options[@]}" -o "%(id)s-%(title)s.%(ext)s" "$video_url"
+    yt-dlp "${options[@]}" "$url"
 }
 
 main "$@"

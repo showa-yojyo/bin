@@ -4,6 +4,10 @@ tmp*
 *.cache
 *.bak
 
+# added by `uv python install` or `uv tool install`
+python3.*
+yt-dlp
+
 # General rules
 
 *.dll
